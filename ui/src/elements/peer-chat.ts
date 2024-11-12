@@ -126,9 +126,10 @@ export class PeerChat extends SignalWatcher(LitElement) {
 						if (event.key === 'Enter') {
 							const input = this.shadowRoot!.getElementById(
 								'text-input',
-							) as SlInput;
+							) as SlTextarea;
 
 							this.sendMessage(input.value);
+							event.preventDefault();
 						}
 					}}
 				>
@@ -138,7 +139,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 					@click=${() => {
 						const input = this.shadowRoot!.getElementById(
 							'text-input',
-						) as SlInput;
+						) as SlTextarea;
 
 						this.sendMessage(input.value);
 					}}
