@@ -11,6 +11,8 @@
       packages.messenger_test_dna = inputs.tnesh-stack.outputs.builders.${system}.dna {
         dnaManifest = ./dna.yaml;
         zomes = {
+          notifications_integrity = inputs'.notifications-zome.packages.notifications_integrity;
+          notifications = inputs'.notifications-zome.packages.notifications;
           linked_devices_integrity = inputs'.linked-devices.packages.linked_devices_integrity;
           linked_devices = inputs'.linked-devices.packages.linked_devices;
           # Include here the zome packages for this DNA, e.g.:

@@ -2,6 +2,7 @@
   description = "Template for Holochain app development";
 
   inputs = {
+    notifications-zome.url = "github:darksoil-studio/notifications-zome/main-0.3";
     linked-devices.url = "github:darksoil-studio/linked-devices/main-0.3";
     holonix.url = "github:holochain/holonix/main-0.3";
 
