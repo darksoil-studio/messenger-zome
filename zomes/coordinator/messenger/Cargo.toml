@@ -1,0 +1,15 @@
+[package]
+name = "messenger"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "messenger"
+
+[dependencies]
+hdk = { workspace = true }
+
+serde = { workspace = true }
+
+messenger_integrity = { path = "../../integrity/messenger", package = "messenger_integrity" }
