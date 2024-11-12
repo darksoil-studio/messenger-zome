@@ -125,6 +125,35 @@
           "kind": "class",
           "description": "",
           "name": "MessengerClient",
+          "members": [
+            {
+              "kind": "method",
+              "name": "sendPeerMessage",
+              "parameters": [
+                {
+                  "name": "recipient",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "String"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "queryPeerMessages",
+              "return": {
+                "type": {
+                  "text": "Promise<Record<EntryHashB64, PeerMessage>>"
+                }
+              }
+            }
+          ],
           "superclass": {
             "name": "ZomeClient",
             "package": "@tnesh-stack/utils"
@@ -149,7 +178,34 @@
         {
           "kind": "class",
           "description": "",
-          "name": "MessengerStore"
+          "name": "MessengerStore",
+          "members": [
+            {
+              "kind": "field",
+              "name": "peerMessages",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "peerConversations",
+              "default": "new AsyncComputed(() => { const messages = this.peerMessages.get(); if (messages.status !== 'completed') return messages; const conversations: Array<Array<AgentPubKey>> = []; for (const [messageHash, message] of Object.entries(messages.value)) { } return { status: 'completed', value: conversations, }; })"
+            },
+            {
+              "kind": "field",
+              "name": "allAgentsFor",
+              "privacy": "private",
+              "default": "new MemoHoloHashMap((agent: AgentPubKey) => { if (this.linkedDevicesStore) { return new AsyncComputed(() => { const devices = this.linkedDevicesStore!.linkedDevicesForAgent.get(agent).get(); if (devices.status !== 'completed') return devices; return { status: 'completed', value: [agent, ...devices.value], }; }); } else { return new AsyncState({ status: 'completed', value: [agent] }); } })"
+            },
+            {
+              "kind": "field",
+              "name": "allMyAgents"
+            },
+            {
+              "kind": "field",
+              "name": "peerChat",
+              "default": "new MemoHoloHashMap( (agent: AgentPubKey) => new AsyncComputed(() => { const messages = this.peerMessages.get(); const theirAgents = this.allAgentsFor.get(agent).get(); if (messages.status !== 'completed') return messages; if (theirAgents.status !== 'completed') return theirAgents; const agentMessages: Record<EntryHashB64, PeerMessage> = {}; const theirAgentsB64 = theirAgents.value.map(encodeHashToBase64); for (const [messageHash, message] of Object.entries(messages.value)) { const messageFromThem = theirAgentsB64.includes( encodeHashToBase64(message.provenance), ); const messageForThem = theirAgentsB64.includes( encodeHashToBase64(message.signed_content.content.recipient), ); if (messageForThem || messageFromThem) { agentMessages[messageHash] = message; } } return { status: 'completed', value: agentMessages, }; }), )"
+            }
+          ]
         }
       ],
       "exports": [
@@ -193,6 +249,34 @@
       "path": "src/types.ts",
       "declarations": [],
       "exports": []
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/utils.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "asyncReadable",
+          "parameters": [
+            {
+              "name": "initFn",
+              "type": {
+                "text": "(set: (value: T) => void) => Promise<(() => void) | void>"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "asyncReadable",
+          "declaration": {
+            "name": "asyncReadable",
+            "module": "src/utils.ts"
+          }
+        }
+      ]
     },
     {
       "kind": "javascript-module",
@@ -244,6 +328,93 @@
           "declaration": {
             "name": "MessengerContext",
             "module": "src/elements/messenger-context.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/peer-chat.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "PeerChat",
+          "members": [
+            {
+              "kind": "field",
+              "name": "peer",
+              "type": {
+                "text": "AgentPubKey"
+              },
+              "attribute": "peer"
+            },
+            {
+              "kind": "field",
+              "name": "messengerStore",
+              "type": {
+                "text": "MessengerStore"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "renderChat",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "myAgents",
+                  "type": {
+                    "text": "AgentPubKey[]"
+                  }
+                },
+                {
+                  "name": "messages",
+                  "type": {
+                    "text": "Record<EntryHashB64, PeerMessage>"
+                  }
+                }
+              ]
+            }
+          ],
+          "attributes": [
+            {
+              "name": "peer",
+              "type": {
+                "text": "AgentPubKey"
+              },
+              "fieldName": "peer"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "peer-chat",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "PeerChat",
+          "declaration": {
+            "name": "PeerChat",
+            "module": "src/elements/peer-chat.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "peer-chat",
+          "declaration": {
+            "name": "PeerChat",
+            "module": "src/elements/peer-chat.ts"
           }
         }
       ]

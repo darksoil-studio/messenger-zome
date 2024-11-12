@@ -57,6 +57,7 @@
 			import { LitElement, css, html } from 'lit';
 
 			import '../src/elements/messenger-context.ts';
+			import '../src/elements/peer-chat.ts';
 			import { MessengerClient, MessengerStore } from '../src/index.ts';
 
 			export class DemoApp extends SignalWatcher(LitElement) {
@@ -73,17 +74,36 @@
 
 					this._loading = false;
 					this.requestUpdate();
+
+					const interval = setInterval(async () => {
+						const allProfilesLinks =
+							await this.profilesStore.client.getAllProfiles();
+						const otherAgentLink = allProfilesLinks.find(
+							link =>
+								link.author.toString() !==
+								this.profilesStore.client.client.myPubKey.toString(),
+						);
+						if (otherAgentLink) {
+							this.peer = otherAgentLink.author;
+							this.requestUpdate();
+							clearInterval(interval);
+						}
+					}, 1000);
 				}
 
 				async initStores(appClient) {
-					const profilesStore = new ProfilesStore(
+					this.profilesStore = new ProfilesStore(
 						new ProfilesClient(appClient, 'messenger_test'),
 					);
-					new ContextProvider(this, profilesStoreContext, profilesStore);
+					new ContextProvider(this, profilesStoreContext, this.profilesStore);
 					const linkedDevicesStore = new LinkedDevicesStore(
 						new LinkedDevicesClient(appClient, 'messenger_test'),
 					);
-					new ContextProvider(this, linkedDevicesStoreContext, linkedDevices);
+					new ContextProvider(
+						this,
+						linkedDevicesStoreContext,
+						linkedDevicesStore,
+					);
 					const notificationsStore = new NotificationsStore(
 						new NotificationsClient(appClient, 'messenger_test'),
 					);
@@ -95,13 +115,19 @@
 
 					this._messengerStore = new MessengerStore(
 						new MessengerClient(appClient, 'messenger_test'),
+						linkedDevicesStore,
 					);
 				}
 
 				renderContent() {
 					return html`
 						<messenger-context .store=${this._messengerStore}>
-							<!-- TODO: add here the content of your application -->
+							${this.peer
+								? html`<peer-chat
+										style="width: 300px; height: 400px"
+										.peer=${this.peer}
+									></peer-chat>`
+								: html``}
 						</messenger-context>
 					`;
 				}
@@ -116,7 +142,7 @@
 						</div>`;
 
 					return html`
-						<div class="fill row" style="width: 100vw; height: 100%;">
+						<div class="fill row" style="width: 100vw; height: 100vh;">
 							<profile-prompt style="flex: 1;">
 								${this.renderContent()}
 							</profile-prompt>
