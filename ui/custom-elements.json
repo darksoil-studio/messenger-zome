@@ -139,17 +139,17 @@
                 {
                   "name": "message",
                   "type": {
-                    "text": "String"
+                    "text": "Message"
                   }
                 }
               ]
             },
             {
               "kind": "method",
-              "name": "queryPeerMessages",
+              "name": "queryPrivateMessengerEntries",
               "return": {
                 "type": {
-                  "text": "Promise<Record<EntryHashB64, PeerMessage>>"
+                  "text": "Promise<\n\t\tRecord<EntryHashB64, PrivateMessengerEntry>\n\t>"
                 }
               }
             }
@@ -182,13 +182,13 @@
           "members": [
             {
               "kind": "field",
-              "name": "peerMessages",
+              "name": "privateMessengerEntries",
               "privacy": "private"
             },
             {
               "kind": "field",
               "name": "peerConversations",
-              "default": "new AsyncComputed(() => { const messages = this.peerMessages.get(); if (messages.status !== 'completed') return messages; const conversations: Array<Array<AgentPubKey>> = []; for (const [messageHash, message] of Object.entries(messages.value)) { } return { status: 'completed', value: conversations, }; })"
+              "default": "new AsyncComputed(() => { const messages = this.privateMessengerEntries.get(); if (messages.status !== 'completed') return messages; const conversations: Array<Array<AgentPubKey>> = []; for (const [messageHash, message] of Object.entries(messages.value)) { } return { status: 'completed', value: conversations, }; })"
             },
             {
               "kind": "field",
@@ -203,7 +203,7 @@
             {
               "kind": "field",
               "name": "peerChat",
-              "default": "new MemoHoloHashMap( (agent: AgentPubKey) => new AsyncComputed(() => { const messages = this.peerMessages.get(); const theirAgents = this.allAgentsFor.get(agent).get(); if (messages.status !== 'completed') return messages; if (theirAgents.status !== 'completed') return theirAgents; const agentMessages: Record<EntryHashB64, PeerMessage> = {}; const theirAgentsB64 = theirAgents.value.map(encodeHashToBase64); for (const [messageHash, message] of Object.entries(messages.value)) { const messageFromThem = theirAgentsB64.includes( encodeHashToBase64(message.provenance), ); const messageForThem = theirAgentsB64.includes( encodeHashToBase64(message.signed_content.content.recipient), ); if (messageForThem || messageFromThem) { agentMessages[messageHash] = message; } } return { status: 'completed', value: agentMessages, }; }), )"
+              "default": "new MemoHoloHashMap( (agent: AgentPubKey) => new AsyncComputed(() => { const messages = this.privateMessengerEntries.get(); const theirAgents = this.allAgentsFor.get(agent).get(); if (messages.status !== 'completed') return messages; if (theirAgents.status !== 'completed') return theirAgents; const agentMessages: Record<EntryHashB64, Signed<PeerMessage>> = {}; const theirAgentsB64 = theirAgents.value.map(encodeHashToBase64); for (const [messageHash, message] of Object.entries( messages.value.peerMessages, )) { const messageFromThem = theirAgentsB64.includes( encodeHashToBase64(message.provenance), ); const messageForThem = theirAgentsB64.includes( encodeHashToBase64(message.signed_content.content.recipient), ); if (messageForThem || messageFromThem) { agentMessages[messageHash] = message; } } return { status: 'completed', value: agentMessages, }; }), )"
             }
           ]
         }
@@ -351,7 +351,7 @@
             },
             {
               "kind": "field",
-              "name": "messengerStore",
+              "name": "store",
               "type": {
                 "text": "MessengerStore"
               },
@@ -371,10 +371,52 @@
                 {
                   "name": "messages",
                   "type": {
-                    "text": "Record<EntryHashB64, PeerMessage>"
+                    "text": "Record<EntryHashB64, Signed<PeerMessage>>"
                   }
                 }
               ]
+            },
+            {
+              "kind": "method",
+              "name": "renderMessage",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "messageHash",
+                  "type": {
+                    "text": "EntryHashB64"
+                  }
+                },
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "Signed<PeerMessage>"
+                  }
+                },
+                {
+                  "name": "myAgentsB64",
+                  "type": {
+                    "text": "AgentPubKeyB64[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "sendMessage",
+              "parameters": [
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderTextInput",
+              "privacy": "private"
             }
           ],
           "attributes": [
