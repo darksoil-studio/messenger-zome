@@ -39,12 +39,27 @@ export class MessengerStore {
 		public linkedDevicesStore?: LinkedDevicesStore,
 	) {}
 
-	private privateMessengerEntries = asyncReadable<
-		Record<EntryHashB64, PrivateMessengerEntry>
-	>(async set => {
-		const messages = await this.client.queryPrivateMessengerEntries();
+	private privateMessengerEntries = asyncReadable<{
+		peerMessages: Record<EntryHashB64, Signed<PeerMessage>>;
+	}>(async set => {
+		const privateMessengerEntries =
+			await this.client.queryPrivateMessengerEntries();
 
-		set(messages);
+		const value: {
+			peerMessages: Record<EntryHashB64, Signed<PeerMessage>>;
+		} = {
+			peerMessages: {},
+		};
+
+		for (const [entryHash, privateMessengerEntry] of Object.entries(
+			privateMessengerEntries,
+		)) {
+			if (privateMessengerEntry.signed_content.content.type === 'PeerMessage') {
+				value.peerMessages[entryHash] = privateMessengerEntry;
+			}
+		}
+
+		set(value);
 
 		this.client.onSignal(signal => {
 			if (
@@ -52,30 +67,20 @@ export class MessengerStore {
 				signal.app_entry.type !== 'PrivateMessengerEntry'
 			)
 				return;
-			messages[encodeHashToBase64(signal.action.hashed.content.entry_hash)] =
-				signal.app_entry;
-			set(messages);
-		});
-	});
 
-	private allPeerMessages = new AsyncComputed(() => {
-		const privateMessengerEntries = this.privateMessengerEntries.get();
-		if (privateMessengerEntries.status !== 'completed')
-			return privateMessengerEntries;
+			const privateMessageEntryType =
+				signal.app_entry.signed_content.content.type;
 
-		const peerMessages: Record<EntryHashB64, Signed<PeerMessage>> = {};
-		for (const [entryHash, privateMessengerEntry] of Object.entries(
-			privateMessengerEntries.value,
-		)) {
-			if (privateMessengerEntry.signed_content.content.type === 'PeerMessage') {
-				peerMessages[entryHash] = privateMessengerEntry;
+			switch (privateMessageEntryType) {
+				case 'PeerMessage':
+					value.peerMessages[
+						encodeHashToBase64(signal.action.hashed.content.entry_hash)
+					] = signal.app_entry;
+
+					break;
 			}
-		}
-
-		return {
-			status: 'completed',
-			value: peerMessages,
-		};
+			set(value);
+		});
 	});
 
 	peerConversations = new AsyncComputed(() => {
@@ -115,7 +120,7 @@ export class MessengerStore {
 	peerChat = new MemoHoloHashMap(
 		(agent: AgentPubKey) =>
 			new AsyncComputed(() => {
-				const messages = this.allPeerMessages.get();
+				const messages = this.privateMessengerEntries.get();
 				const theirAgents = this.allAgentsFor.get(agent).get();
 				if (messages.status !== 'completed') return messages;
 				if (theirAgents.status !== 'completed') return theirAgents;
@@ -123,7 +128,9 @@ export class MessengerStore {
 				const agentMessages: Record<EntryHashB64, Signed<PeerMessage>> = {};
 				const theirAgentsB64 = theirAgents.value.map(encodeHashToBase64);
 
-				for (const [messageHash, message] of Object.entries(messages.value)) {
+				for (const [messageHash, message] of Object.entries(
+					messages.value.peerMessages,
+				)) {
 					const messageFromThem = theirAgentsB64.includes(
 						encodeHashToBase64(message.provenance),
 					);
