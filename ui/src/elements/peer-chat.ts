@@ -8,7 +8,9 @@ import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { mdiSend } from '@mdi/js';
 import { SlTextarea } from '@shoelace-style/shoelace';
-import '@shoelace-style/shoelace/dist/components/icon-button/icon-button.js';
+import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
+import '@shoelace-style/shoelace/dist/components/icon/icon.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
 import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
 import {
@@ -25,7 +27,7 @@ import { ref } from 'lit/directives/ref.js';
 
 import { messengerStoreContext } from '../context.js';
 import { MessengerStore } from '../messenger-store.js';
-import { PeerMessage } from '../types.js';
+import { PeerMessage, Signed } from '../types.js';
 
 @localized()
 @customElement('peer-chat')
@@ -38,7 +40,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 
 	private renderChat(
 		myAgents: AgentPubKey[],
-		messages: Record<EntryHashB64, PeerMessage>,
+		messages: Record<EntryHashB64, Signed<PeerMessage>>,
 	) {
 		const orderedMessages = Object.entries(messages).sort(
 			(m1, m2) =>
@@ -52,7 +54,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 					<div
 						class="flex-scrollable-y"
 						id="scrolling-chat"
-						style="gap: 4px; padding-right: 8px; padding-left: 8px; align-items: start; flex: 1; display: flex; flex-direction: column-reverse"
+						style="padding-right: 4px; padding-left: 4px; align-items: start; flex: 1; display: flex; flex-direction: column-reverse"
 					>
 						${orderedMessages.map(([messageHash, message]) =>
 							this.renderMessage(messageHash, message, myAgentsB64),
@@ -66,28 +68,44 @@ export class PeerChat extends SignalWatcher(LitElement) {
 
 	private renderMessage(
 		messageHash: EntryHashB64,
-		message: PeerMessage,
+		message: Signed<PeerMessage>,
 		myAgentsB64: AgentPubKeyB64[],
 	) {
+		const timestamp = message.signed_content.timestamp / 1000;
+		const date = new Date(timestamp);
+		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
+		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
 		return html` <div
 			class=${classMap({
 				'from-me': myAgentsB64.includes(encodeHashToBase64(message.provenance)),
 				message: true,
 				row: true,
 			})}
-			style="align-items: end; flex-wrap: wrap; gap: 4px; min-width: 60%"
+			style="align-items: end; flex-wrap: wrap; gap: 8px;"
 		>
 			<span style="flex: 1; word-break: break-all"
-				>${message.signed_content.content.message}</span
+				>${message.signed_content.content.message.message}</span
 			>
-			<sl-relative-time
-				class="placeholder"
-				style="font-size: 12px"
-				sync
-				format="short"
-				.date=${new Date(message.signed_content.timestamp / 1000)}
+			<div
+				class="placeholder column"
+				style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
 			>
-			</sl-relative-time>
+				${lessThanAMinuteAgo
+					? html`<span>${msg('now')}</span>`
+					: moreThanAnHourAgo
+						? html`
+								<sl-format-date
+									hour="numeric"
+									minute="numeric"
+									hour-format="24"
+									.date=${date}
+								></sl-format-date>
+							`
+						: html`
+								<sl-relative-time style="" sync format="short" .date=${date}>
+								</sl-relative-time>
+							`}
+			</div>
 		</div>`;
 	}
 
@@ -95,14 +113,17 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		if (!message || message === '') return;
 
 		try {
-			await this.store.client.sendPeerMessage(this.peer, message);
+			await this.store.client.sendPeerMessage(this.peer, {
+				message,
+				reply_to: undefined,
+			});
 			const input = this.shadowRoot!.getElementById('text-input') as SlTextarea;
 			input.value = '';
 
 			const scrollingChat = this.shadowRoot!.getElementById('scrolling-chat')!;
 
 			scrollingChat.scrollTo({
-				top: scrollingChat.scrollHeight,
+				top: 0,
 				behavior: 'smooth',
 			});
 		} catch (e) {
@@ -115,14 +136,12 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		return html`
 			<div class="row" style="align-items: center;">
 				<sl-textarea
-					pill
 					type="text"
 					id="text-input"
 					resize="auto"
 					rows="1"
 					style="flex: 1; margin: 2px"
 					@keypress=${(event: KeyboardEvent) => {
-						console.log(event);
 						if (event.key === 'Enter') {
 							const input = this.shadowRoot!.getElementById(
 								'text-input',
@@ -134,8 +153,9 @@ export class PeerChat extends SignalWatcher(LitElement) {
 					}}
 				>
 				</sl-textarea>
-				<sl-icon-button
-					.src=${wrapPathInSvg(mdiSend)}
+				<sl-button
+					variant="primary"
+					circle
 					@click=${() => {
 						const input = this.shadowRoot!.getElementById(
 							'text-input',
@@ -143,7 +163,9 @@ export class PeerChat extends SignalWatcher(LitElement) {
 
 						this.sendMessage(input.value);
 					}}
-				></sl-icon-button>
+				>
+					<sl-icon .src=${wrapPathInSvg(mdiSend)}></sl-icon>
+				</sl-button>
 			</div>
 		`;
 	}
@@ -177,9 +199,10 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		css`
 			.message {
 				border-radius: 4px;
-				border: 1px solid grey;
+				border: 1px solid lightgrey;
 				padding: 4px;
-				margin: 4px;
+				margin: 2px;
+				box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px;
 				background-color: var(--sl-color-neutral-100, white);
 			}
 			.from-me {
@@ -190,8 +213,18 @@ export class PeerChat extends SignalWatcher(LitElement) {
 			.from-me sl-relative-time {
 				color: var(--sl-color-neutral-100, white);
 			}
+			.from-me sl-format-date {
+				color: var(--sl-color-neutral-100, white);
+			}
+			.from-me span {
+				color: var(--sl-color-neutral-100, white);
+			}
 			:host {
 				display: flex;
+				font-size: 14px;
+			}
+			sl-textarea::part(base) {
+				border-radius: 20px;
 			}
 		`,
 	];

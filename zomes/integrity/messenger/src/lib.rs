@@ -3,11 +3,11 @@ use hdi::prelude::*;
 mod agent_encrypted_message;
 pub use agent_encrypted_message::*;
 
+mod private_messenger_entry;
+pub use private_messenger_entry::*;
+
 mod signed;
 pub use signed::*;
-
-mod peer_message;
-pub use peer_message::*;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
@@ -15,13 +15,7 @@ pub use peer_message::*;
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
     #[entry_type(visibility = "private")]
-    PeerMessage(PeerMessage),
-    // #[entry_type(visibility = "private")]
-    // CreateGroup(CreateGroup),
-    // #[entry_type(visibility = "private")]
-    // UpdateGroup(UpdateGroup),
-    // #[entry_type(visibility = "private")]
-    // GroupMessage(GroupMessage),
+    PrivateMessengerEntry(PrivateMessengerEntry),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -81,23 +75,29 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
     match op.flattened::<EntryTypes, LinkTypes>()? {
         FlatOp::StoreEntry(store_entry) => match store_entry {
             OpEntry::CreateEntry { app_entry, action } => match app_entry {
-                EntryTypes::PeerMessage(peer_message) => {
-                    validate_create_peer_message(EntryCreationAction::Create(action), peer_message)
+                EntryTypes::PrivateMessengerEntry(private_messenger_entry) => {
+                    validate_create_private_messenger_entry(
+                        EntryCreationAction::Create(action),
+                        private_messenger_entry,
+                    )
                 }
             },
             OpEntry::UpdateEntry {
                 app_entry, action, ..
             } => match app_entry {
-                EntryTypes::PeerMessage(peer_message) => {
-                    validate_create_peer_message(EntryCreationAction::Update(action), peer_message)
+                EntryTypes::PrivateMessengerEntry(private_messenger_entry) => {
+                    validate_create_private_messenger_entry(
+                        EntryCreationAction::Update(action),
+                        private_messenger_entry,
+                    )
                 }
             },
             _ => Ok(ValidateCallbackResult::Valid),
         },
         FlatOp::RegisterUpdate(update_entry) => match update_entry {
             OpUpdate::Entry { app_entry, action } => match app_entry {
-                EntryTypes::PeerMessage(peer_message) => {
-                    validate_update_peer_message(action, peer_message)
+                EntryTypes::PrivateMessengerEntry(private_messenger_entry) => {
+                    validate_update_private_messenger_entry(action, private_messenger_entry)
                 }
             },
             _ => Ok(ValidateCallbackResult::Valid),
@@ -145,7 +145,9 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 }
             };
             match original_app_entry {
-                EntryTypes::PeerMessage(_) => validate_delete_peer_message(action),
+                EntryTypes::PrivateMessengerEntry(_) => {
+                    validate_delete_private_messenger_entry(action)
+                }
             }
         }
         FlatOp::RegisterCreateLink {
@@ -181,22 +183,25 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
         },
         FlatOp::StoreRecord(store_record) => match store_record {
             OpRecord::CreateEntry { app_entry, action } => match app_entry {
-                EntryTypes::PeerMessage(peer_message) => {
-                    validate_create_peer_message(EntryCreationAction::Create(action), peer_message)
+                EntryTypes::PrivateMessengerEntry(private_messenger_entry) => {
+                    validate_create_private_messenger_entry(
+                        EntryCreationAction::Create(action),
+                        private_messenger_entry,
+                    )
                 }
             },
             OpRecord::UpdateEntry {
                 app_entry, action, ..
             } => match app_entry {
-                EntryTypes::PeerMessage(peer_message) => {
-                    let result = validate_create_peer_message(
+                EntryTypes::PrivateMessengerEntry(private_messenger_entry) => {
+                    let result = validate_create_private_messenger_entry(
                         EntryCreationAction::Update(action.clone()),
-                        peer_message.clone(),
+                        private_messenger_entry.clone(),
                     )?;
                     let ValidateCallbackResult::Valid = result else {
                         return Ok(result);
                     };
-                    validate_update_peer_message(action, peer_message)
+                    validate_update_private_messenger_entry(action, private_messenger_entry)
                 }
             },
             OpRecord::DeleteEntry {
@@ -246,7 +251,9 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     }
                 };
                 match original_app_entry {
-                    EntryTypes::PeerMessage(_) => validate_delete_peer_message(action),
+                    EntryTypes::PrivateMessengerEntry(_) => {
+                        validate_delete_private_messenger_entry(action)
+                    }
                 }
             }
             OpRecord::CreateLink {

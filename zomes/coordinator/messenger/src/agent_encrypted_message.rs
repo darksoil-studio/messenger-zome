@@ -1,9 +1,10 @@
 use hdk::prelude::*;
-use messenger_integrity::{EntryTypes, LinkTypes, PeerMessage};
+use messenger_integrity::{EntryTypes, LinkTypes, PeerMessage, PrivateMessengerEntry};
 
 use crate::{
     linked_devices::query_my_linked_devices,
-    peer_messages::query_peer_messages,
+    private_messenger_entries::query_private_messenger_entries,
+    signed::verify_signed,
     utils::{create_link_relaxed, create_relaxed, delete_link_relaxed},
 };
 
@@ -11,9 +12,7 @@ use crate::{
 pub struct EncryptedMessageBytes(XSalsa20Poly1305EncryptedData);
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes)]
-pub enum MessengerEncryptedMessage {
-    PeerMessage(PeerMessage),
-}
+pub struct MessengerEncryptedMessage(pub PrivateMessengerEntry);
 
 pub fn create_encrypted_message(
     recipient: AgentPubKey,
@@ -47,7 +46,7 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
     )?;
     // let my_linked_devices = query_my_linked_devices()?;
 
-    let peer_messages = query_peer_messages(())?;
+    let private_messenger_entries = query_private_messenger_entries(())?;
 
     for link in links {
         let tag = link.tag;
@@ -67,12 +66,14 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
         let message = MessengerEncryptedMessage::try_from(decrypted_serialized_bytes)
             .map_err(|err| wasm_error!(err))?;
 
-        match message {
-            MessengerEncryptedMessage::PeerMessage(peer_message) => {
-                let peer_message_hash = hash_entry(&peer_message)?;
-                if !peer_messages.contains_key(&peer_message_hash.into()) {
-                    create_relaxed(EntryTypes::PeerMessage(peer_message))?;
-                }
+        let private_messenger_entry = message.0;
+
+        let valid = verify_signed(private_messenger_entry.0.clone())?;
+
+        if valid {
+            let private_messager_entry_hash = hash_entry(&private_messenger_entry)?;
+            if !private_messenger_entries.contains_key(&private_messager_entry_hash.into()) {
+                create_relaxed(EntryTypes::PrivateMessengerEntry(private_messenger_entry))?;
             }
         }
 

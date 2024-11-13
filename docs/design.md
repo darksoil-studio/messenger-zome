@@ -7,28 +7,44 @@ struct Signed<T> {
   timestamp: Timestamp,
 }
 
-struct PeerMessage {
+struct Message {
+  reply_to: Option<EntryHash>,
   message: String,
 }
 
-struct CreateGroup {
-  admins: Vec<AgentPubKey>,
-  members: Vec<AgentPubKey>,
+struct PeerMessage {
+  recipient: AgentPubKey,
+  message: Message
+}
+
+struct GroupInfo {
   name: String
 }
 
-struct UpdateGroup {
+struct CreateGroupChat {
+  admins: Vec<AgentPubKey>,
+  members: Vec<AgentPubKey>,
+  info: GroupInfo
+}
+
+struct UpdateGroupChat {
   original_group_hash: EntryHash,
   previous_group_hash: EntryHash,
   
   admins: Vec<AgentPubKey>,
   members: Vec<AgentPubKey>,
-  name: String,
+  info: GroupInfo,
+}
+
+struct DeleteGroupChat {
+  original_group_hash: EntryHash,
+  previous_group_hash: EntryHash,
 }
 
 struct GroupMessage {
   original_group_hash: EntryHash,
   current_group_hash: EntryHash,
-  message: String,
+
+  message: Message,
 }
 ```

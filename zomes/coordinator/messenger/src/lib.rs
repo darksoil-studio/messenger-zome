@@ -1,9 +1,10 @@
 use hdk::prelude::*;
 use messenger_integrity::*;
-use peer_messages::receive_peer_message;
+use private_messenger_entries::receive_private_messenger_entry;
 
 mod agent_encrypted_message;
 mod linked_devices;
+mod private_messenger_entries;
 mod signed;
 mod synchronize;
 mod utils;
@@ -56,14 +57,16 @@ pub enum Signal {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum MessengerRemoteSignal {
-    NewPeerMessage(PeerMessage),
+    NewPrivateMessengerEntry(PrivateMessengerEntry),
 }
 
 #[hdk_extern]
 pub fn recv_remote_signal(signal: MessengerRemoteSignal) -> ExternResult<()> {
-    // TODO: take into account wether the recipient has the notification enabled in their settings
+    // TODO: take into account wether the recipient is blocked
     match signal {
-        MessengerRemoteSignal::NewPeerMessage(peer_message) => receive_peer_message(peer_message),
+        MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry) => {
+            receive_private_messenger_entry(private_messenger_entry)
+        }
     }
 }
 

@@ -6,7 +6,7 @@ use crate::{
         commit_my_pending_encrypted_messages, create_encrypted_message, MessengerEncryptedMessage,
     },
     linked_devices::query_my_linked_devices,
-    peer_messages::query_peer_messages,
+    private_messenger_entries::query_private_messenger_entries,
 };
 
 #[hdk_extern(infallible)]
@@ -27,50 +27,52 @@ pub fn synchronize_with_linked_devices() -> ExternResult<()> {
     let agents = query_my_linked_devices()?;
     let other_agents = agents.into_iter().filter(|a| a.ne(&my_pub_key));
 
-    let peer_messages = query_peer_messages(())?;
+    let private_messenger_entries = query_private_messenger_entries(())?;
 
-    let peer_messages_unit_entry_types: EntryType = UnitEntryTypes::PeerMessage.try_into()?;
+    let private_messenger_entries_unit_entry_types: EntryType =
+        UnitEntryTypes::PrivateMessengerEntry.try_into()?;
 
     for agent in other_agents {
-        let peer_messages_agent_activity = get_agent_activity(
+        let private_messenger_entries_agent_activity = get_agent_activity(
             agent.clone(),
             ChainQueryFilter::new()
-                .entry_type(peer_messages_unit_entry_types.clone())
+                .entry_type(private_messenger_entries_unit_entry_types.clone())
                 .clone(),
             ActivityRequest::Full,
         )?;
 
-        let actions_get_inputs = peer_messages_agent_activity
+        let actions_get_inputs = private_messenger_entries_agent_activity
             .valid_activity
             .into_iter()
             .map(|(_, action_hash)| GetInput::new(action_hash.into(), GetOptions::network()))
             .collect();
 
         let records = HDK.with(|hdk| hdk.borrow().get(actions_get_inputs))?;
-        let existing_peer_messages_hashes: HashSet<EntryHash> = records
+        let existing_private_messenger_entries_hashes: HashSet<EntryHash> = records
             .into_iter()
             .filter_map(|r| r)
             .filter_map(|r| r.action().entry_hash().cloned())
             .collect();
 
-        let missing_peer_messages: Vec<(EntryHashB64, PeerMessage)> = peer_messages
-            .clone()
-            .into_iter()
-            .filter(|(entry_hash, _)| {
-                !existing_peer_messages_hashes.contains(&entry_hash.clone().into())
-            })
-            .collect();
+        let missing_private_messenger_entries: Vec<(EntryHashB64, PrivateMessengerEntry)> =
+            private_messenger_entries
+                .clone()
+                .into_iter()
+                .filter(|(entry_hash, _)| {
+                    !existing_private_messenger_entries_hashes.contains(&entry_hash.clone().into())
+                })
+                .collect();
 
         let mut offline = false;
 
-        for (_, peer_message) in missing_peer_messages {
+        for (_, private_messenger_entry) in missing_private_messenger_entries {
             if !offline {
                 let response = call_remote(
                     agent.clone(),
                     zome_info()?.name,
-                    "receive_peer_message".into(),
+                    "receive_private_messenger_entry".into(),
                     None,
-                    peer_message.clone(),
+                    private_messenger_entry.clone(),
                 )?;
 
                 match response {
@@ -80,7 +82,7 @@ pub fn synchronize_with_linked_devices() -> ExternResult<()> {
             }
             create_encrypted_message(
                 agent.clone(),
-                MessengerEncryptedMessage::PeerMessage(peer_message.clone()),
+                MessengerEncryptedMessage(private_messenger_entry.clone()),
             )?;
         }
     }

@@ -17,7 +17,9 @@ import { ActionCommittedSignal } from '@tnesh-stack/utils';
 
 export type MessengerSignal = ActionCommittedSignal<EntryTypes, LinkTypes>;
 
-export type EntryTypes = { type: 'PeerMessage' } & PeerMessage;
+export type EntryTypes = {
+	type: 'PrivateMessengerEntry';
+} & PrivateMessengerEntry;
 
 export type LinkTypes = string;
 
@@ -32,8 +34,16 @@ export interface Signed<T> {
 	signature: Signature;
 }
 
-export interface PeerMessageContent {
-	recipient: AgentPubKey;
+export interface Message {
+	reply_to: EntryHash | undefined;
 	message: string;
 }
-export type PeerMessage = Signed<PeerMessageContent>;
+
+export interface PeerMessage {
+	recipient: AgentPubKey;
+	message: Message;
+}
+
+export type PrivateMessengerEntry = Signed<
+	{ type: 'PeerMessage' } & PeerMessage
+>;
