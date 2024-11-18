@@ -304,6 +304,13 @@
             },
             {
               "kind": "field",
+              "name": "linkedDevicesStore",
+              "type": {
+                "text": "LinkedDevicesStore"
+              }
+            },
+            {
+              "kind": "field",
               "name": "role",
               "type": {
                 "text": "string"
