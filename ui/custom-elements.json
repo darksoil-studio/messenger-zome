@@ -294,6 +294,30 @@
                 "text": "MessengerStore"
               },
               "attribute": "store"
+            },
+            {
+              "kind": "field",
+              "name": "client",
+              "type": {
+                "text": "AppClient"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "role",
+              "type": {
+                "text": "string"
+              },
+              "attribute": "role"
+            },
+            {
+              "kind": "field",
+              "name": "zome",
+              "type": {
+                "text": "string"
+              },
+              "default": "'messenger'",
+              "attribute": "zome"
             }
           ],
           "attributes": [
@@ -303,6 +327,21 @@
                 "text": "MessengerStore"
               },
               "fieldName": "store"
+            },
+            {
+              "name": "role",
+              "type": {
+                "text": "string"
+              },
+              "fieldName": "role"
+            },
+            {
+              "name": "zome",
+              "type": {
+                "text": "string"
+              },
+              "default": "'messenger'",
+              "fieldName": "zome"
             }
           ],
           "superclass": {
