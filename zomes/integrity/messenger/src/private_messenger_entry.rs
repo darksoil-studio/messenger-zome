@@ -28,7 +28,7 @@ pub struct GroupInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CreateGroupChat {
+pub struct Group {
     pub admins: Vec<AgentPubKey>,
     pub members: Vec<AgentPubKey>,
     pub info: GroupInfo,
@@ -38,9 +38,7 @@ pub struct UpdateGroupChat {
     pub original_group_hash: EntryHash,
     pub previous_group_hash: EntryHash,
 
-    pub admins: Vec<AgentPubKey>,
-    pub members: Vec<AgentPubKey>,
-    pub info: GroupInfo,
+    pub group: Group,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -53,7 +51,7 @@ pub struct DeleteGroupChat {
 #[serde(tag = "type")]
 pub enum PrivateMessengerEntryContent {
     PeerMessage(PeerMessage),
-    CreateGroupChat(CreateGroupChat),
+    CreateGroupChat(Group),
     UpdateGroupChat(UpdateGroupChat),
     DeleteGroupChat(DeleteGroupChat),
     GroupMessage(GroupMessage),

@@ -1,8 +1,7 @@
 use hdk::prelude::*;
-use messenger_integrity::{EntryTypes, LinkTypes, PeerMessage, PrivateMessengerEntry};
+use messenger_integrity::{EntryTypes, LinkTypes, PrivateMessengerEntry};
 
 use crate::{
-    linked_devices::query_my_linked_devices,
     private_messenger_entries::query_private_messenger_entries,
     signed::verify_signed,
     utils::{create_link_relaxed, create_relaxed, delete_link_relaxed},

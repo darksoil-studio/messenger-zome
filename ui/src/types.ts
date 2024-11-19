@@ -7,6 +7,7 @@ import {
 	DeleteLink,
 	DnaHash,
 	EntryHash,
+	EntryHashB64,
 	Record,
 	Signature,
 	SignedActionHashed,
@@ -44,6 +45,34 @@ export interface PeerMessage {
 	message: Message;
 }
 
+export interface GroupInfo {
+	name: string;
+}
+export interface Group {
+	admins: Array<AgentPubKey>;
+	members: Array<AgentPubKey>;
+	info: GroupInfo;
+}
+export interface UpdateGroupChat {
+	original_group_hash: EntryHash;
+	previous_group_hash: EntryHash;
+	group: Group;
+}
+export interface DeleteGroupChat {
+	original_group_hash: EntryHash;
+	previous_group_hash: EntryHash;
+}
+
+export interface GroupMessage {
+	original_group_hash: EntryHash;
+	current_group_hash: EntryHash;
+	message: Message;
+}
+
 export type PrivateMessengerEntry = Signed<
-	{ type: 'PeerMessage' } & PeerMessage
+	| ({ type: 'PeerMessage' } & PeerMessage)
+	| ({ type: 'GroupMessage' } & GroupMessage)
+	| ({ type: 'CreateGroupChat' } & Group)
+	| ({ type: 'UpdateGroupChat' } & UpdateGroupChat)
+	| ({ type: 'DeleteGroupChat' } & DeleteGroupChat)
 >;

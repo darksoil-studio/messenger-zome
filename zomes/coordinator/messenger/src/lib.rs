@@ -9,6 +9,7 @@ mod signed;
 mod synchronize;
 mod utils;
 
+mod group_chat;
 mod peer_messages;
 
 #[hdk_extern]

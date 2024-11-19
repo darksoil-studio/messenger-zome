@@ -39,6 +39,7 @@ async function setupStore(player: Player) {
 		new MessengerClient(player.appWs as any, 'messenger_test'),
 		linkedDevicesStore,
 	);
+	await store.client.queryPrivateMessengerEntries();
 	return {
 		store,
 		player,

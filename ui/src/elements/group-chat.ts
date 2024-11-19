@@ -1,7 +1,9 @@
 import {
 	AgentPubKey,
 	AgentPubKeyB64,
+	EntryHash,
 	EntryHashB64,
+	decodeHashFromBase64,
 	encodeHashToBase64,
 } from '@holochain/client';
 import { consume } from '@lit/context';
@@ -19,27 +21,48 @@ import { classMap } from 'lit/directives/class-map.js';
 import { messengerStoreContext } from '../context.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
-import { Message, PeerMessage, Signed } from '../types.js';
+import {
+	DeleteGroupChat,
+	Group,
+	GroupMessage,
+	Message,
+	PeerMessage,
+	Signed,
+	UpdateGroupChat,
+} from '../types.js';
 import './message-input.js';
 
 @localized()
-@customElement('peer-chat')
-export class PeerChat extends SignalWatcher(LitElement) {
-	@property(hashProperty('peer'))
-	peer!: AgentPubKey;
+@customElement('group-chat')
+export class GroupChat extends SignalWatcher(LitElement) {
+	@property(hashProperty('group-hash'))
+	groupHash!: EntryHash;
 
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
 	private renderChat(
 		myAgents: AgentPubKey[],
-		messages: Record<EntryHashB64, Signed<PeerMessage>>,
+		group: Signed<Group>,
+		updates: Record<EntryHashB64, Signed<UpdateGroupChat>>,
+		deletes: Record<EntryHashB64, Signed<DeleteGroupChat>>,
+		messages: Record<EntryHashB64, Signed<GroupMessage>>,
 	) {
 		const orderedMessages = Object.entries(messages).sort(
 			(m1, m2) =>
 				m2[1].signed_content.timestamp - m1[1].signed_content.timestamp,
 		);
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
+
+		const orderedUpdates = Object.entries(updates).sort(
+			(m1, m2) =>
+				m2[1].signed_content.timestamp - m1[1].signed_content.timestamp,
+		);
+		const lastUpdate = orderedUpdates[0];
+		const currentGroupHash =
+			lastUpdate === undefined
+				? this.groupHash
+				: decodeHashFromBase64(lastUpdate[0]);
 
 		return html`<div class="column" style="flex: 1; margin-top: 12px">
 			<div class="flex-scrollable-parent">
@@ -55,13 +78,13 @@ export class PeerChat extends SignalWatcher(LitElement) {
 					</div>
 				</div>
 			</div>
-			<message-input @send-message=${(e: CustomEvent) => this.sendMessage(e.detail.message as Message)}>
+			<message-input @send-message=${(e: CustomEvent) => this.sendMessage(currentGroupHash, e.detail.message as Message)}>
 		</div> `;
 	}
 
 	private renderMessage(
 		messageHash: EntryHashB64,
-		message: Signed<PeerMessage>,
+		message: Signed<GroupMessage>,
 		myAgentsB64: AgentPubKeyB64[],
 	) {
 		const timestamp = message.signed_content.timestamp / 1000;
@@ -102,9 +125,13 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		</div>`;
 	}
 
-	async sendMessage(message: Message) {
+	async sendMessage(currentGroupHash: EntryHash, message: Message) {
 		try {
-			await this.store.client.sendPeerMessage(this.peer, message);
+			await this.store.client.sendGroupMessage(
+				this.groupHash,
+				currentGroupHash,
+				message,
+			);
 
 			const scrollingChat = this.shadowRoot!.getElementById('scrolling-chat')!;
 
@@ -118,11 +145,23 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		}
 	}
 
+	messages() {
+		const myAgents = this.store.allMyAgents.get();
+		const group = this.store.groupChats.get(this.groupHash).get();
+		if (myAgents.status !== 'completed') return myAgents;
+		if (group.status !== 'completed') return group;
+
+		return {
+			status: 'completed' as const,
+			value: {
+				myAgents: myAgents.value,
+				group: group.value,
+			},
+		};
+	}
+
 	render() {
-		const messages = joinAsync([
-			this.store.allMyAgents.get(),
-			this.store.peerChats.get(this.peer).get(),
-		]);
+		const messages = this.messages();
 		switch (messages.status) {
 			case 'pending':
 				return html`
@@ -137,7 +176,19 @@ export class PeerChat extends SignalWatcher(LitElement) {
 					.error=${messages.error}
 				></display-error>`;
 			case 'completed':
-				return this.renderChat(messages.value[0], messages.value[1]);
+				const group = messages.value.group;
+				if (!group) {
+					return html`<display-error
+						.headline=${msg('Group not found')}
+					></display-error>`;
+				}
+				return this.renderChat(
+					messages.value.myAgents,
+					group.group,
+					group.updates,
+					group.deletes,
+					group.messages,
+				);
 		}
 	}
 
