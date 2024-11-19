@@ -64,10 +64,12 @@
               --add-flags "messenger \
                 --integrity-zome-name messenger_integrity \
                 --coordinator-zome-name messenger \
-                --remote-zome-git-url github:darksoil-studio-zome{kebab_case zome_name}} \
-                --remote-npm-package-name messenger \
+                --remote-zome-git-url github:darksoil-studio/messenger-zome \
+                --remote-npm-package-name @darksoil-studio/messenger-zome \
                 --remote-npm-package-path ui \
-                --remote-zome-git-branch main-0.3" 
+                --remote-zome-git-branch main-0.3 \
+                --context-element messenger-context \
+                --context-element-import @darksoil-studio/messenger-zome/dist/elements/messenger-context.js" 
           '';
         };
       };

@@ -3,9 +3,9 @@
 layout: home
 
 hero:
-  name: "@darksoil-studio/messenger-zome"
-  text: "Messenger zome for holochain apps"
-  tagline: Plug-and-play messenger management for your hApps
+  name: "Messenger Zome"
+  text: ""
+  tagline: Plug-and-play private peer and group chats for your hApps
   actions:
     - theme: brand
       text: Setup
@@ -23,7 +23,7 @@ hero:
       link: "/messenger-store.md"
 
 features:
-  - title: UI+Backend Module
+  - title: UI + Coordinator + Integrity Zomes
     details: Following the tnesh-stack guidelines
     link: https://darksoil.studio/tnesh-stack
 ---
