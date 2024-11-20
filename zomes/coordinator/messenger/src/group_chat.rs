@@ -1,8 +1,9 @@
 use hdk::prelude::*;
 use messenger_integrity::*;
 
-use crate::private_messenger_entries::{
-    create_private_messenger_entry, query_private_messenger_entries,
+use crate::{
+    linked_devices::get_all_agents_for,
+    private_messenger_entries::{create_private_messenger_entry, query_private_messenger_entries},
 };
 
 #[hdk_extern]
@@ -13,7 +14,8 @@ pub fn create_group_chat(group: Group) -> ExternResult<EntryHash> {
 
     all_chat_members.append(&mut group.admins.clone());
 
-    create_private_messenger_entry(content, all_chat_members)
+    let all_chat_agents: Vec<AgentPubKey> = get_all_agents_for_members(all_chat_members)?;
+    create_private_messenger_entry(content, all_chat_agents)
 }
 
 #[hdk_extern]
@@ -37,11 +39,24 @@ pub fn send_group_message(group_message: GroupMessage) -> ExternResult<()> {
     let mut recipients = group.members;
     recipients.append(&mut group.admins.clone());
 
+    let all_recipients_agents = get_all_agents_for_members(recipients)?;
+
     let content = PrivateMessengerEntryContent::GroupMessage(group_message);
 
-    create_private_messenger_entry(content, recipients)?;
+    create_private_messenger_entry(content, all_recipients_agents)?;
 
     Ok(())
+}
+
+pub fn get_all_agents_for_members(agents: Vec<AgentPubKey>) -> ExternResult<Vec<AgentPubKey>> {
+    let all_agents = agents
+        .into_iter()
+        .map(|agent| get_all_agents_for(agent))
+        .collect::<ExternResult<Vec<Vec<AgentPubKey>>>>()?
+        .into_iter()
+        .flatten()
+        .collect();
+    Ok(all_agents)
 }
 
 pub fn get_latest_version_for_group(group_hash: &EntryHash) -> ExternResult<Option<Group>> {
