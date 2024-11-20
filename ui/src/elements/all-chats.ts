@@ -7,10 +7,12 @@ import '@darksoil-studio/profiles-zome/dist/elements/agent-avatar.js';
 import { AgentPubKey, EntryHash, Timestamp } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
+import { mdiInformationOutline } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
 import '@shoelace-style/shoelace/dist/components/divider/divider.js';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
+import { wrapPathInSvg } from '@tnesh-stack/elements';
 import { AsyncResult, SignalWatcher } from '@tnesh-stack/signals';
 import { EntryRecord } from '@tnesh-stack/utils';
 import { LitElement, css, html } from 'lit';
@@ -173,6 +175,24 @@ export class AllChats extends SignalWatcher(LitElement) {
 	}
 
 	renderChats(chats: Array<Chat>) {
+		if (chats.length === 0) {
+			return html`<div
+				class="column placeholder"
+				style="flex: 1; align-items: center; justify-content: center"
+			>
+				<div
+					class="column"
+					style="align-items: center; justify-content: center; gap: 8px"
+				>
+					<sl-icon
+						.src=${wrapPathInSvg(mdiInformationOutline)}
+						style="height: 64px; width: 64px"
+					></sl-icon>
+					<span>${msg('There are no chats yet.')}</span>
+				</div>
+			</div>`;
+		}
+
 		return html`<div class="column" style="flex: 1; overflow: hidden">
 			${join(
 				chats.map(chat =>

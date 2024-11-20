@@ -183,7 +183,7 @@ export class MessengerStore {
 						value.peerMessages[peerB64].push(entryHash);
 						break;
 					case 'GroupMessage':
-						let groupHash = encodeHashToBase64(
+						const groupHash = encodeHashToBase64(
 							signal.app_entry.signed_content.content.original_group_hash,
 						);
 						if (!value.groups[groupHash]) {
@@ -196,30 +196,40 @@ export class MessengerStore {
 						value.groups[groupHash].messages.push(entryHash);
 						break;
 					case 'DeleteGroupChat':
-						groupHash = encodeHashToBase64(
+						const groupHash2 = encodeHashToBase64(
 							signal.app_entry.signed_content.content.original_group_hash,
 						);
-						if (!value.groups[groupHash]) {
-							value.groups[groupHash] = {
+						if (!value.groups[groupHash2]) {
+							value.groups[groupHash2] = {
 								updates: [],
 								deletes: [],
 								messages: [],
 							};
 						}
-						value.groups[groupHash].deletes.push(entryHash);
+						value.groups[groupHash2].deletes.push(entryHash);
+						break;
+					case 'CreateGroupChat':
+						const groupHash3 = entryHash;
+						if (!value.groups[groupHash3]) {
+							value.groups[groupHash3] = {
+								updates: [],
+								deletes: [],
+								messages: [],
+							};
+						}
 						break;
 					case 'UpdateGroupChat':
-						groupHash = encodeHashToBase64(
+						const groupHash4 = encodeHashToBase64(
 							signal.app_entry.signed_content.content.original_group_hash,
 						);
-						if (!value.groups[groupHash]) {
-							value.groups[groupHash] = {
+						if (!value.groups[groupHash4]) {
+							value.groups[groupHash4] = {
 								updates: [],
 								deletes: [],
 								messages: [],
 							};
 						}
-						value.groups[groupHash].updates.push(entryHash);
+						value.groups[groupHash4].updates.push(entryHash);
 						break;
 				}
 				set(value);

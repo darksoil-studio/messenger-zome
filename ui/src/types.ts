@@ -47,7 +47,7 @@ export interface PeerMessage {
 
 export interface GroupInfo {
 	name: string;
-	avatar_src: string;
+	avatar_hash: EntryHash | undefined;
 }
 export interface Group {
 	admins: Array<AgentPubKey>;

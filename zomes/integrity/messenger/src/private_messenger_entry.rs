@@ -25,7 +25,7 @@ pub struct GroupMessage {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GroupInfo {
     pub name: String,
-    pub avatar_base64_src: String,
+    pub avatar_hash: Option<EntryHash>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
