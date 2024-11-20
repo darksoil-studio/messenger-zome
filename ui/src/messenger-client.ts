@@ -1,14 +1,8 @@
 import {
-	ActionHash,
 	AgentPubKey,
 	AppClient,
-	CreateLink,
-	Delete,
-	DeleteLink,
 	EntryHash,
 	EntryHashB64,
-	Link,
-	SignedActionHashed,
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@tnesh-stack/utils';
 
@@ -92,5 +86,10 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 					resolve(undefined);
 			});
 		});
+	}
+
+	/** */
+	async synchronizeWithLinkedDevice(linkedDevice: AgentPubKey) {
+		await this.callZome('synchronize_with_linked_device', linkedDevice);
 	}
 }

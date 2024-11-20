@@ -54,10 +54,12 @@ export class MessengerContext extends LitElement {
 			if (e.context === linkedDevicesStoreContext) {
 				const context = e.target as LinkedDevicesContext;
 
-				this.store = new MessengerStore(
-					new MessengerClient(this.client, this.role, this.zome),
-					context.store,
-				);
+				setTimeout(() => {
+					this.store = new MessengerStore(
+						new MessengerClient(this.client, this.role, this.zome),
+						context.store,
+					);
+				});
 			}
 		});
 
