@@ -155,11 +155,13 @@ export class GroupChat extends SignalWatcher(LitElement) {
 
 	renderAgentNickname(agent: AgentPubKey) {
 		const profile = this.profilesStore.profileForAgent.get(agent).get();
-		if (profile.status !== 'completed' || !profile.value) return html`TODO`;
+		if (profile.status !== 'completed' || !profile.value)
+			return html`${msg('Profile not found')}`;
 		const latestValue = profile.value.latestVersion.get() as AsyncResult<
 			EntryRecord<Profile> | undefined
 		>;
-		if (latestValue.status !== 'completed') return html`TODO`;
+		if (latestValue.status !== 'completed')
+			return html`${msg('Profile not found')}`;
 
 		return html`
 			<span

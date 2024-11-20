@@ -29,9 +29,10 @@
     "./locales/*": "./locales/*"
   },
   "dependencies": {
-    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#2c745ab1e5535116bda4c67d19177edb214aed04&path:ui",
-    "@darksoil-studio/notifications-zome": "github:darksoil-studio/notifications-zome#ae2d30eba65a9207fb263fc1db7394c6de96077f&path:ui",
-    "@darksoil-studio/profiles-zome": "github:darksoil-studio/profiles-zome#ffc6a020559d4febc8f7e422bbcb5899f64eefa4&path:ui",
+    "@darksoil-studio/file-storage-zome": "github:darksoil-studio/file-storage#8712e7fdcfee052e8e1c3b62d9dd7623d380b7c6&path:ui",
+    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#9e5175a10835c1f56ac1b6e98cbed3f8dd6f188e&path:ui",
+    "@darksoil-studio/notifications-zome": "github:darksoil-studio/notifications-zome#26f6eae0071487b84801a7828b3b90fcf5d020c2&path:ui",
+    "@darksoil-studio/profiles-zome": "github:darksoil-studio/profiles-zome#e981bcbdfaed6cf686875336e0052421566cf837&path:ui",
     "@holochain/client": "^0.17.1",
     "@lit/context": "^1.0.0",
     "@lit/localize": "^0.12.0",
@@ -47,6 +48,7 @@
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.10.3",
     "@lit/localize-tools": "^0.6.3",
+    "@types/color-hash": "^2.0.0",
     "tslib": "^2.6.2",
     "typescript": "^5.4.5",
     "vite": "^4.0.0"

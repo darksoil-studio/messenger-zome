@@ -5,7 +5,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#2c745ab1e5535116bda4c67d19177edb214aed04&path:ui",
+    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#9e5175a10835c1f56ac1b6e98cbed3f8dd6f188e&path:ui",
     "@msgpack/msgpack": "^2.8.0",
     "@holochain/client": "^0.17.1",
     "@holochain/tryorama": "^0.16.0-dev",

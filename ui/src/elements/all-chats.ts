@@ -1,3 +1,4 @@
+import '@darksoil-studio/file-storage-zome/dist/elements/show-avatar-image.js';
 import {
 	Profile,
 	ProfilesStore,
@@ -119,11 +120,13 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 	renderAgentNickname(agent: AgentPubKey) {
 		const profile = this.profilesStore.profileForAgent.get(agent).get();
-		if (profile.status !== 'completed' || !profile.value) return html`TODO`;
+		if (profile.status !== 'completed') return html`${msg('Loading...')}`;
+		if (!profile.value) return html`${msg('Profile not found')}`;
 		const latestValue = profile.value.latestVersion.get() as AsyncResult<
 			EntryRecord<Profile> | undefined
 		>;
-		if (latestValue.status !== 'completed') return html`TODO`;
+		if (latestValue.status !== 'completed')
+			return html`${msg('Profile not found')}`;
 
 		return html`<span>${latestValue.value?.entry.nickname}</span>`;
 	}
@@ -156,11 +159,21 @@ export class AllChats extends SignalWatcher(LitElement) {
 				);
 			}}
 		>
-			<sl-avatar
-				style="align-self: center; --size: 32px"
-				.image=${group.info.avatar_src}
-				.initials=${group.info.name.slice(0, 2)}
-			></sl-avatar>
+			${group.info.avatar_hash === undefined
+				? html`
+						<sl-avatar
+							style="align-self: center; --size: 32px"
+							.initials=${group.info.name.slice(0, 2)}
+						></sl-avatar>
+					`
+				: html`
+						<show-avatar-image
+							.initials=${group.info.name.slice(0, 2)}
+							.imageHash=${group.info.avatar_hash}
+							style="--size: 32px; align-self: center"
+						>
+						</show-avatar-image>
+					`}
 			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
 				<span class="chat-name">${group.info.name}</span>
 				<span class="placeholder last-activity"

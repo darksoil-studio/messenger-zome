@@ -31,6 +31,8 @@
 		<demo-app></demo-app>
 
 		<script type="module">
+			import '@darksoil-studio/file-storage-zome/dist/elements/file-storage-context.js';
+			import '@darksoil-studio/file-storage-zome/dist/elements/upload-files.js';
 			import '@darksoil-studio/linked-devices-zome/dist/elements/link-device-recipient.js';
 			import '@darksoil-studio/linked-devices-zome/dist/elements/linked-devices-context.js';
 			import '@darksoil-studio/notifications-zome/dist/elements/notifications-context.js';
@@ -81,8 +83,17 @@
 									link.author.toString() !==
 									profilesStore.client.client.myPubKey.toString(),
 							);
-							if (otherAgentLink) {
+							const myAgentLink = allProfilesLinks.find(
+								link =>
+									link.author.toString() ===
+									profilesStore.client.client.myPubKey.toString(),
+							);
+							if (myAgentLink && otherAgentLink) {
 								this.peer = otherAgentLink.author;
+
+								await this.messengerStore.client.sendPeerMessage(this.peer, {
+									message: 'Yo!',
+								});
 
 								this.requestUpdate();
 								clearInterval(interval);
@@ -104,40 +115,44 @@
 						`;
 					}
 					return html`
-						<div class="row">
-							<div class="column" style="width: 300px; height: 400px">
-								<h2>All Chats</h2>
-								<all-chats
-									style="flex: 1"
-									@group-chat-selected=${e => {
-										this.peerChat = undefined;
-										this.groupHash = e.detail.groupHash;
-										this.requestUpdate();
-									}}
-									@peer-chat-selected=${e => {
-										this.peerChat = e.detail.peerChat.agents[0];
-										this.groupHash = undefined;
-										this.requestUpdate();
-									}}
-								>
-								</all-chats>
+						<div class="column">
+							<div class="row">
+								<div class="column" style="width: 300px; height: 400px">
+									<h2>All Chats</h2>
+									<all-chats
+										style="flex: 1"
+										@group-chat-selected=${e => {
+											this.peerChat = undefined;
+											this.groupHash = e.detail.groupHash;
+											this.requestUpdate();
+										}}
+										@peer-chat-selected=${e => {
+											this.peerChat = e.detail.peerChat.agents[0];
+											this.groupHash = undefined;
+											this.requestUpdate();
+										}}
+									>
+									</all-chats>
+								</div>
+								<div class="column" style="width: 300px; height: 400px">
+									<h2>Chat</h2>
+									${this.groupHash
+										? html`<group-chat
+												.groupHash=${this.groupHash}
+												style="flex:1"
+											></group-chat>`
+										: html``}
+									${this.peerChat
+										? html`<peer-chat
+												.peer=${this.peerChat}
+												style="flex:1"
+											></peer-chat>`
+										: html``}
+								</div>
 							</div>
-							<div class="column" style="width: 300px; height: 400px">
-								<h2>Chat</h2>
-								${this.groupHash
-									? html`<group-chat
-											.groupHash=${this.groupHash}
-											style="flex:1"
-										></group-chat>`
-									: html``}
-								${this.peerChat
-									? html`<peer-chat
-											.peer=${this.peerChat}
-											style="flex:1"
-										></peer-chat>`
-									: html``}
-							</div>
-							<div style="display: flex;flex-direction:column">
+							<div
+								style="display: flex;flex-direction:column; margin-top: 40px"
+							>
 								<div style="display: flex">
 									<upload-files id="group-avatar"> </upload-files>
 									<sl-input
@@ -152,14 +167,14 @@
 											this.shadowRoot.getElementById('group-name-input');
 										const uploadFiles =
 											this.shadowRoot.getElementById('group-avatar');
-										console.log(avatar.value.length);
+										console.log(uploadFiles.value[0]);
 										if (!this.peer) return;
 										await this.messengerStore.client.createGroupChat({
 											admins: [this.messengerStore.client.client.myPubKey],
 											members: [this.peer],
 											info: {
 												name: input.value,
-												avatar_hash: uploadFiles.value,
+												avatar_hash: uploadFiles.value[0],
 											},
 										});
 									}}
@@ -188,22 +203,24 @@
 
 					return html`
 						<app-client-context .client=${this._client}>
-							<messenger-context role="messenger_test">
-								<linked-devices-context role="messenger_test">
-									<notifications-context role="messenger_test">
-										<profiles-context role="messenger_test">
-											<div
-												class="fill row"
-												style="width: 100vw; height: 100vh;"
-											>
-												<profile-prompt style="flex: 1;">
-													${this.renderContent()}
-												</profile-prompt>
-											</div>
-										</profiles-context>
-									</notifications-context>
-								</linked-devices-context>
-							</messenger-context>
+							<file-storage-context role="messenger_test">
+								<messenger-context role="messenger_test">
+									<linked-devices-context role="messenger_test">
+										<notifications-context role="messenger_test">
+											<profiles-context role="messenger_test">
+												<div
+													class="fill row"
+													style="width: 100vw; height: 100vh;"
+												>
+													<profile-prompt style="flex: 1;">
+														${this.renderContent()}
+													</profile-prompt>
+												</div>
+											</profiles-context>
+										</notifications-context>
+									</linked-devices-context>
+								</messenger-context>
+							</file-storage-context>
 						</app-client-context>
 					`;
 				}
