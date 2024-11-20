@@ -29,25 +29,26 @@
     "./locales/*": "./locales/*"
   },
   "dependencies": {
-    "@holochain/client": "^0.17.1",
+    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#2c745ab1e5535116bda4c67d19177edb214aed04&path:ui",
+    "@darksoil-studio/notifications-zome": "github:darksoil-studio/notifications-zome#ae2d30eba65a9207fb263fc1db7394c6de96077f&path:ui",
     "@darksoil-studio/profiles-zome": "github:darksoil-studio/profiles-zome#ffc6a020559d4febc8f7e422bbcb5899f64eefa4&path:ui",
-    "@tnesh-stack/elements": "^0.300.5",
-    "@tnesh-stack/signals": "^0.300.0",
-    "@tnesh-stack/utils": "^0.300.0",
+    "@holochain/client": "^0.17.1",
     "@lit/context": "^1.0.0",
     "@lit/localize": "^0.12.0",
     "@mdi/js": "^7.2.0",
     "@msgpack/msgpack": "^2.8.0",
     "@shoelace-style/shoelace": "^2.11.0",
-    "lit": "^3.0.0",
-    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#2c745ab1e5535116bda4c67d19177edb214aed04&path:ui",
-    "@darksoil-studio/notifications-zome": "github:darksoil-studio/notifications-zome#ae2d30eba65a9207fb263fc1db7394c6de96077f&path:ui"
+    "@tnesh-stack/elements": "^0.300.5",
+    "@tnesh-stack/signals": "^0.300.0",
+    "@tnesh-stack/utils": "^0.300.0",
+    "color-hash": "^2.0.2",
+    "lit": "^3.0.0"
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.10.3",
     "@lit/localize-tools": "^0.6.3",
-    "typescript": "^5.4.5",
     "tslib": "^2.6.2",
+    "typescript": "^5.4.5",
     "vite": "^4.0.0"
   },
   "publishConfig": {

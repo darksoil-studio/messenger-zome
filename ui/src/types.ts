@@ -47,6 +47,7 @@ export interface PeerMessage {
 
 export interface GroupInfo {
 	name: string;
+	avatar_src: string;
 }
 export interface Group {
 	admins: Array<AgentPubKey>;
@@ -69,8 +70,11 @@ export interface GroupMessage {
 	message: Message;
 }
 
-export type PrivateMessengerEntry = Signed<
-	| ({ type: 'PeerMessage' } & PeerMessage)
+export type PrivateMessengerEntry =
+	| Signed<{ type: 'PeerMessage' } & PeerMessage>
+	| GroupMessengerEntry;
+
+export type GroupMessengerEntry = Signed<
 	| ({ type: 'GroupMessage' } & GroupMessage)
 	| ({ type: 'CreateGroupChat' } & Group)
 	| ({ type: 'UpdateGroupChat' } & UpdateGroupChat)

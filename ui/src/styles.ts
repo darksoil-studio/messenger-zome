@@ -8,7 +8,6 @@ export const messengerStyles = [
 			border-radius: 4px;
 			border: 1px solid lightgrey;
 			padding: 4px;
-			margin: 2px;
 			box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px;
 			background-color: var(--sl-color-neutral-100, white);
 		}

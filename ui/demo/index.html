@@ -107,8 +107,13 @@
 								<h2>All Chats</h2>
 								<all-chats
 									@group-chat-selected=${e => {
-										this.peer = undefined;
+										this.peerChat = undefined;
 										this.groupHash = e.detail.groupHash;
+										this.requestUpdate();
+									}}
+									@peer-chat-selected=${e => {
+										this.peerChat = e.detail.peerChat.agents[0];
+										this.groupHash = undefined;
 										this.requestUpdate();
 									}}
 								>
@@ -122,21 +127,22 @@
 											style="flex:1"
 										></group-chat>`
 									: html``}
+								${this.peerChat
+									? html`<peer-chat
+											.peer=${this.peerChat}
+											style="flex:1"
+										></peer-chat>`
+									: html``}
 							</div>
-							${this.peer
-								? html`<peer-chat
-										.peer=${this.peer}
-										style="flex:1"
-									></peer-chat>`
-								: html``}
 							<div>
 								<sl-button
 									@click=${async () => {
+										if (!this.peer) return;
 										await this.messengerStore.client.createGroupChat({
 											admins: [this.messengerStore.client.client.myPubKey],
 											members: [this.peer],
 											info: {
-												name: `${encodeHashToBase64(this.messengerStore.client.client.myPubKey)}'s group`,
+												name: `${encodeHashToBase64(this.messengerStore.client.client.myPubKey).slice(0, 5)}'s group`,
 											},
 										});
 									}}

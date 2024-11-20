@@ -1,4 +1,10 @@
 import {
+	Profile,
+	ProfilesStore,
+	profilesStoreContext,
+} from '@darksoil-studio/profiles-zome';
+import '@darksoil-studio/profiles-zome/dist/elements/agent-avatar.js';
+import {
 	AgentPubKey,
 	AgentPubKeyB64,
 	EntryHash,
@@ -13,10 +19,12 @@ import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
 import { hashProperty, notifyError, sharedStyles } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
-import { SignalWatcher, joinAsync } from '@tnesh-stack/signals';
+import { AsyncResult, SignalWatcher, joinAsync } from '@tnesh-stack/signals';
+import { EntryRecord } from '@tnesh-stack/utils';
+import ColorHash from 'color-hash';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { classMap } from 'lit/directives/class-map.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 import { messengerStoreContext } from '../context.js';
 import { MessengerStore } from '../messenger-store.js';
@@ -30,7 +38,10 @@ import {
 	Signed,
 	UpdateGroupChat,
 } from '../types.js';
+import { latestProfile } from '../utils.js';
 import './message-input.js';
+
+const colorHash = new ColorHash({ lightness: [0.1, 0.2, 0.3, 0.4] });
 
 @localized()
 @customElement('group-chat')
@@ -40,6 +51,9 @@ export class GroupChat extends SignalWatcher(LitElement) {
 
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
+
+	@consume({ context: profilesStoreContext, subscribe: true })
+	profilesStore!: ProfilesStore;
 
 	private renderChat(
 		myAgents: AgentPubKey[],
@@ -70,10 +84,12 @@ export class GroupChat extends SignalWatcher(LitElement) {
 					<div
 						class="flex-scrollable-y"
 						id="scrolling-chat"
-						style="padding-right: 4px; padding-left: 4px; align-items: start; flex: 1; display: flex; flex-direction: column-reverse"
+						style="padding-right: 4px; padding-left: 4px; gap: 8px; align-items: start; flex: 1; display: flex; flex-direction: column-reverse"
 					>
 						${orderedMessages.map(([messageHash, message]) =>
-							this.renderMessage(messageHash, message, myAgentsB64),
+							myAgentsB64.includes(encodeHashToBase64(message.provenance))
+								? this.renderMessage(messageHash, message)
+								: this.renderMessageToMe(messageHash, message),
 						)}
 					</div>
 				</div>
@@ -85,18 +101,13 @@ export class GroupChat extends SignalWatcher(LitElement) {
 	private renderMessage(
 		messageHash: EntryHashB64,
 		message: Signed<GroupMessage>,
-		myAgentsB64: AgentPubKeyB64[],
 	) {
 		const timestamp = message.signed_content.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
 		return html` <div
-			class=${classMap({
-				'from-me': myAgentsB64.includes(encodeHashToBase64(message.provenance)),
-				message: true,
-				row: true,
-			})}
+			class="from-me message row"
 			style="align-items: end; flex-wrap: wrap; gap: 8px;"
 		>
 			<span style="flex: 1; word-break: break-all"
@@ -125,6 +136,82 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		</div>`;
 	}
 
+	renderAgentNickname(agent: AgentPubKey) {
+		const profile = this.profilesStore.profileForAgent.get(agent).get();
+		if (profile.status !== 'completed' || !profile.value) return html`TODO`;
+		const latestValue = profile.value.latestVersion.get() as AsyncResult<
+			EntryRecord<Profile> | undefined
+		>;
+		if (latestValue.status !== 'completed') return html`TODO`;
+
+		return html`
+			<span
+				style=${styleMap({
+					color: colorHash.hex(encodeHashToBase64(profile.value.profileHash)),
+					'font-weight': 'bold',
+				})}
+				@click=${() => {
+					this.dispatchEvent(
+						new CustomEvent('agent-selected', {
+							bubbles: true,
+							composed: true,
+							detail: {
+								agentPubKey: agent,
+							},
+						}),
+					);
+				}}
+				>${latestValue.value?.entry.nickname}</span
+			>
+		`;
+	}
+
+	private renderMessageToMe(
+		messageHash: EntryHashB64,
+		message: Signed<GroupMessage>,
+	) {
+		const timestamp = message.signed_content.timestamp / 1000;
+		const date = new Date(timestamp);
+		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
+		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
+		const profile = latestProfile(this.profilesStore, message.provenance).get();
+		return html` <div class="row" style="gap: 8px; align-items: end">
+			<agent-avatar .agentPubKey=${message.provenance}></agent-avatar>
+			<div class="colum message" style="gap:8px">
+				${this.renderAgentNickname(message.provenance)}
+				<div class="row" style="gap: 8px; align-items: end; flex-wrap: wrap; ">
+					<span style="flex: 1; word-break: break-all"
+						>${message.signed_content.content.message.message}</span
+					>
+					<div
+						class="placeholder column"
+						style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
+					>
+						${lessThanAMinuteAgo
+							? html`<span>${msg('now')}</span>`
+							: moreThanAnHourAgo
+								? html`
+										<sl-format-date
+											hour="numeric"
+											minute="numeric"
+											hour-format="24"
+											.date=${date}
+										></sl-format-date>
+									`
+								: html`
+										<sl-relative-time
+											style=""
+											sync
+											format="short"
+											.date=${date}
+										>
+										</sl-relative-time>
+									`}
+					</div>
+				</div>
+			</div>
+		</div>`;
+	}
 	async sendMessage(currentGroupHash: EntryHash, message: Message) {
 		try {
 			await this.store.client.sendGroupMessage(

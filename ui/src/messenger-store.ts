@@ -2,6 +2,7 @@ import { LinkedDevicesStore } from '@darksoil-studio/linked-devices-zome';
 import {
 	ActionHash,
 	AgentPubKey,
+	AgentPubKeyB64,
 	EntryHash,
 	EntryHashB64,
 	NewEntryAction,
@@ -19,14 +20,17 @@ import {
 	deletedLinksSignal,
 	deletesForEntrySignal,
 	immutableEntrySignal,
+	joinAsyncMap,
 	latestVersionOfEntrySignal,
 	liveLinksSignal,
 	pipe,
+	uniquify,
 } from '@tnesh-stack/signals';
 import {
 	EntryRecord,
 	HashType,
 	MemoHoloHashMap,
+	mapValues,
 	retype,
 	slice,
 } from '@tnesh-stack/utils';
@@ -36,6 +40,7 @@ import {
 	DeleteGroupChat,
 	Group,
 	GroupMessage,
+	GroupMessengerEntry,
 	PeerMessage,
 	PrivateMessengerEntry,
 	Signed,
@@ -45,7 +50,7 @@ import { asyncReadable } from './utils.js';
 
 interface InternalEntries {
 	privateMessengerEntries: Record<EntryHashB64, PrivateMessengerEntry>;
-	peerMessages: Array<EntryHashB64>;
+	peerMessages: Record<AgentPubKeyB64, Array<EntryHashB64>>;
 	groups: Record<
 		EntryHashB64,
 		{
@@ -69,7 +74,7 @@ export class MessengerStore {
 
 			const value: InternalEntries = {
 				privateMessengerEntries,
-				peerMessages: [],
+				peerMessages: {},
 				groups: {},
 			};
 
@@ -78,7 +83,18 @@ export class MessengerStore {
 			)) {
 				switch (privateMessengerEntry.signed_content.content.type) {
 					case 'PeerMessage':
-						value.peerMessages.push(entryHash);
+						const peerMessage = privateMessengerEntry as Signed<PeerMessage>;
+						const peer =
+							encodeHashToBase64(peerMessage.provenance) !==
+							encodeHashToBase64(this.client.client.myPubKey)
+								? peerMessage.provenance
+								: peerMessage.signed_content.content.recipient;
+						const peerB64 = encodeHashToBase64(peer);
+						if (!value.peerMessages[peerB64]) {
+							value.peerMessages[peerB64] = [];
+						}
+
+						value.peerMessages[peerB64].push(entryHash);
 						break;
 					case 'UpdateGroupChat':
 						const update = privateMessengerEntry as Signed<UpdateGroupChat>;
@@ -153,7 +169,18 @@ export class MessengerStore {
 
 				switch (privateMessageEntryType) {
 					case 'PeerMessage':
-						value.peerMessages.push(entryHash);
+						const peerMessage = signal.app_entry as Signed<PeerMessage>;
+						const peer =
+							encodeHashToBase64(peerMessage.provenance) !==
+							encodeHashToBase64(this.client.client.myPubKey)
+								? peerMessage.provenance
+								: peerMessage.signed_content.content.recipient;
+						const peerB64 = encodeHashToBase64(peer);
+						if (!value.peerMessages[peerB64]) {
+							value.peerMessages[peerB64] = [];
+						}
+
+						value.peerMessages[peerB64].push(entryHash);
 						break;
 					case 'GroupMessage':
 						let groupHash = encodeHashToBase64(
@@ -230,19 +257,15 @@ export class MessengerStore {
 				const agentMessages: Record<EntryHashB64, Signed<PeerMessage>> = {};
 				const theirAgentsB64 = theirAgents.value.map(encodeHashToBase64);
 
-				for (const messageHash of messages.value.peerMessages) {
-					const message = messages.value.privateMessengerEntries[
-						messageHash
-					] as Signed<PeerMessage>;
-					const messageFromThem = theirAgentsB64.includes(
-						encodeHashToBase64(message.provenance),
-					);
-					const messageForThem = theirAgentsB64.includes(
-						encodeHashToBase64(message.signed_content.content.recipient),
-					);
-
-					if (messageForThem || messageFromThem) {
-						agentMessages[messageHash] = message;
+				for (const agent of theirAgentsB64) {
+					const messagesFromThisAgent = messages.value.peerMessages[agent];
+					if (messagesFromThisAgent) {
+						for (const messageHash of messagesFromThisAgent) {
+							const message = messages.value.privateMessengerEntries[
+								messageHash
+							] as Signed<PeerMessage>;
+							agentMessages[messageHash] = message;
+						}
 					}
 				}
 
@@ -299,24 +322,144 @@ export class MessengerStore {
 			}),
 	);
 
-	allChats = new AsyncComputed(() => {
+	allPeerChats = new AsyncComputed<Array<PeerChat>>(() => {
 		const privateMessengerEntries = this.privateMessengerEntries.get();
 		if (privateMessengerEntries.status !== 'completed')
 			return privateMessengerEntries;
 
-		const chats: Array<Chat> = [];
+		let allPeerAgents: AgentPubKey[] = Object.keys(
+			privateMessengerEntries.value.peerMessages,
+		).map(decodeHashFromBase64);
+
+		const linkedDevicesForAllPeerAgents = joinAsyncMap(
+			mapValues(slice(this.allAgentsFor, allPeerAgents), s => s.get()),
+		);
+		if (linkedDevicesForAllPeerAgents.status !== 'completed')
+			return linkedDevicesForAllPeerAgents;
+
+		const agentSets: Array<Array<AgentPubKeyB64>> = [];
+
+		for (const [agent, agents] of Array.from(
+			linkedDevicesForAllPeerAgents.value.entries(),
+		)) {
+			const agentSetForAgentIndex = agentSets.findIndex(
+				a => !!agents.find(a2 => a.includes(encodeHashToBase64(a2))),
+			);
+
+			if (agentSetForAgentIndex === -1) {
+				agentSets.push(agents.map(encodeHashToBase64));
+			} else {
+				agentSets[agentSetForAgentIndex] = Array.from(
+					new Set([
+						...agentSets[agentSetForAgentIndex],
+						...agents.map(encodeHashToBase64),
+					]),
+				);
+			}
+		}
+
+		const peerChats: Array<PeerChat> = [];
+
+		for (const agentSet of agentSets) {
+			let lastActivity: Signed<PeerMessage> | undefined;
+
+			for (const agent of agentSet) {
+				const messagesForAgent =
+					privateMessengerEntries.value.peerMessages[agent];
+				for (const messageHash of messagesForAgent) {
+					const message = privateMessengerEntries.value.privateMessengerEntries[
+						messageHash
+					] as Signed<PeerMessage>;
+
+					if (
+						!lastActivity ||
+						lastActivity.signed_content.timestamp <
+							message.signed_content.timestamp
+					) {
+						lastActivity = message;
+					}
+				}
+			}
+
+			if (lastActivity) {
+				peerChats.push({
+					agents: agentSet.map(decodeHashFromBase64),
+					lastActivity,
+				});
+			}
+		}
+
+		return {
+			status: 'completed',
+			value: peerChats,
+		};
+	});
+
+	allGroupChats = new AsyncComputed<Array<GroupChat>>(() => {
+		const privateMessengerEntries = this.privateMessengerEntries.get();
+		if (privateMessengerEntries.status !== 'completed')
+			return privateMessengerEntries;
+
+		const chats: Array<GroupChat> = [];
 
 		for (const [groupHash, group] of Object.entries(
 			privateMessengerEntries.value.groups,
 		)) {
-			const group = privateMessengerEntries.value.privateMessengerEntries[
+			const createGroup = privateMessengerEntries.value.privateMessengerEntries[
 				groupHash
-			] as Signed<Group>;
+			] as Signed<{ type: 'CreateGroupChat' } & Group>;
+
+			let lastActivity: GroupMessengerEntry = createGroup;
+			let lastGroupVersion: [Timestamp, Group] = [
+				createGroup.signed_content.timestamp,
+				createGroup.signed_content.content,
+			];
+
+			for (const messageHash of group.messages) {
+				const message =
+					privateMessengerEntries.value.privateMessengerEntries[messageHash];
+
+				if (
+					lastActivity.signed_content.timestamp <
+					message.signed_content.timestamp
+				) {
+					lastActivity = message as Signed<
+						{ type: 'GroupMessage' } & GroupMessage
+					>;
+				}
+			}
+
+			for (const updateHash of group.updates) {
+				const update = privateMessengerEntries.value.privateMessengerEntries[
+					updateHash
+				] as Signed<{ type: 'UpdateGroupChat' } & UpdateGroupChat>;
+
+				if (
+					lastActivity.signed_content.timestamp <
+					update.signed_content.timestamp
+				) {
+					lastActivity = update;
+				}
+				if (lastGroupVersion[0] < update.signed_content.timestamp) {
+					lastGroupVersion = [
+						update.signed_content.timestamp,
+						update.signed_content.content.group,
+					];
+				}
+			}
+
+			for (const deleteHash of group.deletes) {
+				const deleteGroup = privateMessengerEntries.value
+					.privateMessengerEntries[deleteHash] as Signed<
+					{ type: 'DeleteGroupChat' } & DeleteGroupChat
+				>;
+
+				lastActivity = deleteGroup;
+			}
 
 			chats.push({
-				type: 'GroupChat',
-				lastActivity: Date.now(), // TODO CHANGE THIIIS
-				group: group.signed_content.content,
+				lastActivity,
+				currentGroup: lastGroupVersion[1],
 				groupHash: decodeHashFromBase64(groupHash),
 			});
 		}
@@ -326,16 +469,50 @@ export class MessengerStore {
 			value: chats,
 		};
 	});
+
+	allChats = new AsyncComputed<Array<Chat>>(() => {
+		const allGroupChats = this.allGroupChats.get();
+		const allPeerChats = this.allPeerChats.get();
+		if (allGroupChats.status !== 'completed') return allGroupChats;
+		if (allPeerChats.status !== 'completed') return allPeerChats;
+
+		const groupChats = allGroupChats.value.map(g => ({
+			type: 'GroupChat' as const,
+			...g,
+		}));
+		const peerChats = allPeerChats.value.map(p => ({
+			type: 'PeerChat' as const,
+			...p,
+		}));
+
+		const chats = [...groupChats, ...peerChats].sort(
+			(c1, c2) =>
+				c2.lastActivity.signed_content.timestamp -
+				c1.lastActivity.signed_content.timestamp,
+		);
+
+		return {
+			status: 'completed',
+			value: chats,
+		};
+	});
+}
+
+export interface PeerChat {
+	agents: AgentPubKey[];
+	lastActivity: Signed<PeerMessage>;
+}
+
+export interface GroupChat {
+	lastActivity: GroupMessengerEntry;
+	groupHash: EntryHash;
+	currentGroup: Group;
 }
 
 export type Chat =
-	| {
+	| ({
 			type: 'PeerChat';
-			lastActivity: Timestamp;
-	  }
-	| {
+	  } & PeerChat)
+	| ({
 			type: 'GroupChat';
-			lastActivity: Timestamp;
-			groupHash: EntryHash;
-			group: Group;
-	  };
+	  } & GroupChat);
