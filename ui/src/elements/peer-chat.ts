@@ -33,11 +33,12 @@ export class PeerChat extends SignalWatcher(LitElement) {
 	store!: MessengerStore;
 
 	private renderChat(
-		myAgents: AgentPubKey[],
 		messages: Record<EntryHashB64, Signed<PeerMessage>>,
+		myAgents: AgentPubKey[],
+		theirAgents: AgentPubKey[],
 	) {
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
-		const messageSets = orderInMessageSets(messages);
+		const messageSets = orderInMessageSets(messages, [myAgents, theirAgents]);
 
 		return html`<div class="column" style="flex: 1;">
 			<div class="flex-scrollable-parent">
@@ -139,10 +140,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 	}
 
 	render() {
-		const messages = joinAsync([
-			this.store.allMyAgents.get(),
-			this.store.peerChats.get(this.peer).get(),
-		]);
+		const messages = this.store.peerChats.get(this.peer).get();
 		switch (messages.status) {
 			case 'pending':
 				return html`
@@ -157,7 +155,11 @@ export class PeerChat extends SignalWatcher(LitElement) {
 					.error=${messages.error}
 				></display-error>`;
 			case 'completed':
-				return this.renderChat(messages.value[0], messages.value[1]);
+				return this.renderChat(
+					messages.value.messages,
+					messages.value.myAgentSet,
+					messages.value.theirAgentSet,
+				);
 		}
 	}
 

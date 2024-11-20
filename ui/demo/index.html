@@ -127,7 +127,7 @@
 											this.requestUpdate();
 										}}
 										@peer-chat-selected=${e => {
-											this.peerChat = e.detail.peerChat.agents[0];
+											this.peerChat = e.detail.peerChat.theirAgentSet[0];
 											this.groupHash = undefined;
 											this.requestUpdate();
 										}}

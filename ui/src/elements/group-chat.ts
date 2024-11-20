@@ -62,8 +62,12 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		updates: Record<EntryHashB64, Signed<UpdateGroupChat>>,
 		deletes: Record<EntryHashB64, Signed<DeleteGroupChat>>,
 		messages: Record<EntryHashB64, Signed<GroupMessage>>,
+		theirAgentSets: Array<Array<AgentPubKey>>,
 	) {
-		const messageSets = orderInMessageSets(messages);
+		const messageSets = orderInMessageSets(messages, [
+			myAgents,
+			...theirAgentSets,
+		]);
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
 
 		const orderedUpdates = Object.entries(updates).sort(
@@ -316,6 +320,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 					group.updates,
 					group.deletes,
 					group.messages,
+					group.theirAgentSets,
 				);
 		}
 	}

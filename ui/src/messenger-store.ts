@@ -224,9 +224,11 @@ export class MessengerStore {
 		(agent: AgentPubKey) =>
 			new AsyncComputed(() => {
 				const messages = this.internalEntries.get();
+				const myAgents = this.allMyAgents.get();
 				const theirAgents = this.allAgentsFor.get(agent).get();
 				if (messages.status !== 'completed') return messages;
 				if (theirAgents.status !== 'completed') return theirAgents;
+				if (myAgents.status !== 'completed') return myAgents;
 
 				const agentMessages: Record<EntryHashB64, Signed<PeerMessage>> = {};
 				const theirAgentsB64 = theirAgents.value.map(encodeHashToBase64);
@@ -245,7 +247,11 @@ export class MessengerStore {
 
 				return {
 					status: 'completed',
-					value: agentMessages,
+					value: {
+						messages: agentMessages,
+						myAgentSet: myAgents.value,
+						theirAgentSet: theirAgents.value,
+					},
 				};
 			}),
 	);
@@ -256,6 +262,8 @@ export class MessengerStore {
 				const privateMessengerEntries = this.internalEntries.get();
 				if (privateMessengerEntries.status !== 'completed')
 					return privateMessengerEntries;
+				const myAgents = this.allMyAgents.get();
+				if (myAgents.status !== 'completed') return myAgents;
 				const entryHashB64 = encodeHashToBase64(groupHash);
 				const group = privateMessengerEntries.value.groups[entryHashB64];
 
@@ -268,18 +276,76 @@ export class MessengerStore {
 				const messages: Record<EntryHashB64, Signed<GroupMessage>> = {};
 				const updates: Record<EntryHashB64, Signed<UpdateGroupChat>> = {};
 				const deletes: Record<EntryHashB64, Signed<DeleteGroupChat>> = {};
+				const theirAgents: AgentPubKey[] = [];
 
 				for (const messageHash of group.messages) {
-					messages[messageHash] = privateMessengerEntries.value
-						.privateMessengerEntries[messageHash] as Signed<GroupMessage>;
+					const message = privateMessengerEntries.value.privateMessengerEntries[
+						messageHash
+					] as Signed<GroupMessage>;
+					messages[messageHash] = message;
+
+					const author = message.provenance;
+
+					if (
+						!myAgents.value.find(
+							a => encodeHashToBase64(a) === encodeHashToBase64(author),
+						)
+					) {
+						theirAgents.push(author);
+					}
 				}
 				for (const deleteHash of group.deletes) {
 					deletes[deleteHash] = privateMessengerEntries.value
 						.privateMessengerEntries[deleteHash] as Signed<DeleteGroupChat>;
+					const author = deletes[deleteHash].provenance;
+
+					if (
+						!myAgents.value.find(
+							a => encodeHashToBase64(a) === encodeHashToBase64(author),
+						)
+					) {
+						theirAgents.push(author);
+					}
 				}
 				for (const updateHash of group.updates) {
 					updates[updateHash] = privateMessengerEntries.value
 						.privateMessengerEntries[updateHash] as Signed<UpdateGroupChat>;
+					const author = updates[updateHash].provenance;
+
+					if (
+						!myAgents.value.find(
+							a => encodeHashToBase64(a) === encodeHashToBase64(author),
+						)
+					) {
+						theirAgents.push(author);
+					}
+				}
+
+				const agentsLinkedDevices = joinAsyncMap(
+					mapValues(slice(this.allAgentsFor, theirAgents), s => s.get()),
+				);
+				if (agentsLinkedDevices.status !== 'completed')
+					return agentsLinkedDevices;
+
+				const theirAgentSets: Array<Array<AgentPubKey>> = [];
+
+				for (const agents of Array.from(agentsLinkedDevices.value.values())) {
+					const currentAgentSet = theirAgentSets.findIndex(agentSet =>
+						agentSet.find(agent =>
+							agents.find(
+								a => encodeHashToBase64(a) === encodeHashToBase64(agent),
+							),
+						),
+					);
+
+					if (currentAgentSet === -1) {
+						theirAgentSets.push(agents);
+					} else {
+						theirAgentSets[currentAgentSet] = uniquify([
+							...theirAgentSets[currentAgentSet],
+							...agents,
+						]);
+					}
 				}
 
 				return {
@@ -291,6 +357,8 @@ export class MessengerStore {
 						messages,
 						updates,
 						deletes,
+						myAgentSet: myAgents.value,
+						theirAgentSets,
 					},
 				};
 			}),
@@ -358,7 +426,7 @@ export class MessengerStore {
 
 			if (lastActivity) {
 				peerChats.push({
-					agents: agentSet.map(decodeHashFromBase64),
+					theirAgentSet: agentSet.map(decodeHashFromBase64),
 					lastActivity,
 				});
 			}
@@ -474,7 +542,7 @@ export class MessengerStore {
 }
 
 export interface PeerChat {
-	agents: AgentPubKey[];
+	theirAgentSet: AgentPubKey[];
 	lastActivity: Signed<PeerMessage>;
 }
 

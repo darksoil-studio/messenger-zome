@@ -52,10 +52,10 @@ export class AllChats extends SignalWatcher(LitElement) {
 		>
 			<agent-avatar
 				style="align-self: center"
-				.agentPubKey=${chat.agents[0]}
+				.agentPubKey=${chat.theirAgentSet[0]}
 			></agent-avatar>
 			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
-				<span>${this.renderAgentNickname(chat.agents[0])}</span>
+				<span>${this.renderAgentNickname(chat.theirAgentSet[0])}</span>
 				<span class="placeholder last-activity"
 					>${chat.lastActivity.signed_content.content.message.message}</span
 				>
