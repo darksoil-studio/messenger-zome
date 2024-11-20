@@ -52,15 +52,13 @@ export class AllChats extends SignalWatcher(LitElement) {
 				.agentPubKey=${chat.agents[0]}
 			></agent-avatar>
 			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
-				<span style="font-weight: bold"
-					>${this.renderAgentNickname(chat.agents[0])}</span
-				>
+				<span>${this.renderAgentNickname(chat.agents[0])}</span>
 				<span class="placeholder last-activity"
 					>${chat.lastActivity.signed_content.content.message.message}</span
 				>
 			</div>
 
-			<div class="placeholder" style="display: contents">
+			<div class="placeholder time" style="display: contents">
 				${this.renderTime(chat.lastActivity.signed_content.timestamp)}
 			</div>
 		</div>`;
@@ -125,11 +123,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 		>;
 		if (latestValue.status !== 'completed') return html`TODO`;
 
-		return html`
-			<span style="font-weight: bold"
-				>${latestValue.value?.entry.nickname}</span
-			>
-		`;
+		return html`<span>${latestValue.value?.entry.nickname}</span>`;
 	}
 
 	renderGroupLastActivity(groupMessengerEntry: GroupMessengerEntry) {
@@ -166,13 +160,13 @@ export class AllChats extends SignalWatcher(LitElement) {
 				.initials=${group.info.name.slice(0, 2)}
 			></sl-avatar>
 			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
-				<span style="font-weight: bold">${group.info.name}</span>
+				<span class="chat-name">${group.info.name}</span>
 				<span class="placeholder last-activity"
 					>${this.renderGroupLastActivity(lastActivity)}</span
 				>
 			</div>
 
-			<div class="placeholder" style="display: contents">
+			<div class="placeholder time" style="display: contents">
 				${this.renderTime(lastActivity.signed_content.timestamp)}
 			</div>
 		</div>`;
@@ -222,9 +216,15 @@ export class AllChats extends SignalWatcher(LitElement) {
 				display: flex;
 			}
 			.last-activity {
+				font-size: 14px;
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
+			}
+			.chat-name {
+			}
+			.time {
+				font-size: 14px;
 			}
 		`,
 	];

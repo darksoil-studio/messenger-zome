@@ -11,18 +11,18 @@ export const messengerStyles = [
 			box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px;
 			background-color: var(--sl-color-neutral-100, white);
 		}
-		.from-me {
+		.from-me .message {
 			background-color: var(--sl-color-primary-600, blue);
 			align-self: end;
 			color: var(--sl-color-neutral-0, white);
 		}
-		.from-me sl-relative-time {
+		.from-me .message sl-relative-time {
 			color: var(--sl-color-neutral-100, white);
 		}
-		.from-me sl-format-date {
+		.from-me .message sl-format-date {
 			color: var(--sl-color-neutral-100, white);
 		}
-		.from-me span {
+		.from-me .message span {
 			color: var(--sl-color-neutral-100, white);
 		}
 	`,

@@ -27,6 +27,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { messengerStoreContext } from '../context.js';
+import { MessageSet, orderInMessageSets } from '../message-set.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
 import {
@@ -62,10 +63,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		deletes: Record<EntryHashB64, Signed<DeleteGroupChat>>,
 		messages: Record<EntryHashB64, Signed<GroupMessage>>,
 	) {
-		const orderedMessages = Object.entries(messages).sort(
-			(m1, m2) =>
-				m2[1].signed_content.timestamp - m1[1].signed_content.timestamp,
-		);
+		const messageSets = orderInMessageSets(messages);
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
 
 		const orderedUpdates = Object.entries(updates).sort(
@@ -78,18 +76,22 @@ export class GroupChat extends SignalWatcher(LitElement) {
 				? this.groupHash
 				: decodeHashFromBase64(lastUpdate[0]);
 
-		return html`<div class="column" style="flex: 1; margin-top: 12px">
+		return html`<div class="column" style="flex: 1;">
 			<div class="flex-scrollable-parent">
 				<div class="flex-scrollable-container">
 					<div
 						class="flex-scrollable-y"
 						id="scrolling-chat"
-						style="padding-right: 4px; padding-left: 4px; gap: 8px; align-items: start; flex: 1; display: flex; flex-direction: column-reverse"
+						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
 					>
-						${orderedMessages.map(([messageHash, message]) =>
-							myAgentsB64.includes(encodeHashToBase64(message.provenance))
-								? this.renderMessage(messageHash, message)
-								: this.renderMessageToMe(messageHash, message),
+						<div style="margin-bottom: 4px">
+						</div>
+						${messageSets.map(messageSet =>
+							myAgentsB64.includes(
+								encodeHashToBase64(messageSet.messages[0][1].provenance),
+							)
+								? this.renderMessageSetFromMe(messageSet)
+								: this.renderMessageSetToMe(messageSet),
 						)}
 					</div>
 				</div>
@@ -98,42 +100,57 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		</div> `;
 	}
 
-	private renderMessage(
-		messageHash: EntryHashB64,
-		message: Signed<GroupMessage>,
-	) {
-		const timestamp = message.signed_content.timestamp / 1000;
+	private renderMessageSetFromMe(messageSet: MessageSet<GroupMessage>) {
+		const lastMessage = messageSet.messages[0][1];
+		const timestamp = lastMessage.signed_content.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
-		return html` <div
-			class="from-me message row"
-			style="align-items: end; flex-wrap: wrap; gap: 8px;"
-		>
-			<span style="flex: 1; word-break: break-all"
-				>${message.signed_content.content.message.message}</span
-			>
-			<div
-				class="placeholder column"
-				style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
-			>
-				${lessThanAMinuteAgo
-					? html`<span>${msg('now')}</span>`
-					: moreThanAnHourAgo
-						? html`
-								<sl-format-date
-									hour="numeric"
-									minute="numeric"
-									hour-format="24"
-									.date=${date}
-								></sl-format-date>
-							`
-						: html`
-								<sl-relative-time style="" sync format="short" .date=${date}>
-								</sl-relative-time>
-							`}
+		return html`
+			<div class="column from-me" style="flex-direction: column-reverse">
+				${messageSet.messages.map(
+					([messageHash, message], i) => html`
+						<div
+							class="message row"
+							style="align-items: end; flex-wrap: wrap; gap: 8px;"
+						>
+							<span style="flex: 1; word-break: break-all"
+								>${message.signed_content.content.message.message}</span
+							>
+							${i === 0
+								? html`
+										<div
+											class="placeholder column"
+											style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
+										>
+											${lessThanAMinuteAgo
+												? html`<span>${msg('now')}</span>`
+												: moreThanAnHourAgo
+													? html`
+															<sl-format-date
+																hour="numeric"
+																minute="numeric"
+																hour-format="24"
+																.date=${date}
+															></sl-format-date>
+														`
+													: html`
+															<sl-relative-time
+																style=""
+																sync
+																format="short"
+																.date=${date}
+															>
+															</sl-relative-time>
+														`}
+										</div>
+									`
+								: html``}
+						</div>
+					`,
+				)}
 			</div>
-		</div>`;
+		`;
 	}
 
 	renderAgentNickname(agent: AgentPubKey) {
@@ -166,49 +183,71 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		`;
 	}
 
-	private renderMessageToMe(
-		messageHash: EntryHashB64,
-		message: Signed<GroupMessage>,
-	) {
-		const timestamp = message.signed_content.timestamp / 1000;
+	private renderMessageSetToMe(messageSet: MessageSet<GroupMessage>) {
+		const lastMessage = messageSet.messages[0][1];
+		const timestamp = lastMessage.signed_content.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
-		const profile = latestProfile(this.profilesStore, message.provenance).get();
 		return html` <div class="row" style="gap: 8px; align-items: end">
-			<agent-avatar .agentPubKey=${message.provenance}></agent-avatar>
-			<div class="colum message" style="gap:8px">
-				${this.renderAgentNickname(message.provenance)}
-				<div class="row" style="gap: 8px; align-items: end; flex-wrap: wrap; ">
-					<span style="flex: 1; word-break: break-all"
-						>${message.signed_content.content.message.message}</span
-					>
-					<div
-						class="placeholder column"
-						style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
-					>
-						${lessThanAMinuteAgo
-							? html`<span>${msg('now')}</span>`
-							: moreThanAnHourAgo
-								? html`
-										<sl-format-date
-											hour="numeric"
-											minute="numeric"
-											hour-format="24"
-											.date=${date}
-										></sl-format-date>
-									`
-								: html`
-										<sl-relative-time
-											style=""
-											sync
-											format="short"
-											.date=${date}
-										>
-										</sl-relative-time>
-									`}
+			<agent-avatar .agentPubKey=${lastMessage.provenance}></agent-avatar>
+
+			<div
+				class="column"
+				style="flex-direction: column-reverse; align-items: start"
+			>
+				${messageSet.messages.map(
+					([messageHash, message], i) => html`
+
+						<div class="colum message" style="gap:8px">
+							${
+								i === messageSet.messages.length - 1
+									? this.renderAgentNickname(message.provenance)
+									: html``
+							}
+							<div
+								class="row"
+								style="gap: 8px; align-items: end; flex-wrap: wrap; "
+							>
+								<span style="flex: 1; word-break: break-all"
+									>${message.signed_content.content.message.message}</span
+								>
+								${
+									i === 0
+										? html`
+												<div
+													class="placeholder column"
+													style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
+												>
+													${lessThanAMinuteAgo
+														? html`<span>${msg('now')}</span>`
+														: moreThanAnHourAgo
+															? html`
+																	<sl-format-date
+																		hour="numeric"
+																		minute="numeric"
+																		hour-format="24"
+																		.date=${date}
+																	></sl-format-date>
+																`
+															: html`
+																	<sl-relative-time
+																		style=""
+																		sync
+																		format="short"
+																		.date=${date}
+																	>
+																	</sl-relative-time>
+																`}
+												</div>
+											`
+										: html``
+								}
+							</div>
+						</div>
 					</div>
-				</div>
+				`,
+				)}
 			</div>
 		</div>`;
 	}

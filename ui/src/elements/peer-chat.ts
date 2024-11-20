@@ -17,6 +17,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 
 import { messengerStoreContext } from '../context.js';
+import { MessageSet, orderInMessageSets } from '../message-set.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
 import { Message, PeerMessage, Signed } from '../types.js';
@@ -35,23 +36,20 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		myAgents: AgentPubKey[],
 		messages: Record<EntryHashB64, Signed<PeerMessage>>,
 	) {
-		const orderedMessages = Object.entries(messages).sort(
-			(m1, m2) =>
-				m2[1].signed_content.timestamp - m1[1].signed_content.timestamp,
-		);
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
+		const messageSets = orderInMessageSets(messages);
 
-		return html`<div class="column" style="flex: 1; margin-top: 12px">
+		return html`<div class="column" style="flex: 1;">
 			<div class="flex-scrollable-parent">
 				<div class="flex-scrollable-container">
 					<div
 						class="flex-scrollable-y"
 						id="scrolling-chat"
-						style="padding-right: 4px; padding-left: 4px; align-items: start; flex: 1; display: flex; flex-direction: column-reverse"
+						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
 					>
-						${orderedMessages.map(([messageHash, message]) =>
-							this.renderMessage(messageHash, message, myAgentsB64),
-						)}
+						<div style="margin-bottom: 4px">
+						</div>
+						${messageSets.map(messageSet => this.renderMessageSet(messageSet, myAgentsB64))}
 					</div>
 				</div>
 			</div>
@@ -59,47 +57,69 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		</div> `;
 	}
 
-	private renderMessage(
-		messageHash: EntryHashB64,
-		message: Signed<PeerMessage>,
+	private renderMessageSet(
+		messageSet: MessageSet<PeerMessage>,
 		myAgentsB64: AgentPubKeyB64[],
 	) {
-		const timestamp = message.signed_content.timestamp / 1000;
+		const lastMessage = messageSet.messages[0];
+		const timestamp = lastMessage[1].signed_content.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
-		return html` <div
-			class=${classMap({
-				'from-me': myAgentsB64.includes(encodeHashToBase64(message.provenance)),
-				message: true,
-				row: true,
-			})}
-			style="align-items: end; flex-wrap: wrap; gap: 8px;"
-		>
-			<span style="flex: 1; word-break: break-all"
-				>${message.signed_content.content.message.message}</span
-			>
+		const fromMe = myAgentsB64.includes(
+			encodeHashToBase64(lastMessage[1].provenance),
+		);
+		return html`
 			<div
-				class="placeholder column"
-				style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
+				class=${classMap({
+					'from-me': fromMe,
+					column: true,
+				})}
+				style="align-items: start; flex-direction: column-reverse"
 			>
-				${lessThanAMinuteAgo
-					? html`<span>${msg('now')}</span>`
-					: moreThanAnHourAgo
-						? html`
-								<sl-format-date
-									hour="numeric"
-									minute="numeric"
-									hour-format="24"
-									.date=${date}
-								></sl-format-date>
-							`
-						: html`
-								<sl-relative-time style="" sync format="short" .date=${date}>
-								</sl-relative-time>
-							`}
+				${messageSet.messages.map(
+					([messageHash, message], i) => html`
+						<div
+							class="message row"
+							style="align-items: end; flex-wrap: wrap; gap: 8px;"
+						>
+							<span style="flex: 1; word-break: break-all"
+								>${message.signed_content.content.message.message}</span
+							>
+							${i === 0
+								? html`
+										<div
+											class="placeholder column"
+											style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
+										>
+											${lessThanAMinuteAgo
+												? html`<span>${msg('now')}</span>`
+												: moreThanAnHourAgo
+													? html`
+															<sl-format-date
+																hour="numeric"
+																minute="numeric"
+																hour-format="24"
+																.date=${date}
+															></sl-format-date>
+														`
+													: html`
+															<sl-relative-time
+																style=""
+																sync
+																format="short"
+																.date=${date}
+															>
+															</sl-relative-time>
+														`}
+										</div>
+									`
+								: html``}
+						</div>
+					`,
+				)}
 			</div>
-		</div>`;
+		`;
 	}
 
 	async sendMessage(message: Message) {
