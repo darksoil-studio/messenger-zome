@@ -88,7 +88,8 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		});
 	}
 
-	/** */
+	/** Linked Devices */
+
 	async synchronizeWithLinkedDevice(linkedDevice: AgentPubKey) {
 		await this.callZome('synchronize_with_linked_device', linkedDevice);
 	}

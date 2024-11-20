@@ -73,7 +73,10 @@ export class MessengerStore {
 					signal.link_type !== 'AgentToLinkedDevices'
 				)
 					return;
-				const linkedDevice = signal.action.hashed.content.target_address;
+				const linkedDevice = retype(
+					signal.action.hashed.content.target_address,
+					HashType.AGENT,
+				);
 
 				this.client.synchronizeWithLinkedDevice(linkedDevice);
 			});

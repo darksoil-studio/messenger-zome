@@ -61,6 +61,29 @@ pub fn receive_private_messenger_entry(
     Ok(())
 }
 
+pub fn receive_private_messenger_entries(
+    their_private_messenger_entries: BTreeMap<EntryHashB64, PrivateMessengerEntry>,
+) -> ExternResult<()> {
+    let my_private_messenger_entries = query_private_messenger_entries(())?;
+
+    for (entry_hash, private_messenger_entry) in their_private_messenger_entries {
+        if my_private_messenger_entries.contains_key(&entry_hash) {
+            // We already have this message committed
+            continue;
+        }
+
+        let valid = verify_signed(private_messenger_entry.0.clone())?;
+
+        if !valid {
+            return Err(wasm_error!("Invalid signature for PeerMessage"));
+        }
+
+        create_relaxed(EntryTypes::PrivateMessengerEntry(private_messenger_entry))?;
+    }
+
+    Ok(())
+}
+
 pub fn create_private_messenger_entry(
     content: PrivateMessengerEntryContent,
     recipients: Vec<AgentPubKey>,

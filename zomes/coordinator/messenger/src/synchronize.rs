@@ -7,6 +7,7 @@ use crate::{
     },
     linked_devices::query_my_linked_devices,
     private_messenger_entries::query_private_messenger_entries,
+    MessengerRemoteSignal,
 };
 
 #[hdk_extern(infallible)]
@@ -87,6 +88,18 @@ pub fn synchronize_with_linked_devices() -> ExternResult<()> {
             )?;
         }
     }
+
+    Ok(())
+}
+
+#[hdk_extern]
+pub fn synchronize_with_linked_device(linked_device: AgentPubKey) -> ExternResult<()> {
+    let entries = query_private_messenger_entries(())?;
+
+    send_remote_signal(
+        MessengerRemoteSignal::SynchronizeEntries(entries),
+        vec![linked_device],
+    )?;
 
     Ok(())
 }

@@ -159,7 +159,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 				);
 			}}
 		>
-			${group.info.avatar_hash === undefined
+			${!group.info.avatar_hash
 				? html`
 						<sl-avatar
 							style="align-self: center; --size: 32px"

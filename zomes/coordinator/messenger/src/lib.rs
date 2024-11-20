@@ -1,6 +1,11 @@
+use std::collections::BTreeMap;
+
 use hdk::prelude::*;
+use linked_devices::query_my_linked_devices;
 use messenger_integrity::*;
-use private_messenger_entries::receive_private_messenger_entry;
+use private_messenger_entries::{
+    receive_private_messenger_entries, receive_private_messenger_entry,
+};
 
 mod agent_encrypted_message;
 mod linked_devices;
@@ -59,6 +64,7 @@ pub enum Signal {
 #[derive(Serialize, Deserialize, Debug)]
 pub enum MessengerRemoteSignal {
     NewPrivateMessengerEntry(PrivateMessengerEntry),
+    SynchronizeEntries(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
 }
 
 #[hdk_extern]
@@ -67,6 +73,16 @@ pub fn recv_remote_signal(signal: MessengerRemoteSignal) -> ExternResult<()> {
     match signal {
         MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry) => {
             receive_private_messenger_entry(private_messenger_entry)
+        }
+        MessengerRemoteSignal::SynchronizeEntries(entries) => {
+            let call_info = call_info()?;
+            let my_devices = query_my_linked_devices()?;
+
+            if !my_devices.contains(&call_info.provenance) {
+                return Err(wasm_error!("Agent {} tried to synchronize its entries with us but we have not linked devices", call_info.provenance));
+            }
+
+            receive_private_messenger_entries(entries)
         }
     }
 }
