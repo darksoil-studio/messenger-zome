@@ -164,6 +164,15 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
                     action: action.clone(),
                     app_entry: app_entry.clone(),
                 })?;
+                match app_entry {
+                    EntryTypes::PrivateMessengerEntry(entry) => call_remote(
+                        agent_info()?.agent_latest_pubkey,
+                        zome_info()?.name,
+                        "notify_private_messenger_entry_recipients".into(),
+                        None,
+                        entry,
+                    )?,
+                };
             }
             Ok(())
         }

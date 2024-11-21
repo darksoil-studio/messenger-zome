@@ -1,25 +1,22 @@
 use hdk::prelude::*;
 use messenger_integrity::*;
 
-use crate::{
-    linked_devices::get_all_agents_for, private_messenger_entries::create_private_messenger_entry,
-};
+use crate::{signed::build_signed, utils::create_relaxed};
 
 #[hdk_extern]
 pub fn send_peer_message(message_content: PeerMessage) -> ExternResult<()> {
-    let recipients = get_all_agents_for(message_content.recipient.clone())?;
+    let signed = build_signed(PrivateMessengerEntryContent::PeerMessage(message_content))?;
 
-    let content = PrivateMessengerEntryContent::PeerMessage(message_content);
+    let private_messenger_entry = PrivateMessengerEntry(signed.clone());
+    let entry = EntryTypes::PrivateMessengerEntry(private_messenger_entry.clone());
 
-    create_private_messenger_entry(content, recipients)?;
+    create_relaxed(entry)?;
 
     Ok(())
 }
 
 #[hdk_extern]
 pub fn mark_peer_messages_as_read(read_peer_messages: ReadPeerMessages) -> ExternResult<()> {
-    let recipients = get_all_agents_for(read_peer_messages.peer.clone())?;
-
     let read_messages_hashes_chunks: Vec<Vec<EntryHash>> = read_peer_messages
         .read_messages_hashes
         .chunks(16)
@@ -32,8 +29,11 @@ pub fn mark_peer_messages_as_read(read_peer_messages: ReadPeerMessages) -> Exter
             peer: read_peer_messages.peer.clone(),
             read_messages_hashes: chunk,
         });
+        let signed = build_signed(content)?;
 
-        create_private_messenger_entry(content, recipients.clone())?;
+        create_relaxed(EntryTypes::PrivateMessengerEntry(PrivateMessengerEntry(
+            signed,
+        )))?;
     }
 
     Ok(())

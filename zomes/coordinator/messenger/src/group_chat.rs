@@ -2,61 +2,57 @@ use hdk::prelude::*;
 use messenger_integrity::*;
 
 use crate::{
-    linked_devices::get_all_agents_for,
-    private_messenger_entries::{create_private_messenger_entry, query_private_messenger_entries},
+    linked_devices::get_all_agents_for, private_messenger_entries::query_private_messenger_entries,
+    signed::build_signed,
 };
 
 #[hdk_extern]
 pub fn create_group_chat(group: Group) -> ExternResult<EntryHash> {
     let content = PrivateMessengerEntryContent::CreateGroupChat(group.clone());
+    let signed = build_signed(content)?;
+    let private_messenger_entry = PrivateMessengerEntry(signed.clone());
+    let entry = EntryTypes::PrivateMessengerEntry(private_messenger_entry.clone());
+    let entry_hash = hash_entry(&entry)?;
 
-    let mut all_chat_members = group.members;
+    create_entry(entry)?;
 
-    all_chat_members.append(&mut group.admins.clone());
-
-    let all_chat_agents: Vec<AgentPubKey> = get_all_agents_for_members(all_chat_members)?;
-    create_private_messenger_entry(content, all_chat_agents)
+    Ok(entry_hash)
 }
 
 #[hdk_extern]
 pub fn send_group_message(group_message: GroupMessage) -> ExternResult<()> {
-    let private_messenger_entries = query_private_messenger_entries(())?;
+    let content = PrivateMessengerEntryContent::GroupMessage(group_message.clone());
+    let signed = build_signed(content)?;
+    let private_messenger_entry = PrivateMessengerEntry(signed.clone());
+    let entry = EntryTypes::PrivateMessengerEntry(private_messenger_entry.clone());
 
-    let Some(group) = private_messenger_entries.get(&EntryHashB64::from(
-        group_message.current_group_hash.clone(),
-    )) else {
-        return Err(wasm_error!("Group not found"));
-    };
-
-    let group = match group.0.signed_content.content.clone() {
-        PrivateMessengerEntryContent::CreateGroupChat(group) => group,
-        PrivateMessengerEntryContent::UpdateGroupChat(update_group) => update_group.group,
-        _ => Err(wasm_error!(
-            "Given current_group_hash does not correspond to a CreateGroupChat or UpdateGroupChat"
-        ))?,
-    };
-
-    let mut recipients = group.members;
-    recipients.append(&mut group.admins.clone());
-
-    let all_recipients_agents = get_all_agents_for_members(recipients)?;
-
-    let content = PrivateMessengerEntryContent::GroupMessage(group_message);
-
-    create_private_messenger_entry(content, all_recipients_agents)?;
+    create_entry(entry)?;
 
     Ok(())
 }
 
-pub fn get_all_agents_for_members(agents: Vec<AgentPubKey>) -> ExternResult<Vec<AgentPubKey>> {
+pub fn get_all_agent_sets_for_agents(
+    agents: Vec<AgentPubKey>,
+) -> ExternResult<Vec<Vec<AgentPubKey>>> {
     let all_agents = agents
         .into_iter()
         .map(|agent| get_all_agents_for(agent))
-        .collect::<ExternResult<Vec<Vec<AgentPubKey>>>>()?
-        .into_iter()
-        .flatten()
-        .collect();
+        .collect::<ExternResult<Vec<Vec<AgentPubKey>>>>()?;
     Ok(all_agents)
+}
+
+pub fn get_all_agent_sets_for_current_group(
+    group_hash: &EntryHash,
+) -> ExternResult<Option<Vec<Vec<AgentPubKey>>>> {
+    let Some(group) = get_latest_version_for_group(&group_hash)? else {
+        return Ok(None);
+    };
+    let mut recipients = group.members;
+    recipients.append(&mut group.admins.clone());
+
+    let all_recipients_agents = get_all_agent_sets_for_agents(recipients)?;
+
+    Ok(Some(all_recipients_agents))
 }
 
 pub fn get_latest_version_for_group(group_hash: &EntryHash) -> ExternResult<Option<Group>> {

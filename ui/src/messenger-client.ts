@@ -23,6 +23,11 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		super(client, roleName, zomeName);
 	}
 
+	callZome(fn: string, p: any) {
+		console.log('fn', fn);
+		return super.callZome(fn, p);
+	}
+
 	async queryPrivateMessengerEntries(): Promise<
 		Record<EntryHashB64, PrivateMessengerEntry>
 	> {

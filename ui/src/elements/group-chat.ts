@@ -344,7 +344,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 				behavior: 'smooth',
 			});
 		} catch (e) {
-			console.log(e);
+			console.error(e);
 			notifyError(msg(`Error sending the message`));
 		}
 	}

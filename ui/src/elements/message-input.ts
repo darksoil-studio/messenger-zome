@@ -39,7 +39,7 @@ export class MessageInput extends SignalWatcher(LitElement) {
 					id="text-input"
 					resize="auto"
 					rows="1"
-					style="flex: 1; margin: 2px"
+					style="flex: 1; margin: 2px;"
 					@keypress=${(event: KeyboardEvent) => {
 						if (event.key === 'Enter') {
 							const input = this.shadowRoot!.getElementById(
@@ -75,6 +75,9 @@ export class MessageInput extends SignalWatcher(LitElement) {
 		css`
 			sl-textarea::part(base) {
 				border-radius: 20px;
+			}
+			sl-textarea::part(textarea) {
+				min-height: 38px;
 			}
 		`,
 	];

@@ -1,6 +1,7 @@
 import {
 	AgentPubKey,
 	AgentPubKeyB64,
+	EntryHash,
 	EntryHashB64,
 	decodeHashFromBase64,
 	encodeHashToBase64,
@@ -34,31 +35,15 @@ export class PeerChat extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
-	lastScroll: number | undefined;
-	syncScrolledBottom() {
-		// if (this.lastScroll && Date.now() - this.lastScroll < 10) return;
-		// this.lastScroll = Date.now();
-		// if (this.virtualizerIsOnBottom()) {
-		// 	setTimeout(() => {
-		// 		this.virtualizer().scrollTo({
-		// 			top: this.virtualizer().scrollHeight,
-		// 			behavior: 'smooth',
-		// 		});
-		// 	});
-		// }
-	}
-
 	private renderTypingIndicator() {
 		return html`
-			<div class="row" style="padding-top: 4px">
+			<div class="row">
 				<div class="typing-indicator">
 					<span>...</span>
 				</div>
 			</div>
 		`;
 	}
-
-	initVirtualizer = false;
 
 	private renderChat(
 		messages: Record<EntryHashB64, Signed<PeerMessage>>,
@@ -74,6 +59,32 @@ export class PeerChat extends SignalWatcher(LitElement) {
 			<div class="flex-scrollable-parent">
 				<div class="flex-scrollable-container">
 					<div
+						${ref(el => {
+							if (!el) return;
+							const theirMessageSets = messageSets.filter(
+								set =>
+									!myAgentsB64.includes(
+										encodeHashToBase64(set.messages[0][1].provenance),
+									),
+							);
+
+							const unreadMessages: EntryHash[] = [];
+
+							for (const messageSet of theirMessageSets) {
+								for (const [messageHash, _] of messageSet.messages) {
+									if (!myReadMessages.includes(messageHash)) {
+										unreadMessages.push(decodeHashFromBase64(messageHash));
+									}
+								}
+							}
+
+							if (unreadMessages.length > 0) {
+								this.store.client.markPeerMessagesAsRead(
+									this.peer,
+									unreadMessages,
+								);
+							}
+						})}
 						class="flex-scrollable-y"
 						id="scrolling-chat"
 						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
@@ -81,7 +92,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 						<div style="margin-bottom: 4px"></div>
 						${peerIsTyping ? this.renderTypingIndicator() : html``}
 						${messageSets.map(messageSet =>
-							this.renderMessageSet(messageSet, myReadMessages, myAgentsB64),
+							this.renderMessageSet(messageSet, myAgentsB64),
 						)}
 					</div>
 				</div>
@@ -95,11 +106,8 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		</div> `;
 	}
 
-	initMessageSets: Record<string, boolean> = {};
-
 	private renderMessageSet(
 		messageSet: MessageSet<PeerMessage>,
-		myReadMessages: Array<EntryHashB64>,
 		myAgentsB64: AgentPubKeyB64[],
 	) {
 		const lastMessage = messageSet.messages[0];
@@ -112,25 +120,11 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		);
 		return html`
 			<div
-				${ref(el => {
-					if (!el) return;
-
-					if (fromMe) return;
-					const unreadMessages = messageSet.messages
-						.map(([hash]) => hash)
-						.filter(messageHash => !myReadMessages.includes(messageHash));
-					if (unreadMessages.length > 0) {
-						this.store.client.markPeerMessagesAsRead(
-							this.peer,
-							unreadMessages.map(decodeHashFromBase64),
-						);
-					}
-				})}
 				class=${classMap({
 					'from-me': fromMe,
 					column: true,
 				})}
-				style="align-items: start; padding-top: 8px; flex-direction: column-reverse"
+				style="align-items: start; flex-direction: column-reverse"
 			>
 				${messageSet.messages.map(
 					([messageHash, message], i) => html`
@@ -188,14 +182,14 @@ export class PeerChat extends SignalWatcher(LitElement) {
 			// 	});
 			// });
 		} catch (e) {
-			console.log(e);
+			console.error(e);
 			notifyError(msg(`Error sending the message`));
 		}
 	}
 
 	render() {
 		const messages = this.store.peerChats.get(this.peer).get();
-		console.log(messages);
+
 		switch (messages.status) {
 			case 'pending':
 				return html`
