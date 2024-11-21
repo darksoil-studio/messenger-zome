@@ -16,7 +16,17 @@ import {
 } from '@holochain/client';
 import { ActionCommittedSignal } from '@tnesh-stack/utils';
 
-export type MessengerSignal = ActionCommittedSignal<EntryTypes, LinkTypes>;
+export type MessengerSignal =
+	| ActionCommittedSignal<EntryTypes, LinkTypes>
+	| {
+			type: 'PeerChatTypingIndicator';
+			peer: AgentPubKey;
+	  }
+	| {
+			type: 'GroupChatTypingIndicator';
+			peer: AgentPubKey;
+			group_hash: EntryHash;
+	  };
 
 export type EntryTypes = {
 	type: 'PrivateMessengerEntry';

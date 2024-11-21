@@ -29,6 +29,7 @@ import {
 import {
 	EntryRecord,
 	HashType,
+	HoloHashMap,
 	MemoHoloHashMap,
 	mapValues,
 	retype,
@@ -46,7 +47,7 @@ import {
 	Signed,
 	UpdateGroupChat,
 } from './types.js';
-import { asyncReadable } from './utils.js';
+import { TYPING_INDICATOR_TTL_MS, asyncReadable } from './utils.js';
 
 interface InternalEntries {
 	privateMessengerEntries: Record<EntryHashB64, PrivateMessengerEntry>;
@@ -82,6 +83,76 @@ export class MessengerStore {
 			});
 		}
 	}
+
+	private peerIsTyping = new MemoHoloHashMap((agent: AgentPubKey) => {
+		const peerIsTyping = new Signal.State<boolean>(false);
+		let timeout: any;
+		this.client.onSignal(signal => {
+			if (signal.type === 'PeerChatTypingIndicator') {
+				if (encodeHashToBase64(signal.peer) === encodeHashToBase64(agent)) {
+					peerIsTyping.set(true);
+					if (timeout) clearTimeout(timeout);
+					timeout = setTimeout(() => {
+						peerIsTyping.set(false);
+					}, TYPING_INDICATOR_TTL_MS);
+				}
+			} else if (
+				signal.type === 'EntryCreated' &&
+				signal.app_entry.type === 'PrivateMessengerEntry' &&
+				signal.app_entry.signed_content.content.type === 'PeerMessage'
+			) {
+				if (
+					encodeHashToBase64(signal.app_entry.provenance) ===
+					encodeHashToBase64(agent)
+				) {
+					peerIsTyping.set(false);
+					if (timeout) clearTimeout(timeout);
+				}
+			}
+		});
+
+		return peerIsTyping;
+	});
+
+	private peerIsTypingInGroup = new MemoHoloHashMap(
+		(groupHash: EntryHash) =>
+			new MemoHoloHashMap((agent: AgentPubKey) => {
+				const peerIsTyping = new Signal.State<boolean>(false);
+				let timeout: any;
+				this.client.onSignal(signal => {
+					if (signal.type === 'GroupChatTypingIndicator') {
+						if (
+							encodeHashToBase64(signal.peer) === encodeHashToBase64(agent) &&
+							encodeHashToBase64(signal.group_hash) ===
+								encodeHashToBase64(groupHash)
+						) {
+							peerIsTyping.set(true);
+							if (timeout) clearTimeout(timeout);
+							timeout = setTimeout(() => {
+								peerIsTyping.set(false);
+							}, TYPING_INDICATOR_TTL_MS);
+						}
+					} else if (
+						signal.type === 'EntryCreated' &&
+						signal.app_entry.type === 'PrivateMessengerEntry' &&
+						signal.app_entry.signed_content.content.type === 'GroupMessage'
+					) {
+						if (
+							encodeHashToBase64(signal.app_entry.provenance) ===
+								encodeHashToBase64(agent) &&
+							encodeHashToBase64(
+								signal.app_entry.signed_content.content.original_group_hash,
+							) === encodeHashToBase64(groupHash)
+						) {
+							peerIsTyping.set(false);
+							if (timeout) clearTimeout(timeout);
+						}
+					}
+				});
+
+				return peerIsTyping;
+			}),
+	);
 
 	private privateMessengerEntries = asyncReadable<
 		Record<EntryHashB64, PrivateMessengerEntry>
@@ -245,12 +316,23 @@ export class MessengerStore {
 					}
 				}
 
+				let peerIsTyping = false;
+
+				for (const theirAgent of theirAgents.value) {
+					const thisPeerIsTyping = this.peerIsTyping.get(theirAgent).get();
+
+					if (thisPeerIsTyping) {
+						peerIsTyping = true;
+					}
+				}
+
 				return {
 					status: 'completed',
 					value: {
 						messages: agentMessages,
 						myAgentSet: myAgents.value,
 						theirAgentSet: theirAgents.value,
+						peerIsTyping,
 					},
 				};
 			}),
@@ -264,8 +346,8 @@ export class MessengerStore {
 					return privateMessengerEntries;
 				const myAgents = this.allMyAgents.get();
 				if (myAgents.status !== 'completed') return myAgents;
-				const entryHashB64 = encodeHashToBase64(groupHash);
-				const group = privateMessengerEntries.value.groups[entryHashB64];
+				const groupHashB64 = encodeHashToBase64(groupHash);
+				const group = privateMessengerEntries.value.groups[groupHashB64];
 
 				if (!group) {
 					return {
@@ -273,54 +355,57 @@ export class MessengerStore {
 						value: undefined,
 					};
 				}
+
+				const originalGroup = privateMessengerEntries.value
+					.privateMessengerEntries[groupHashB64] as Signed<Group>;
+				let currentGroup: Group = originalGroup.signed_content.content;
+				let currentGroupTimestamp = originalGroup.signed_content.timestamp;
+
 				const messages: Record<EntryHashB64, Signed<GroupMessage>> = {};
 				const updates: Record<EntryHashB64, Signed<UpdateGroupChat>> = {};
 				const deletes: Record<EntryHashB64, Signed<DeleteGroupChat>> = {};
-				const theirAgents: AgentPubKey[] = [];
+
+				let theirAgents: AgentPubKey[] = [];
+
+				for (const updateHash of group.updates) {
+					const update = privateMessengerEntries.value.privateMessengerEntries[
+						updateHash
+					] as Signed<UpdateGroupChat>;
+					updates[updateHash] = update;
+					if (currentGroupTimestamp < update.signed_content.timestamp) {
+						currentGroupTimestamp = update.signed_content.timestamp;
+						currentGroup = update.signed_content.content.group;
+					}
+					theirAgents.push(update.provenance);
+				}
 
 				for (const messageHash of group.messages) {
 					const message = privateMessengerEntries.value.privateMessengerEntries[
 						messageHash
 					] as Signed<GroupMessage>;
 					messages[messageHash] = message;
-
-					const author = message.provenance;
-
-					if (
-						!myAgents.value.find(
-							a => encodeHashToBase64(a) === encodeHashToBase64(author),
-						)
-					) {
-						theirAgents.push(author);
-					}
+					theirAgents.push(message.provenance);
 				}
 				for (const deleteHash of group.deletes) {
-					deletes[deleteHash] = privateMessengerEntries.value
+					const deleteChat = privateMessengerEntries.value
 						.privateMessengerEntries[deleteHash] as Signed<DeleteGroupChat>;
-					const author = deletes[deleteHash].provenance;
-
-					if (
-						!myAgents.value.find(
-							a => encodeHashToBase64(a) === encodeHashToBase64(author),
-						)
-					) {
-						theirAgents.push(author);
-					}
-				}
-				for (const updateHash of group.updates) {
-					updates[updateHash] = privateMessengerEntries.value
-						.privateMessengerEntries[updateHash] as Signed<UpdateGroupChat>;
-					const author = updates[updateHash].provenance;
-
-					if (
-						!myAgents.value.find(
-							a => encodeHashToBase64(a) === encodeHashToBase64(author),
-						)
-					) {
-						theirAgents.push(author);
-					}
+					deletes[deleteHash] = deleteChat;
+					theirAgents.push(deleteChat.provenance);
 				}
 
+				for (const admin of currentGroup.admins) {
+					theirAgents.push(admin);
+				}
+				for (const member of currentGroup.members) {
+					theirAgents.push(member);
+				}
+				theirAgents = uniquify(theirAgents).filter(
+					theirAgent =>
+						!myAgents.value.find(
+							myAgent =>
+								encodeHashToBase64(myAgent) === encodeHashToBase64(theirAgent),
+						),
+				);
 				const agentsLinkedDevices = joinAsyncMap(
 					mapValues(slice(this.allAgentsFor, theirAgents), s => s.get()),
 				);
@@ -348,17 +433,29 @@ export class MessengerStore {
 					}
 				}
 
+				const typingPeers: Array<AgentPubKey> = [];
+
+				for (const agentSet of theirAgentSets) {
+					for (const agent of agentSet) {
+						const isTyping = this.peerIsTypingInGroup
+							.get(groupHash)
+							.get(agent)
+							.get();
+						if (isTyping) typingPeers.push(agent);
+					}
+				}
+
 				return {
 					status: 'completed',
 					value: {
-						group: privateMessengerEntries.value.privateMessengerEntries[
-							entryHashB64
-						] as Signed<Group>,
+						originalGroup,
+						currentGroup,
 						messages,
 						updates,
 						deletes,
 						myAgentSet: myAgents.value,
 						theirAgentSets,
+						typingPeers,
 					},
 				};
 			}),

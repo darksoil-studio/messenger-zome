@@ -21,6 +21,7 @@ import { MessageSet, orderInMessageSets } from '../message-set.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
 import { Message, PeerMessage, Signed } from '../types.js';
+import { TYPING_INDICATOR_TTL_MS } from '../utils.js';
 import './message-input.js';
 
 @localized()
@@ -32,10 +33,21 @@ export class PeerChat extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
+	private renderTypingIndicator() {
+		return html`
+			<div class="row">
+				<div class="typing-indicator">
+					<span>...</span>
+				</div>
+			</div>
+		`;
+	}
+
 	private renderChat(
 		messages: Record<EntryHashB64, Signed<PeerMessage>>,
 		myAgents: AgentPubKey[],
 		theirAgents: AgentPubKey[],
+		peerIsTyping: boolean,
 	) {
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
 		const messageSets = orderInMessageSets(messages, [myAgents, theirAgents]);
@@ -48,13 +60,20 @@ export class PeerChat extends SignalWatcher(LitElement) {
 						id="scrolling-chat"
 						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
 					>
-						<div style="margin-bottom: 4px">
-						</div>
-						${messageSets.map(messageSet => this.renderMessageSet(messageSet, myAgentsB64))}
+						<div style="margin-bottom: 4px"></div>
+						${peerIsTyping ? this.renderTypingIndicator() : html``}
+						${messageSets.map(messageSet =>
+							this.renderMessageSet(messageSet, myAgentsB64),
+						)}
 					</div>
 				</div>
 			</div>
-			<message-input @send-message=${(e: CustomEvent) => this.sendMessage(e.detail.message as Message)}>
+			<message-input
+				@input=${() =>
+					this.store.client.sendPeerChatTypingIndicator(theirAgents)}
+				@send-message=${(e: CustomEvent) =>
+					this.sendMessage(e.detail.message as Message)}
+			></message-input>
 		</div> `;
 	}
 
@@ -159,6 +178,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 					messages.value.messages,
 					messages.value.myAgentSet,
 					messages.value.theirAgentSet,
+					messages.value.peerIsTyping,
 				);
 		}
 	}

@@ -25,5 +25,17 @@ export const messengerStyles = [
 		.from-me .message span {
 			color: var(--sl-color-neutral-100, white);
 		}
+
+		.typing-indicator {
+			display: flex;
+			flex-direction: row;
+			align-items: end;
+			border-radius: 4px;
+			height: 16px;
+			padding: 0 4px;
+			background: var(--sl-color-neutral-300);
+			color: var(--sl-color-neutral-500);
+			font-size: 24px;
+		}
 	`,
 ];

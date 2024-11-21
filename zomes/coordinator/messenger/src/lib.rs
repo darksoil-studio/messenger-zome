@@ -16,6 +16,7 @@ mod utils;
 
 mod group_chat;
 mod peer_messages;
+mod typing_indicator;
 
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
@@ -59,11 +60,20 @@ pub enum Signal {
         action: SignedActionHashed,
         original_app_entry: EntryTypes,
     },
+    PeerChatTypingIndicator {
+        peer: AgentPubKey,
+    },
+    GroupChatTypingIndicator {
+        peer: AgentPubKey,
+        group_hash: EntryHash,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum MessengerRemoteSignal {
     NewPrivateMessengerEntry(PrivateMessengerEntry),
+    PeerChatTypingIndicator,
+    GroupChatTypingIndicator { group_hash: EntryHash },
     SynchronizeEntries(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
 }
 
@@ -83,6 +93,22 @@ pub fn recv_remote_signal(signal: MessengerRemoteSignal) -> ExternResult<()> {
             }
 
             receive_private_messenger_entries(entries)
+        }
+        MessengerRemoteSignal::PeerChatTypingIndicator => {
+            let call_info = call_info()?;
+
+            let peer = call_info.provenance;
+
+            emit_signal(Signal::PeerChatTypingIndicator { peer })?;
+            Ok(())
+        }
+        MessengerRemoteSignal::GroupChatTypingIndicator { group_hash } => {
+            let call_info = call_info()?;
+
+            let peer = call_info.provenance;
+
+            emit_signal(Signal::GroupChatTypingIndicator { peer, group_hash })?;
+            Ok(())
         }
     }
 }

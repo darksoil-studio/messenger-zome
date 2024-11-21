@@ -43,20 +43,4 @@ export function asyncReadable<T>(
 	return signal;
 }
 
-export function latestProfile(
-	profilesStore: ProfilesStore,
-	agent: AgentPubKey,
-): AsyncSignal<EntryRecord<Profile> | undefined> {
-	return new AsyncComputed(() => {
-		const profile = profilesStore.profileForAgent.get(agent).get();
-		if (profile.status !== 'completed') return profile;
-		if (!profile.value)
-			return {
-				status: 'completed',
-				value: undefined,
-			};
-		return profile.value.latestVersion.get() as AsyncResult<
-			EntryRecord<Profile> | undefined
-		>;
-	});
-}
+export const TYPING_INDICATOR_TTL_MS = 1 * 1000; // 1 second

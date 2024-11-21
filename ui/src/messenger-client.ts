@@ -88,6 +88,22 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		});
 	}
 
+	/** Typing Indicator */
+
+	async sendPeerChatTypingIndicator(peerAgentSet: AgentPubKey[]) {
+		await this.callZome('send_peer_chat_typing_indicator', peerAgentSet);
+	}
+
+	async sendGroupChatTypingIndicator(
+		groupHash: EntryHash,
+		allMembersAgentsSets: Array<Array<AgentPubKey>>,
+	) {
+		await this.callZome('send_group_chat_typing_indicator', {
+			group_hash: groupHash,
+			all_members_agents_sets: allMembersAgentsSets,
+		});
+	}
+
 	/** Linked Devices */
 
 	async synchronizeWithLinkedDevice(linkedDevice: AgentPubKey) {

@@ -13,10 +13,11 @@ import {
 	encodeHashToBase64,
 } from '@holochain/client';
 import { consume } from '@lit/context';
-import { localized, msg } from '@lit/localize';
+import { localized, msg, str } from '@lit/localize';
 import { SlTextarea } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
+import '@shoelace-style/shoelace/dist/components/tag/tag.js';
 import { hashProperty, notifyError, sharedStyles } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
 import { AsyncResult, SignalWatcher, joinAsync } from '@tnesh-stack/signals';
@@ -39,7 +40,6 @@ import {
 	Signed,
 	UpdateGroupChat,
 } from '../types.js';
-import { latestProfile } from '../utils.js';
 import './message-input.js';
 
 const colorHash = new ColorHash({ lightness: [0.1, 0.2, 0.3, 0.4] });
@@ -58,17 +58,29 @@ export class GroupChat extends SignalWatcher(LitElement) {
 
 	private renderChat(
 		myAgents: AgentPubKey[],
-		group: Signed<Group>,
+		originalGroup: Signed<Group>,
+		currentGroup: Group,
 		updates: Record<EntryHashB64, Signed<UpdateGroupChat>>,
 		deletes: Record<EntryHashB64, Signed<DeleteGroupChat>>,
 		messages: Record<EntryHashB64, Signed<GroupMessage>>,
 		theirAgentSets: Array<Array<AgentPubKey>>,
+		typingPeers: Array<AgentPubKey>,
 	) {
 		const messageSets = orderInMessageSets(messages, [
 			myAgents,
 			...theirAgentSets,
 		]);
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
+		const currentMembers = [...currentGroup.admins, ...currentGroup.members];
+		const currentGroupAgentSets = theirAgentSets.filter(
+			agentSet =>
+				!!currentMembers.find(currentMember =>
+					agentSet.find(
+						agent =>
+							encodeHashToBase64(agent) === encodeHashToBase64(currentMember),
+					),
+				),
+		);
 
 		const orderedUpdates = Object.entries(updates).sort(
 			(m1, m2) =>
@@ -88,8 +100,8 @@ export class GroupChat extends SignalWatcher(LitElement) {
 						id="scrolling-chat"
 						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
 					>
-						<div style="margin-bottom: 4px">
-						</div>
+						<div style="margin-bottom: 4px"></div>
+						${this.renderTypingIndicators(typingPeers)}
 						${messageSets.map(messageSet =>
 							myAgentsB64.includes(
 								encodeHashToBase64(messageSet.messages[0][1].provenance),
@@ -97,11 +109,49 @@ export class GroupChat extends SignalWatcher(LitElement) {
 								? this.renderMessageSetFromMe(messageSet)
 								: this.renderMessageSetToMe(messageSet),
 						)}
+						<sl-tag style="align-self: center">
+							${msg(str`Group was created by`)}&nbsp;
+							${this.renderAgentNickname(originalGroup.provenance)}
+						</sl-tag>
 					</div>
 				</div>
 			</div>
-			<message-input @send-message=${(e: CustomEvent) => this.sendMessage(currentGroupHash, e.detail.message as Message)}>
+			<message-input
+				@input=${() =>
+					this.store.client.sendGroupChatTypingIndicator(
+						this.groupHash,
+						currentGroupAgentSets,
+					)}
+				@send-message=${(e: CustomEvent) =>
+					this.sendMessage(currentGroupHash, e.detail.message as Message)}
+			>
+			</message-input>
 		</div> `;
+	}
+
+	private renderTypingIndicators(typingPeers: Array<AgentPubKey>) {
+		if (typingPeers.length === 0) return html``;
+		return html`
+			<div
+				class="column"
+				style="gap: 4px; justify-content: start; margin-top:4px"
+			>
+				${typingPeers.map(
+					peer => html`
+						<div class="row" style="gap: 2px; align-items: center">
+							<agent-avatar
+								size="24"
+								style="height: 24px"
+								.agentPubKey=${peer}
+							></agent-avatar>
+							<div class="typing-indicator">
+								<span>...</span>
+							</div>
+						</div>
+					`,
+				)}
+			</div>
+		`;
 	}
 
 	private renderMessageSetFromMe(messageSet: MessageSet<GroupMessage>) {
@@ -316,11 +366,13 @@ export class GroupChat extends SignalWatcher(LitElement) {
 				}
 				return this.renderChat(
 					messages.value.myAgents,
-					group.group,
+					group.originalGroup,
+					group.currentGroup,
 					group.updates,
 					group.deletes,
 					group.messages,
 					group.theirAgentSets,
+					group.typingPeers,
 				);
 		}
 	}
