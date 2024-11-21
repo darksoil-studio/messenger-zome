@@ -80,9 +80,16 @@ export interface GroupMessage {
 	message: Message;
 }
 
-export type PrivateMessengerEntry =
+export interface ReadPeerMessages {
+	read_messages_hashes: EntryHash[];
+	peer: AgentPubKey;
+}
+
+export type PrivateMessengerEntry = PeerMessengerEntry | GroupMessengerEntry;
+
+export type PeerMessengerEntry =
 	| Signed<{ type: 'PeerMessage' } & PeerMessage>
-	| GroupMessengerEntry;
+	| Signed<{ type: 'ReadPeerMessages' } & ReadPeerMessages>;
 
 export type GroupMessengerEntry = Signed<
 	| ({ type: 'GroupMessage' } & GroupMessage)

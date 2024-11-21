@@ -91,10 +91,6 @@
 							if (myAgentLink && otherAgentLink) {
 								this.peer = otherAgentLink.author;
 
-								await this.messengerStore.client.sendPeerMessage(this.peer, {
-									message: 'Yo!',
-								});
-
 								this.requestUpdate();
 								clearInterval(interval);
 							}
@@ -187,6 +183,20 @@
 									this.requestUpdate();
 								}}
 								>Link device</sl-button
+							>
+							<sl-button
+								.disabled=${!this.peer}
+								@click=${async () => {
+									if (this.peer) {
+										await this.messengerStore.client.sendPeerMessage(
+											this.peer,
+											{
+												message: 'Yo!',
+											},
+										);
+									}
+								}}
+								>Send Peer Message</sl-button
 							>
 						</div>
 					`;

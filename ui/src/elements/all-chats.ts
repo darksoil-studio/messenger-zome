@@ -10,6 +10,7 @@ import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { mdiInformationOutline } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
+import '@shoelace-style/shoelace/dist/components/badge/badge.js';
 import '@shoelace-style/shoelace/dist/components/divider/divider.js';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
@@ -61,8 +62,17 @@ export class AllChats extends SignalWatcher(LitElement) {
 				>
 			</div>
 
-			<div class="placeholder time" style="display: contents">
-				${this.renderTime(chat.lastActivity.signed_content.timestamp)}
+			<div class="column" style="gap: 2px; justify-content: end">
+				<div class="placeholder time" style="display: contents">
+					${this.renderTime(chat.lastActivity.signed_content.timestamp)}
+				</div>
+				<div style="flex: 1">
+					${chat.myUnreadMessages.length !== 0
+						? html`<sl-badge variant="primary" pill
+								>${chat.myUnreadMessages.length}</sl-badge
+							>`
+						: html``}
+				</div>
 			</div>
 		</div>`;
 	}

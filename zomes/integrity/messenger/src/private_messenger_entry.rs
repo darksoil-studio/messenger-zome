@@ -48,10 +48,17 @@ pub struct DeleteGroupChat {
     pub previous_group_hash: EntryHash,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReadPeerMessages {
+    pub peer: AgentPubKey,
+    pub read_messages_hashes: Vec<EntryHash>,
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum PrivateMessengerEntryContent {
     PeerMessage(PeerMessage),
+    ReadPeerMessages(ReadPeerMessages),
     CreateGroupChat(Group),
     UpdateGroupChat(UpdateGroupChat),
     DeleteGroupChat(DeleteGroupChat),

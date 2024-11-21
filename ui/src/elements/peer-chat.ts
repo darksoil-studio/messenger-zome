@@ -2,8 +2,11 @@ import {
 	AgentPubKey,
 	AgentPubKeyB64,
 	EntryHashB64,
+	decodeHashFromBase64,
 	encodeHashToBase64,
 } from '@holochain/client';
+import '@lit-labs/virtualizer';
+import { LitVirtualizer } from '@lit-labs/virtualizer';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { SlTextarea } from '@shoelace-style/shoelace';
@@ -15,13 +18,13 @@ import { SignalWatcher, joinAsync } from '@tnesh-stack/signals';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
+import { ref } from 'lit/directives/ref.js';
 
 import { messengerStoreContext } from '../context.js';
 import { MessageSet, orderInMessageSets } from '../message-set.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
-import { Message, PeerMessage, Signed } from '../types.js';
-import { TYPING_INDICATOR_TTL_MS } from '../utils.js';
+import { GroupMessage, Message, PeerMessage, Signed } from '../types.js';
 import './message-input.js';
 
 @localized()
@@ -43,30 +46,43 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		`;
 	}
 
+	initVirtualizer = false;
+
 	private renderChat(
 		messages: Record<EntryHashB64, Signed<PeerMessage>>,
 		myAgents: AgentPubKey[],
 		theirAgents: AgentPubKey[],
 		peerIsTyping: boolean,
+		myReadMessages: Array<EntryHashB64>,
 	) {
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
 		const messageSets = orderInMessageSets(messages, [myAgents, theirAgents]);
 
 		return html`<div class="column" style="flex: 1;">
-			<div class="flex-scrollable-parent">
-				<div class="flex-scrollable-container">
-					<div
-						class="flex-scrollable-y"
-						id="scrolling-chat"
-						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
-					>
-						<div style="margin-bottom: 4px"></div>
-						${peerIsTyping ? this.renderTypingIndicator() : html``}
-						${messageSets.map(messageSet =>
-							this.renderMessageSet(messageSet, myAgentsB64),
-						)}
-					</div>
-				</div>
+			<div
+				style="padding-right: 8px; padding-left: 8px; flex: 1; display: flex; flex-direction: column-reverse"
+			>
+				${peerIsTyping ? this.renderTypingIndicator() : html``}
+				<lit-virtualizer
+					style="opacity: 0"
+					${ref(el => {
+						if (!el || this.initVirtualizer) return;
+						this.initVirtualizer = true;
+						const virtualizer = el as LitVirtualizer;
+						setTimeout(() => {
+							virtualizer.scrollTo({
+								top: virtualizer.scrollHeight,
+								behavior: 'instant',
+							});
+							virtualizer.style.opacity = '1';
+						});
+					})}
+					id="scrolling-chat"
+					.items=${messageSets}
+					.renderItem=${(messageSet: MessageSet<PeerMessage>) =>
+						this.renderMessageSet(messageSet, myReadMessages, myAgentsB64)}
+				>
+				</lit-virtualizer>
 			</div>
 			<message-input
 				@input=${() =>
@@ -79,6 +95,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 
 	private renderMessageSet(
 		messageSet: MessageSet<PeerMessage>,
+		myReadMessages: Array<EntryHashB64>,
 		myAgentsB64: AgentPubKeyB64[],
 	) {
 		const lastMessage = messageSet.messages[0];
@@ -91,11 +108,23 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		);
 		return html`
 			<div
+				${ref(() => {
+					if (fromMe) return;
+					const unreadMessages = messageSet.messages
+						.map(([hash]) => hash)
+						.filter(messageHash => !myReadMessages.includes(messageHash));
+					if (unreadMessages.length > 0) {
+						this.store.client.markPeerMessagesAsRead(
+							this.peer,
+							unreadMessages.map(decodeHashFromBase64),
+						);
+					}
+				})}
 				class=${classMap({
 					'from-me': fromMe,
 					column: true,
 				})}
-				style="align-items: start; flex-direction: column-reverse"
+				style="align-items: start;"
 			>
 				${messageSet.messages.map(
 					([messageHash, message], i) => html`
@@ -106,7 +135,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 							<span style="flex: 1; word-break: break-all"
 								>${message.signed_content.content.message.message}</span
 							>
-							${i === 0
+							${i === messageSet.messages.length - 1
 								? html`
 										<div
 											class="placeholder column"
@@ -146,11 +175,15 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		try {
 			await this.store.client.sendPeerMessage(this.peer, message);
 
-			const scrollingChat = this.shadowRoot!.getElementById('scrolling-chat')!;
+			const virtualizer = this.shadowRoot!.getElementById(
+				'scrolling-chat',
+			)! as LitVirtualizer;
 
-			scrollingChat.scrollTo({
-				top: 0,
-				behavior: 'smooth',
+			setTimeout(() => {
+				virtualizer.scrollTo({
+					top: virtualizer.scrollHeight,
+					behavior: 'smooth',
+				});
 			});
 		} catch (e) {
 			console.log(e);
@@ -179,6 +212,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 					messages.value.myAgentSet,
 					messages.value.theirAgentSet,
 					messages.value.peerIsTyping,
+					messages.value.myReadMessages,
 				);
 		}
 	}

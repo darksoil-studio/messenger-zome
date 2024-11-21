@@ -44,6 +44,7 @@ import {
 	GroupMessengerEntry,
 	PeerMessage,
 	PrivateMessengerEntry,
+	ReadPeerMessages,
 	Signed,
 	UpdateGroupChat,
 } from './types.js';
@@ -51,7 +52,14 @@ import { TYPING_INDICATOR_TTL_MS, asyncReadable } from './utils.js';
 
 interface InternalEntries {
 	privateMessengerEntries: Record<EntryHashB64, PrivateMessengerEntry>;
-	peerMessages: Record<AgentPubKeyB64, Array<EntryHashB64>>;
+	peerChats: Record<
+		AgentPubKeyB64,
+		{
+			messages: Array<EntryHashB64>;
+			myReadMessages: Array<EntryHashB64>;
+			theirReadMessages: Array<EntryHashB64>;
+		}
+	>;
 	groups: Record<
 		EntryHashB64,
 		{
@@ -190,7 +198,7 @@ export class MessengerStore {
 
 		const value: InternalEntries = {
 			privateMessengerEntries,
-			peerMessages: {},
+			peerChats: {},
 			groups: {},
 		};
 
@@ -206,11 +214,49 @@ export class MessengerStore {
 						? peerMessage.provenance
 						: peerMessage.signed_content.content.recipient;
 					const peerB64 = encodeHashToBase64(peer);
-					if (!value.peerMessages[peerB64]) {
-						value.peerMessages[peerB64] = [];
+					if (!value.peerChats[peerB64]) {
+						value.peerChats[peerB64] = {
+							messages: [],
+							myReadMessages: [],
+							theirReadMessages: [],
+						};
 					}
 
-					value.peerMessages[peerB64].push(entryHash);
+					value.peerChats[peerB64].messages.push(entryHash);
+					break;
+				case 'ReadPeerMessages':
+					const readPeerMessages =
+						privateMessengerEntry as Signed<ReadPeerMessages>;
+					const fromMe = allMyAgentsB64.includes(
+						encodeHashToBase64(readPeerMessages.provenance),
+					);
+					const peer2 = fromMe
+						? readPeerMessages.signed_content.content.peer
+						: readPeerMessages.provenance;
+					const peerB642 = encodeHashToBase64(peer2);
+					if (!value.peerChats[peerB642]) {
+						value.peerChats[peerB642] = {
+							messages: [],
+							myReadMessages: [],
+							theirReadMessages: [],
+						};
+					}
+
+					if (fromMe) {
+						for (const readMessage of readPeerMessages.signed_content.content
+							.read_messages_hashes) {
+							value.peerChats[peerB642].myReadMessages.push(
+								encodeHashToBase64(readMessage),
+							);
+						}
+					} else {
+						for (const readMessage of readPeerMessages.signed_content.content
+							.read_messages_hashes) {
+							value.peerChats[peerB642].theirReadMessages.push(
+								encodeHashToBase64(readMessage),
+							);
+						}
+					}
 					break;
 				case 'UpdateGroupChat':
 					const update = privateMessengerEntry as Signed<UpdateGroupChat>;
@@ -303,15 +349,23 @@ export class MessengerStore {
 
 				const agentMessages: Record<EntryHashB64, Signed<PeerMessage>> = {};
 				const theirAgentsB64 = theirAgents.value.map(encodeHashToBase64);
+				const myReadMessages: Array<EntryHashB64> = [];
+				const theirReadMessages: Array<EntryHashB64> = [];
 
 				for (const agent of theirAgentsB64) {
-					const messagesFromThisAgent = messages.value.peerMessages[agent];
-					if (messagesFromThisAgent) {
-						for (const messageHash of messagesFromThisAgent) {
+					const peerChatForThisAgent = messages.value.peerChats[agent];
+					if (peerChatForThisAgent) {
+						for (const messageHash of peerChatForThisAgent.messages) {
 							const message = messages.value.privateMessengerEntries[
 								messageHash
 							] as Signed<PeerMessage>;
 							agentMessages[messageHash] = message;
+						}
+						for (const readMessageHash of peerChatForThisAgent.myReadMessages) {
+							myReadMessages.push(readMessageHash);
+						}
+						for (const readMessageHash of peerChatForThisAgent.theirReadMessages) {
+							theirReadMessages.push(readMessageHash);
 						}
 					}
 				}
@@ -330,6 +384,8 @@ export class MessengerStore {
 					status: 'completed',
 					value: {
 						messages: agentMessages,
+						myReadMessages,
+						theirReadMessages,
 						myAgentSet: myAgents.value,
 						theirAgentSet: theirAgents.value,
 						peerIsTyping,
@@ -465,9 +521,11 @@ export class MessengerStore {
 		const privateMessengerEntries = this.internalEntries.get();
 		if (privateMessengerEntries.status !== 'completed')
 			return privateMessengerEntries;
+		const myAgents = this.allMyAgents.get();
+		if (myAgents.status !== 'completed') return myAgents;
 
 		let allPeerAgents: AgentPubKey[] = Object.keys(
-			privateMessengerEntries.value.peerMessages,
+			privateMessengerEntries.value.peerChats,
 		).map(decodeHashFromBase64);
 
 		const linkedDevicesForAllPeerAgents = joinAsyncMap(
@@ -501,12 +559,12 @@ export class MessengerStore {
 
 		for (const agentSet of agentSets) {
 			let lastActivity: Signed<PeerMessage> | undefined;
+			const myReadMessages: Record<EntryHashB64, 'read' | 'unread'> = {};
 
 			for (const agent of agentSet) {
-				const messagesForAgent =
-					privateMessengerEntries.value.peerMessages[agent];
-				if (messagesForAgent) {
-					for (const messageHash of messagesForAgent) {
+				const peerChatForAgent = privateMessengerEntries.value.peerChats[agent];
+				if (peerChatForAgent) {
+					for (const messageHash of peerChatForAgent.messages) {
 						const message = privateMessengerEntries.value
 							.privateMessengerEntries[messageHash] as Signed<PeerMessage>;
 
@@ -517,14 +575,30 @@ export class MessengerStore {
 						) {
 							lastActivity = message;
 						}
+						const fromMe = myAgents.value.find(
+							myAgent =>
+								encodeHashToBase64(myAgent) ===
+								encodeHashToBase64(message.provenance),
+						);
+						if (!fromMe && !myReadMessages[messageHash]) {
+							myReadMessages[messageHash] = 'unread';
+						}
+					}
+					for (const readMessageHash of peerChatForAgent.myReadMessages) {
+						myReadMessages[readMessageHash] = 'read';
 					}
 				}
 			}
+
+			const myUnreadMessages = Object.entries(myReadMessages)
+				.filter(([_, read]) => read === 'unread')
+				.map(([hash, _]) => decodeHashFromBase64(hash));
 
 			if (lastActivity) {
 				peerChats.push({
 					theirAgentSet: agentSet.map(decodeHashFromBase64),
 					lastActivity,
+					myUnreadMessages,
 				});
 			}
 		}
@@ -641,6 +715,7 @@ export class MessengerStore {
 export interface PeerChat {
 	theirAgentSet: AgentPubKey[];
 	lastActivity: Signed<PeerMessage>;
+	myUnreadMessages: Array<EntryHash>;
 }
 
 export interface GroupChat {

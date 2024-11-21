@@ -54,6 +54,16 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		});
 	}
 
+	async markPeerMessagesAsRead(
+		peer: AgentPubKey,
+		readMessagesHashes: Array<EntryHash>,
+	) {
+		await this.callZome('mark_peer_messages_as_read', {
+			peer,
+			read_messages_hashes: readMessagesHashes,
+		});
+	}
+
 	/** Group Chat */
 
 	async createGroupChat(group: Group): Promise<EntryHash> {
