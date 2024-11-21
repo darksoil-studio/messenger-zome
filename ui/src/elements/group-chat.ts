@@ -12,6 +12,8 @@ import {
 	decodeHashFromBase64,
 	encodeHashToBase64,
 } from '@holochain/client';
+import '@lit-labs/virtualizer';
+import { LitVirtualizer } from '@lit-labs/virtualizer';
 import { consume } from '@lit/context';
 import { localized, msg, str } from '@lit/localize';
 import { SlTextarea } from '@shoelace-style/shoelace';
@@ -25,6 +27,7 @@ import { EntryRecord } from '@tnesh-stack/utils';
 import ColorHash from 'color-hash';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { messengerStoreContext } from '../context.js';
@@ -134,6 +137,25 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		return html`
 			<div
 				class="column"
+				${ref(el => {
+					const virtualizer = this.shadowRoot!.getElementById(
+						'scrolling-chat',
+					)! as LitVirtualizer;
+
+					if (
+						virtualizer.scrollHeight -
+							virtualizer.offsetHeight -
+							virtualizer.scrollTop <
+						40
+					) {
+						setTimeout(() => {
+							virtualizer.scrollTo({
+								top: virtualizer.scrollHeight,
+								behavior: 'smooth',
+							});
+						}, 40);
+					}
+				})}
 				style="gap: 4px; justify-content: start; margin-top:4px"
 			>
 				${typingPeers.map(
@@ -161,7 +183,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
 		return html`
-			<div class="column from-me">
+			<div class="column from-me" style="flex-direction: column-reverse">
 				${messageSet.messages.map(
 					([messageHash, message], i) => html`
 						<div
@@ -171,7 +193,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 							<span style="flex: 1; word-break: break-all"
 								>${message.signed_content.content.message.message}</span
 							>
-							${i === messageSet.messages.length - 1
+							${i === 0
 								? html`
 										<div
 											class="placeholder column"

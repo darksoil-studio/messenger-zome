@@ -5,8 +5,6 @@ import {
 	decodeHashFromBase64,
 	encodeHashToBase64,
 } from '@holochain/client';
-import '@lit-labs/virtualizer';
-import { LitVirtualizer } from '@lit-labs/virtualizer';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { SlTextarea } from '@shoelace-style/shoelace';
@@ -15,7 +13,7 @@ import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js'
 import { hashProperty, notifyError, sharedStyles } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
 import { SignalWatcher, joinAsync } from '@tnesh-stack/signals';
-import { LitElement, css, html } from 'lit';
+import { LitElement, css, html, render } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { ref } from 'lit/directives/ref.js';
@@ -36,30 +34,23 @@ export class PeerChat extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
+	lastScroll: number | undefined;
+	syncScrolledBottom() {
+		// if (this.lastScroll && Date.now() - this.lastScroll < 10) return;
+		// this.lastScroll = Date.now();
+		// if (this.virtualizerIsOnBottom()) {
+		// 	setTimeout(() => {
+		// 		this.virtualizer().scrollTo({
+		// 			top: this.virtualizer().scrollHeight,
+		// 			behavior: 'smooth',
+		// 		});
+		// 	});
+		// }
+	}
+
 	private renderTypingIndicator() {
 		return html`
-			<div
-				class="row"
-				${ref(el => {
-					const virtualizer = this.shadowRoot!.getElementById(
-						'scrolling-chat',
-					)! as LitVirtualizer;
-
-					if (
-						virtualizer.scrollHeight -
-							virtualizer.offsetHeight -
-							virtualizer.scrollTop <
-						40
-					) {
-						setTimeout(() => {
-							virtualizer.scrollTo({
-								top: virtualizer.scrollHeight,
-								behavior: 'smooth',
-							});
-						}, 40);
-					}
-				})}
-			>
+			<div class="row" style="padding-top: 4px">
 				<div class="typing-indicator">
 					<span>...</span>
 				</div>
@@ -80,31 +71,20 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		const messageSets = orderInMessageSets(messages, [myAgents, theirAgents]);
 
 		return html`<div class="column" style="flex: 1;">
-			<div
-				style="padding-right: 8px; padding-left: 8px; flex: 1; display: flex; flex-direction: column-reverse"
-			>
-				<lit-virtualizer
-					style="opacity: 0"
-					${ref(el => {
-						if (!el || this.initVirtualizer) return;
-						this.initVirtualizer = true;
-						const virtualizer = el as LitVirtualizer;
-						setTimeout(() => {
-							virtualizer.scrollTo({
-								top: virtualizer.scrollHeight,
-								behavior: 'instant',
-							});
-							virtualizer.style.opacity = '1';
-						}, 50);
-					})}
-					id="scrolling-chat"
-					.items=${peerIsTyping ? [...messageSets, peerIsTyping] : messageSets}
-					.renderItem=${(messageSet: MessageSet<PeerMessage> | boolean) =>
-						typeof messageSet === 'boolean'
-							? this.renderTypingIndicator()
-							: this.renderMessageSet(messageSet, myReadMessages, myAgentsB64)}
-				>
-				</lit-virtualizer>
+			<div class="flex-scrollable-parent">
+				<div class="flex-scrollable-container">
+					<div
+						class="flex-scrollable-y"
+						id="scrolling-chat"
+						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
+					>
+						<div style="margin-bottom: 4px"></div>
+						${peerIsTyping ? this.renderTypingIndicator() : html``}
+						${messageSets.map(messageSet =>
+							this.renderMessageSet(messageSet, myReadMessages, myAgentsB64),
+						)}
+					</div>
+				</div>
 			</div>
 			<message-input
 				@input=${() =>
@@ -114,6 +94,8 @@ export class PeerChat extends SignalWatcher(LitElement) {
 			></message-input>
 		</div> `;
 	}
+
+	initMessageSets: Record<string, boolean> = {};
 
 	private renderMessageSet(
 		messageSet: MessageSet<PeerMessage>,
@@ -130,7 +112,9 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		);
 		return html`
 			<div
-				${ref(() => {
+				${ref(el => {
+					if (!el) return;
+
 					if (fromMe) return;
 					const unreadMessages = messageSet.messages
 						.map(([hash]) => hash)
@@ -146,7 +130,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 					'from-me': fromMe,
 					column: true,
 				})}
-				style="align-items: start;"
+				style="align-items: start; padding-top: 8px; flex-direction: column-reverse"
 			>
 				${messageSet.messages.map(
 					([messageHash, message], i) => html`
@@ -157,7 +141,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 							<span style="flex: 1; word-break: break-all"
 								>${message.signed_content.content.message.message}</span
 							>
-							${i === messageSet.messages.length - 1
+							${i === 0
 								? html`
 										<div
 											class="placeholder column"
@@ -197,16 +181,12 @@ export class PeerChat extends SignalWatcher(LitElement) {
 		try {
 			await this.store.client.sendPeerMessage(this.peer, message);
 
-			const virtualizer = this.shadowRoot!.getElementById(
-				'scrolling-chat',
-			)! as LitVirtualizer;
-
-			setTimeout(() => {
-				virtualizer.scrollTo({
-					top: virtualizer.scrollHeight,
-					behavior: 'smooth',
-				});
-			});
+			// setTimeout(() => {
+			// 	virtualizer.scrollTo({
+			// 		top: virtualizer.scrollHeight,
+			// 		behavior: 'smooth',
+			// 	});
+			// });
 		} catch (e) {
 			console.log(e);
 			notifyError(msg(`Error sending the message`));
@@ -215,6 +195,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 
 	render() {
 		const messages = this.store.peerChats.get(this.peer).get();
+		console.log(messages);
 		switch (messages.status) {
 			case 'pending':
 				return html`

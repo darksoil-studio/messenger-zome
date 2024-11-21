@@ -207,6 +207,24 @@
             },
             {
               "kind": "method",
+              "name": "markPeerMessagesAsRead",
+              "parameters": [
+                {
+                  "name": "peer",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "readMessagesHashes",
+                  "type": {
+                    "text": "Array<EntryHash>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
               "name": "createGroupChat",
               "return": {
                 "type": {
@@ -425,7 +443,7 @@
           "type": {
             "text": "array"
           },
-          "default": "[ ...sharedStyles, css` .message { border-radius: 4px; border: 1px solid lightgrey; padding: 4px; box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px; background-color: var(--sl-color-neutral-100, white); } .from-me .message { background-color: var(--sl-color-primary-600, blue); align-self: end; color: var(--sl-color-neutral-0, white); } .from-me .message sl-relative-time { color: var(--sl-color-neutral-100, white); } .from-me .message sl-format-date { color: var(--sl-color-neutral-100, white); } .from-me .message span { color: var(--sl-color-neutral-100, white); } .typing-indicator { display: flex; flex-direction: row; align-items: end; border-radius: 4px; height: 16px; padding: 0 4px; background: var(--sl-color-neutral-300); color: var(--sl-color-neutral-500); font-size: 24px; } `, ]"
+          "default": "[ ...sharedStyles, css` lit-virtualizer { height: 100%; flex: 1; overflow: auto; min-height: unset !important; } .message { border-radius: 4px; border: 1px solid lightgrey; padding: 4px; box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px; background-color: var(--sl-color-neutral-100, white); } .from-me { right: 0; } .from-me .message { background-color: var(--sl-color-primary-600, blue); align-self: end; color: var(--sl-color-neutral-0, white); } .from-me .message sl-relative-time { color: var(--sl-color-neutral-100, white); } .from-me .message sl-format-date { color: var(--sl-color-neutral-100, white); } .from-me .message span { color: var(--sl-color-neutral-100, white); } .typing-indicator { display: flex; flex-direction: row; align-items: end; border-radius: 4px; height: 16px; padding: 0 4px; background: var(--sl-color-neutral-300); color: var(--sl-color-neutral-500); font-size: 24px; } `, ]"
         }
       ],
       "exports": [
@@ -1040,8 +1058,35 @@
             },
             {
               "kind": "method",
+              "name": "virtualizerIsOnBottom"
+            },
+            {
+              "kind": "method",
+              "name": "virtualizer"
+            },
+            {
+              "kind": "field",
+              "name": "lastScroll",
+              "type": {
+                "text": "number | undefined"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "syncScrolledBottom"
+            },
+            {
+              "kind": "method",
               "name": "renderTypingIndicator",
               "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "initVirtualizer",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
             },
             {
               "kind": "method",
@@ -1081,6 +1126,14 @@
               ]
             },
             {
+              "kind": "field",
+              "name": "initMessageSets",
+              "type": {
+                "text": "Record<string, boolean>"
+              },
+              "default": "{}"
+            },
+            {
               "kind": "method",
               "name": "renderMessageSet",
               "privacy": "private",
@@ -1092,9 +1145,21 @@
                   }
                 },
                 {
+                  "name": "myReadMessages",
+                  "type": {
+                    "text": "Array<EntryHashB64>"
+                  }
+                },
+                {
                   "name": "myAgentsB64",
                   "type": {
                     "text": "AgentPubKeyB64[]"
+                  }
+                },
+                {
+                  "name": "last",
+                  "type": {
+                    "text": "boolean"
                   }
                 }
               ]

@@ -17,10 +17,10 @@ export function orderInMessageSets<T>(
 	agentSets: Array<Array<AgentPubKey>>,
 ): Array<MessageSet<T>> {
 	const messageSets: MessageSet<T>[] = [];
-	const orderedAscendingMessages = Object.entries(messages).sort(
-		(m1, m2) => m1[1].signed_content.timestamp - m2[1].signed_content.timestamp,
+	const orderedDescendingMessages = Object.entries(messages).sort(
+		(m1, m2) => m2[1].signed_content.timestamp - m1[1].signed_content.timestamp,
 	);
-	for (const [messageHash, message] of orderedAscendingMessages) {
+	for (const [messageHash, message] of orderedDescendingMessages) {
 		if (messageSets.length === 0) {
 			messageSets.push({
 				messages: [[messageHash, message]],
@@ -48,8 +48,8 @@ export function orderInMessageSets<T>(
 
 			const sameProvenance = lastMessageAgentSet === currentMessageAgentSet;
 			const sameTimeframe =
-				message.signed_content.timestamp -
-					lastMessage.signed_content.timestamp <
+				lastMessage.signed_content.timestamp -
+					message.signed_content.timestamp <
 				MESSAGE_SET_TIMEFRAME_INTERVAL;
 
 			if (sameProvenance && sameTimeframe) {

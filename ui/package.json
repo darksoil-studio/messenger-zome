@@ -50,6 +50,7 @@
     "@lit-labs/virtualizer": "^2.0.14",
     "@lit/localize-tools": "^0.6.3",
     "@types/color-hash": "^2.0.0",
+    "@vaadin/virtual-list": "^24.5.3",
     "tslib": "^2.6.2",
     "typescript": "^5.4.5",
     "vite": "^4.0.0"

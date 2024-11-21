@@ -4,11 +4,8 @@ import { css } from 'lit';
 export const messengerStyles = [
 	...sharedStyles,
 	css`
-		lit-virtualizer {
-			height: 100%;
+		vaadin-virtual-list {
 			flex: 1;
-			overflow: auto;
-			min-height: unset !important;
 		}
 		.message {
 			border-radius: 4px;
