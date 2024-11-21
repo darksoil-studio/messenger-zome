@@ -161,7 +161,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
 		return html`
-			<div class="column from-me" style="flex-direction: column-reverse">
+			<div class="column from-me">
 				${messageSet.messages.map(
 					([messageHash, message], i) => html`
 						<div
@@ -171,7 +171,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 							<span style="flex: 1; word-break: break-all"
 								>${message.signed_content.content.message.message}</span
 							>
-							${i === 0
+							${i === messageSet.messages.length - 1
 								? html`
 										<div
 											class="placeholder column"

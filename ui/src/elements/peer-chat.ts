@@ -38,7 +38,28 @@ export class PeerChat extends SignalWatcher(LitElement) {
 
 	private renderTypingIndicator() {
 		return html`
-			<div class="row">
+			<div
+				class="row"
+				${ref(el => {
+					const virtualizer = this.shadowRoot!.getElementById(
+						'scrolling-chat',
+					)! as LitVirtualizer;
+
+					if (
+						virtualizer.scrollHeight -
+							virtualizer.offsetHeight -
+							virtualizer.scrollTop <
+						40
+					) {
+						setTimeout(() => {
+							virtualizer.scrollTo({
+								top: virtualizer.scrollHeight,
+								behavior: 'smooth',
+							});
+						}, 40);
+					}
+				})}
+			>
 				<div class="typing-indicator">
 					<span>...</span>
 				</div>
@@ -62,7 +83,6 @@ export class PeerChat extends SignalWatcher(LitElement) {
 			<div
 				style="padding-right: 8px; padding-left: 8px; flex: 1; display: flex; flex-direction: column-reverse"
 			>
-				${peerIsTyping ? this.renderTypingIndicator() : html``}
 				<lit-virtualizer
 					style="opacity: 0"
 					${ref(el => {
@@ -75,12 +95,14 @@ export class PeerChat extends SignalWatcher(LitElement) {
 								behavior: 'instant',
 							});
 							virtualizer.style.opacity = '1';
-						});
+						}, 50);
 					})}
 					id="scrolling-chat"
-					.items=${messageSets}
-					.renderItem=${(messageSet: MessageSet<PeerMessage>) =>
-						this.renderMessageSet(messageSet, myReadMessages, myAgentsB64)}
+					.items=${peerIsTyping ? [...messageSets, peerIsTyping] : messageSets}
+					.renderItem=${(messageSet: MessageSet<PeerMessage> | boolean) =>
+						typeof messageSet === 'boolean'
+							? this.renderTypingIndicator()
+							: this.renderMessageSet(messageSet, myReadMessages, myAgentsB64)}
 				>
 				</lit-virtualizer>
 			</div>
