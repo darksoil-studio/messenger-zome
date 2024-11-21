@@ -4,9 +4,6 @@ import { css } from 'lit';
 export const messengerStyles = [
 	...sharedStyles,
 	css`
-		vaadin-virtual-list {
-			flex: 1;
-		}
 		.message {
 			border-radius: 4px;
 			border: 1px solid lightgrey;

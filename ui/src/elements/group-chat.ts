@@ -68,6 +68,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		messages: Record<EntryHashB64, Signed<GroupMessage>>,
 		theirAgentSets: Array<Array<AgentPubKey>>,
 		typingPeers: Array<AgentPubKey>,
+		myReadMessages: EntryHashB64[],
 	) {
 		const messageSets = orderInMessageSets(messages, [
 			myAgents,
@@ -102,6 +103,32 @@ export class GroupChat extends SignalWatcher(LitElement) {
 						class="flex-scrollable-y"
 						id="scrolling-chat"
 						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
+						${ref(el => {
+							if (!el) return;
+							const theirMessageSets = messageSets.filter(
+								set =>
+									!myAgentsB64.includes(
+										encodeHashToBase64(set.messages[0][1].provenance),
+									),
+							);
+
+							const unreadMessages: EntryHash[] = [];
+
+							for (const messageSet of theirMessageSets) {
+								for (const [messageHash, _] of messageSet.messages) {
+									if (!myReadMessages.includes(messageHash)) {
+										unreadMessages.push(decodeHashFromBase64(messageHash));
+									}
+								}
+							}
+
+							if (unreadMessages.length > 0) {
+								this.store.client.markGroupMessagesAsRead(
+									this.groupHash,
+									unreadMessages,
+								);
+							}
+						})}
 					>
 						<div style="margin-bottom: 4px"></div>
 						${this.renderTypingIndicators(typingPeers)}
@@ -112,7 +139,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 								? this.renderMessageSetFromMe(messageSet)
 								: this.renderMessageSetToMe(messageSet),
 						)}
-						<sl-tag style="align-self: center">
+						<sl-tag style="align-self: center; margin: 8px">
 							${msg(str`Group was created by`)}&nbsp;
 							${this.renderAgentNickname(originalGroup.provenance)}
 						</sl-tag>
@@ -395,6 +422,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 					group.messages,
 					group.theirAgentSets,
 					group.typingPeers,
+					group.myReadMessages,
 				);
 		}
 	}

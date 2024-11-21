@@ -44,6 +44,7 @@ import {
 	GroupMessengerEntry,
 	PeerMessage,
 	PrivateMessengerEntry,
+	ReadGroupMessages,
 	ReadPeerMessages,
 	Signed,
 	UpdateGroupChat,
@@ -66,6 +67,8 @@ interface InternalEntries {
 			updates: Array<EntryHashB64>;
 			deletes: Array<EntryHashB64>;
 			messages: Array<EntryHashB64>;
+			myReadMessages: Array<EntryHashB64>;
+			theirReadMessages: Record<AgentPubKeyB64, EntryHashB64[]>;
 		}
 	>;
 }
@@ -268,6 +271,8 @@ export class MessengerStore {
 							updates: [],
 							deletes: [],
 							messages: [],
+							myReadMessages: [],
+							theirReadMessages: {},
 						};
 					}
 					value.groups[groupHash].updates.push(entryHash);
@@ -282,6 +287,8 @@ export class MessengerStore {
 							updates: [],
 							deletes: [],
 							messages: [],
+							myReadMessages: [],
+							theirReadMessages: {},
 						};
 					}
 					value.groups[groupHash2].deletes.push(entryHash);
@@ -296,9 +303,48 @@ export class MessengerStore {
 							updates: [],
 							deletes: [],
 							messages: [],
+							myReadMessages: [],
+							theirReadMessages: {},
 						};
 					}
 					value.groups[groupHash3].messages.push(entryHash);
+					break;
+				case 'ReadGroupMessages':
+					const readGroupMessages =
+						privateMessengerEntry as Signed<ReadGroupMessages>;
+					const author = encodeHashToBase64(readGroupMessages.provenance);
+					const fromMe2 = allMyAgentsB64.includes(author);
+					const groupHash4 = encodeHashToBase64(
+						readGroupMessages.signed_content.content.group_hash,
+					);
+					if (!value.groups[groupHash4]) {
+						value.groups[groupHash4] = {
+							updates: [],
+							deletes: [],
+							messages: [],
+							myReadMessages: [],
+							theirReadMessages: {},
+						};
+					}
+
+					if (fromMe2) {
+						for (const readMessage of readGroupMessages.signed_content.content
+							.read_messages_hashes) {
+							value.groups[groupHash4].myReadMessages.push(
+								encodeHashToBase64(readMessage),
+							);
+						}
+					} else {
+						for (const readMessage of readGroupMessages.signed_content.content
+							.read_messages_hashes) {
+							if (!value.groups[groupHash4].theirReadMessages[author]) {
+								value.groups[groupHash4].theirReadMessages[author] = [];
+							}
+							value.groups[groupHash4].theirReadMessages[author].push(
+								encodeHashToBase64(readMessage),
+							);
+						}
+					}
 					break;
 				case 'CreateGroupChat':
 					if (!value.groups[entryHash]) {
@@ -306,6 +352,8 @@ export class MessengerStore {
 							updates: [],
 							deletes: [],
 							messages: [],
+							myReadMessages: [],
+							theirReadMessages: {},
 						};
 					}
 					break;
@@ -512,6 +560,7 @@ export class MessengerStore {
 						myAgentSet: myAgents.value,
 						theirAgentSets,
 						typingPeers,
+						myReadMessages: group.myReadMessages,
 					},
 				};
 			}),
@@ -613,6 +662,9 @@ export class MessengerStore {
 		const privateMessengerEntries = this.internalEntries.get();
 		if (privateMessengerEntries.status !== 'completed')
 			return privateMessengerEntries;
+		const myAgents = this.allMyAgents.get();
+		if (myAgents.status !== 'completed') return myAgents;
+		const myAgentsB64 = myAgents.value.map(encodeHashToBase64);
 
 		const chats: Array<GroupChat> = [];
 
@@ -629,6 +681,8 @@ export class MessengerStore {
 				createGroup.signed_content.content,
 			];
 
+			const myUnreadMessages: EntryHash[] = [];
+
 			for (const messageHash of group.messages) {
 				const message =
 					privateMessengerEntries.value.privateMessengerEntries[messageHash];
@@ -640,6 +694,13 @@ export class MessengerStore {
 					lastActivity = message as Signed<
 						{ type: 'GroupMessage' } & GroupMessage
 					>;
+				}
+
+				if (
+					!myAgentsB64.includes(encodeHashToBase64(message.provenance)) &&
+					!group.myReadMessages.includes(messageHash)
+				) {
+					myUnreadMessages.push(decodeHashFromBase64(messageHash));
 				}
 			}
 
@@ -675,6 +736,7 @@ export class MessengerStore {
 				lastActivity,
 				currentGroup: lastGroupVersion[1],
 				groupHash: decodeHashFromBase64(groupHash),
+				myUnreadMessages,
 			});
 		}
 
@@ -722,6 +784,7 @@ export interface GroupChat {
 	lastActivity: GroupMessengerEntry;
 	groupHash: EntryHash;
 	currentGroup: Group;
+	myUnreadMessages: Array<EntryHash>;
 }
 
 export type Chat =

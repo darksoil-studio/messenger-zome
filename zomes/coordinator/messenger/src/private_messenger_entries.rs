@@ -125,6 +125,14 @@ fn recipients(private_messenger_entry: &PrivateMessengerEntry) -> ExternResult<V
             };
             Ok(all_chat_agents.into_iter().flatten().collect())
         }
+        PrivateMessengerEntryContent::ReadGroupMessages(read_group_messages) => {
+            let Some(all_chat_agents) =
+                get_all_agent_sets_for_current_group(&read_group_messages.group_hash)?
+            else {
+                return Err(wasm_error!("Group not found"));
+            };
+            Ok(all_chat_agents.into_iter().flatten().collect())
+        }
     }
 }
 

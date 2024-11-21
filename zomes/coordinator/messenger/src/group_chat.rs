@@ -3,7 +3,7 @@ use messenger_integrity::*;
 
 use crate::{
     linked_devices::get_all_agents_for, private_messenger_entries::query_private_messenger_entries,
-    signed::build_signed,
+    signed::build_signed, utils::create_relaxed,
 };
 
 #[hdk_extern]
@@ -26,7 +26,19 @@ pub fn send_group_message(group_message: GroupMessage) -> ExternResult<()> {
     let private_messenger_entry = PrivateMessengerEntry(signed.clone());
     let entry = EntryTypes::PrivateMessengerEntry(private_messenger_entry.clone());
 
-    create_entry(entry)?;
+    create_relaxed(entry)?;
+
+    Ok(())
+}
+
+#[hdk_extern]
+pub fn mark_group_messages_as_read(read_group_messages: ReadGroupMessages) -> ExternResult<()> {
+    let content = PrivateMessengerEntryContent::ReadGroupMessages(read_group_messages.clone());
+    let signed = build_signed(content)?;
+    let private_messenger_entry = PrivateMessengerEntry(signed.clone());
+    let entry = EntryTypes::PrivateMessengerEntry(private_messenger_entry.clone());
+
+    create_relaxed(entry)?;
 
     Ok(())
 }

@@ -153,6 +153,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 		groupHash: EntryHash,
 		group: Group,
 		lastActivity: GroupMessengerEntry,
+		myUnreadMessages: EntryHash[],
 	) {
 		return html`<div
 			class="row"
@@ -191,8 +192,16 @@ export class AllChats extends SignalWatcher(LitElement) {
 				>
 			</div>
 
-			<div class="placeholder time" style="display: contents">
-				${this.renderTime(lastActivity.signed_content.timestamp)}
+			<div class="column" style="gap: 2px; align-items: end">
+				<div class="placeholder time" style="display: contents">
+					${this.renderTime(lastActivity.signed_content.timestamp)}
+				</div>
+				<div style="flex: 1"></div>
+				${myUnreadMessages.length !== 0
+					? html`<sl-badge variant="primary" pill
+							>${myUnreadMessages.length}</sl-badge
+						>`
+					: html``}
 			</div>
 		</div>`;
 	}
@@ -225,6 +234,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 								chat.groupHash,
 								chat.currentGroup,
 								chat.lastActivity,
+								chat.myUnreadMessages,
 							),
 				),
 				html`<sl-divider></sl-divider>`,

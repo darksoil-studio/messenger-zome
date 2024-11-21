@@ -54,6 +54,12 @@ pub struct ReadPeerMessages {
     pub read_messages_hashes: Vec<EntryHash>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReadGroupMessages {
+    pub group_hash: EntryHash,
+    pub read_messages_hashes: Vec<EntryHash>,
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum PrivateMessengerEntryContent {
@@ -63,6 +69,7 @@ pub enum PrivateMessengerEntryContent {
     UpdateGroupChat(UpdateGroupChat),
     DeleteGroupChat(DeleteGroupChat),
     GroupMessage(GroupMessage),
+    ReadGroupMessages(ReadGroupMessages),
 }
 
 #[hdk_entry_helper]

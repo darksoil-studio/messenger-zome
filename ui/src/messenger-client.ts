@@ -23,11 +23,6 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		super(client, roleName, zomeName);
 	}
 
-	callZome(fn: string, p: any) {
-		console.log('fn', fn);
-		return super.callZome(fn, p);
-	}
-
 	async queryPrivateMessengerEntries(): Promise<
 		Record<EntryHashB64, PrivateMessengerEntry>
 	> {
@@ -100,6 +95,16 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 				)
 					resolve(undefined);
 			});
+		});
+	}
+
+	async markGroupMessagesAsRead(
+		groupHash: EntryHash,
+		readMessagesHashes: Array<EntryHash>,
+	) {
+		await this.callZome('mark_group_messages_as_read', {
+			group_hash: groupHash,
+			read_messages_hashes: readMessagesHashes,
 		});
 	}
 

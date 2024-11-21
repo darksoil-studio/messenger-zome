@@ -85,6 +85,11 @@ export interface ReadPeerMessages {
 	peer: AgentPubKey;
 }
 
+export interface ReadGroupMessages {
+	read_messages_hashes: EntryHash[];
+	group_hash: EntryHash;
+}
+
 export type PrivateMessengerEntry = PeerMessengerEntry | GroupMessengerEntry;
 
 export type PeerMessengerEntry =
@@ -93,6 +98,7 @@ export type PeerMessengerEntry =
 
 export type GroupMessengerEntry = Signed<
 	| ({ type: 'GroupMessage' } & GroupMessage)
+	| ({ type: 'ReadGroupMessages' } & ReadGroupMessages)
 	| ({ type: 'CreateGroupChat' } & Group)
 	| ({ type: 'UpdateGroupChat' } & UpdateGroupChat)
 	| ({ type: 'DeleteGroupChat' } & DeleteGroupChat)
