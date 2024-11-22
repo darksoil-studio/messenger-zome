@@ -267,6 +267,24 @@
             },
             {
               "kind": "method",
+              "name": "markGroupMessagesAsRead",
+              "parameters": [
+                {
+                  "name": "groupHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                },
+                {
+                  "name": "readMessagesHashes",
+                  "type": {
+                    "text": "Array<EntryHash>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
               "name": "sendPeerChatTypingIndicator",
               "parameters": [
                 {
@@ -357,7 +375,7 @@
               "kind": "field",
               "name": "internalEntries",
               "privacy": "private",
-              "default": "new AsyncComputed<InternalEntries>(() => { const privateMessengerEntriesResult = this.privateMessengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const allMyAgents = this.allMyAgents.get(); if (allMyAgents.status !== 'completed') return allMyAgents; const allMyAgentsB64 = allMyAgents.value.map(encodeHashToBase64); const privateMessengerEntries = privateMessengerEntriesResult.value; const value: InternalEntries = { privateMessengerEntries, peerChats: {}, groups: {}, }; for (const [entryHash, privateMessengerEntry] of Object.entries( privateMessengerEntries, )) { switch (privateMessengerEntry.signed_content.content.type) { case 'PeerMessage': const peerMessage = privateMessengerEntry as Signed<PeerMessage>; const peer = !allMyAgentsB64.includes( encodeHashToBase64(peerMessage.provenance), ) ? peerMessage.provenance : peerMessage.signed_content.content.recipient; const peerB64 = encodeHashToBase64(peer); if (!value.peerChats[peerB64]) { value.peerChats[peerB64] = { messages: [], myReadMessages: [], theirReadMessages: [], }; } value.peerChats[peerB64].messages.push(entryHash); break; case 'ReadPeerMessages': const readPeerMessages = privateMessengerEntry as Signed<ReadPeerMessages>; const fromMe = allMyAgentsB64.includes( encodeHashToBase64(readPeerMessages.provenance), ); const peer2 = fromMe ? readPeerMessages.signed_content.content.peer : readPeerMessages.provenance; const peerB642 = encodeHashToBase64(peer2); if (!value.peerChats[peerB642]) { value.peerChats[peerB642] = { messages: [], myReadMessages: [], theirReadMessages: [], }; } if (fromMe) { for (const readMessage of readPeerMessages.signed_content.content .read_messages_hashes) { value.peerChats[peerB642].myReadMessages.push( encodeHashToBase64(readMessage), ); } } else { for (const readMessage of readPeerMessages.signed_content.content .read_messages_hashes) { value.peerChats[peerB642].theirReadMessages.push( encodeHashToBase64(readMessage), ); } } break; case 'UpdateGroupChat': const update = privateMessengerEntry as Signed<UpdateGroupChat>; const groupHash = encodeHashToBase64( update.signed_content.content.original_group_hash, ); if (!value.groups[groupHash]) { value.groups[groupHash] = { updates: [], deletes: [], messages: [], }; } value.groups[groupHash].updates.push(entryHash); break; case 'DeleteGroupChat': const deleteChat = privateMessengerEntry as Signed<DeleteGroupChat>; const groupHash2 = encodeHashToBase64( deleteChat.signed_content.content.original_group_hash, ); if (!value.groups[groupHash2]) { value.groups[groupHash2] = { updates: [], deletes: [], messages: [], }; } value.groups[groupHash2].deletes.push(entryHash); break; case 'GroupMessage': const groupMessage = privateMessengerEntry as Signed<GroupMessage>; const groupHash3 = encodeHashToBase64( groupMessage.signed_content.content.original_group_hash, ); if (!value.groups[groupHash3]) { value.groups[groupHash3] = { updates: [], deletes: [], messages: [], }; } value.groups[groupHash3].messages.push(entryHash); break; case 'CreateGroupChat': if (!value.groups[entryHash]) { value.groups[entryHash] = { updates: [], deletes: [], messages: [], }; } break; } } return { status: 'completed', value, }; })"
+              "default": "new AsyncComputed<InternalEntries>(() => { const privateMessengerEntriesResult = this.privateMessengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const allMyAgents = this.allMyAgents.get(); if (allMyAgents.status !== 'completed') return allMyAgents; const allMyAgentsB64 = allMyAgents.value.map(encodeHashToBase64); const privateMessengerEntries = privateMessengerEntriesResult.value; const value: InternalEntries = { privateMessengerEntries, peerChats: {}, groups: {}, }; for (const [entryHash, privateMessengerEntry] of Object.entries( privateMessengerEntries, )) { switch (privateMessengerEntry.signed_content.content.type) { case 'PeerMessage': const peerMessage = privateMessengerEntry as Signed<PeerMessage>; const peer = !allMyAgentsB64.includes( encodeHashToBase64(peerMessage.provenance), ) ? peerMessage.provenance : peerMessage.signed_content.content.recipient; const peerB64 = encodeHashToBase64(peer); if (!value.peerChats[peerB64]) { value.peerChats[peerB64] = { messages: [], myReadMessages: [], theirReadMessages: [], }; } value.peerChats[peerB64].messages.push(entryHash); break; case 'ReadPeerMessages': const readPeerMessages = privateMessengerEntry as Signed<ReadPeerMessages>; const fromMe = allMyAgentsB64.includes( encodeHashToBase64(readPeerMessages.provenance), ); const peer2 = fromMe ? readPeerMessages.signed_content.content.peer : readPeerMessages.provenance; const peerB642 = encodeHashToBase64(peer2); if (!value.peerChats[peerB642]) { value.peerChats[peerB642] = { messages: [], myReadMessages: [], theirReadMessages: [], }; } if (fromMe) { for (const readMessage of readPeerMessages.signed_content.content .read_messages_hashes) { value.peerChats[peerB642].myReadMessages.push( encodeHashToBase64(readMessage), ); } } else { for (const readMessage of readPeerMessages.signed_content.content .read_messages_hashes) { value.peerChats[peerB642].theirReadMessages.push( encodeHashToBase64(readMessage), ); } } break; case 'UpdateGroupChat': const update = privateMessengerEntry as Signed<UpdateGroupChat>; const groupHash = encodeHashToBase64( update.signed_content.content.original_group_hash, ); if (!value.groups[groupHash]) { value.groups[groupHash] = { updates: [], deletes: [], messages: [], myReadMessages: [], theirReadMessages: {}, }; } value.groups[groupHash].updates.push(entryHash); break; case 'DeleteGroupChat': const deleteChat = privateMessengerEntry as Signed<DeleteGroupChat>; const groupHash2 = encodeHashToBase64( deleteChat.signed_content.content.original_group_hash, ); if (!value.groups[groupHash2]) { value.groups[groupHash2] = { updates: [], deletes: [], messages: [], myReadMessages: [], theirReadMessages: {}, }; } value.groups[groupHash2].deletes.push(entryHash); break; case 'GroupMessage': const groupMessage = privateMessengerEntry as Signed<GroupMessage>; const groupHash3 = encodeHashToBase64( groupMessage.signed_content.content.original_group_hash, ); if (!value.groups[groupHash3]) { value.groups[groupHash3] = { updates: [], deletes: [], messages: [], myReadMessages: [], theirReadMessages: {}, }; } value.groups[groupHash3].messages.push(entryHash); break; case 'ReadGroupMessages': const readGroupMessages = privateMessengerEntry as Signed<ReadGroupMessages>; const author = encodeHashToBase64(readGroupMessages.provenance); const fromMe2 = allMyAgentsB64.includes(author); const groupHash4 = encodeHashToBase64( readGroupMessages.signed_content.content.group_hash, ); if (!value.groups[groupHash4]) { value.groups[groupHash4] = { updates: [], deletes: [], messages: [], myReadMessages: [], theirReadMessages: {}, }; } if (fromMe2) { for (const readMessage of readGroupMessages.signed_content.content .read_messages_hashes) { value.groups[groupHash4].myReadMessages.push( encodeHashToBase64(readMessage), ); } } else { for (const readMessage of readGroupMessages.signed_content.content .read_messages_hashes) { if (!value.groups[groupHash4].theirReadMessages[author]) { value.groups[groupHash4].theirReadMessages[author] = []; } value.groups[groupHash4].theirReadMessages[author].push( encodeHashToBase64(readMessage), ); } } break; case 'CreateGroupChat': if (!value.groups[entryHash]) { value.groups[entryHash] = { updates: [], deletes: [], messages: [], myReadMessages: [], theirReadMessages: {}, }; } break; } } return { status: 'completed', value, }; })"
             },
             {
               "kind": "field",
@@ -377,7 +395,7 @@
             {
               "kind": "field",
               "name": "groupChats",
-              "default": "new MemoHoloHashMap( (groupHash: EntryHash) => new AsyncComputed(() => { const privateMessengerEntries = this.internalEntries.get(); if (privateMessengerEntries.status !== 'completed') return privateMessengerEntries; const myAgents = this.allMyAgents.get(); if (myAgents.status !== 'completed') return myAgents; const groupHashB64 = encodeHashToBase64(groupHash); const group = privateMessengerEntries.value.groups[groupHashB64]; if (!group) { return { status: 'completed', value: undefined, }; } const originalGroup = privateMessengerEntries.value .privateMessengerEntries[groupHashB64] as Signed<Group>; let currentGroup: Group = originalGroup.signed_content.content; let currentGroupTimestamp = originalGroup.signed_content.timestamp; const messages: Record<EntryHashB64, Signed<GroupMessage>> = {}; const updates: Record<EntryHashB64, Signed<UpdateGroupChat>> = {}; const deletes: Record<EntryHashB64, Signed<DeleteGroupChat>> = {}; let theirAgents: AgentPubKey[] = []; for (const updateHash of group.updates) { const update = privateMessengerEntries.value.privateMessengerEntries[ updateHash ] as Signed<UpdateGroupChat>; updates[updateHash] = update; if (currentGroupTimestamp < update.signed_content.timestamp) { currentGroupTimestamp = update.signed_content.timestamp; currentGroup = update.signed_content.content.group; } theirAgents.push(update.provenance); } for (const messageHash of group.messages) { const message = privateMessengerEntries.value.privateMessengerEntries[ messageHash ] as Signed<GroupMessage>; messages[messageHash] = message; theirAgents.push(message.provenance); } for (const deleteHash of group.deletes) { const deleteChat = privateMessengerEntries.value .privateMessengerEntries[deleteHash] as Signed<DeleteGroupChat>; deletes[deleteHash] = deleteChat; theirAgents.push(deleteChat.provenance); } for (const admin of currentGroup.admins) { theirAgents.push(admin); } for (const member of currentGroup.members) { theirAgents.push(member); } theirAgents = uniquify(theirAgents).filter( theirAgent => !myAgents.value.find( myAgent => encodeHashToBase64(myAgent) === encodeHashToBase64(theirAgent), ), ); const agentsLinkedDevices = joinAsyncMap( mapValues(slice(this.allAgentsFor, theirAgents), s => s.get()), ); if (agentsLinkedDevices.status !== 'completed') return agentsLinkedDevices; const theirAgentSets: Array<Array<AgentPubKey>> = []; for (const agents of Array.from(agentsLinkedDevices.value.values())) { const currentAgentSet = theirAgentSets.findIndex(agentSet => agentSet.find(agent => agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(agent), ), ), ); if (currentAgentSet === -1) { theirAgentSets.push(agents); } else { theirAgentSets[currentAgentSet] = uniquify([ ...theirAgentSets[currentAgentSet], ...agents, ]); } } const typingPeers: Array<AgentPubKey> = []; for (const agentSet of theirAgentSets) { for (const agent of agentSet) { const isTyping = this.peerIsTypingInGroup .get(groupHash) .get(agent) .get(); if (isTyping) typingPeers.push(agent); } } return { status: 'completed', value: { originalGroup, currentGroup, messages, updates, deletes, myAgentSet: myAgents.value, theirAgentSets, typingPeers, }, }; }), )"
+              "default": "new MemoHoloHashMap( (groupHash: EntryHash) => new AsyncComputed(() => { const privateMessengerEntries = this.internalEntries.get(); if (privateMessengerEntries.status !== 'completed') return privateMessengerEntries; const myAgents = this.allMyAgents.get(); if (myAgents.status !== 'completed') return myAgents; const groupHashB64 = encodeHashToBase64(groupHash); const group = privateMessengerEntries.value.groups[groupHashB64]; if (!group) { return { status: 'completed', value: undefined, }; } const originalGroup = privateMessengerEntries.value .privateMessengerEntries[groupHashB64] as Signed<Group>; let currentGroup: Group = originalGroup.signed_content.content; let currentGroupTimestamp = originalGroup.signed_content.timestamp; const messages: Record<EntryHashB64, Signed<GroupMessage>> = {}; const updates: Record<EntryHashB64, Signed<UpdateGroupChat>> = {}; const deletes: Record<EntryHashB64, Signed<DeleteGroupChat>> = {}; let theirAgents: AgentPubKey[] = []; for (const updateHash of group.updates) { const update = privateMessengerEntries.value.privateMessengerEntries[ updateHash ] as Signed<UpdateGroupChat>; updates[updateHash] = update; if (currentGroupTimestamp < update.signed_content.timestamp) { currentGroupTimestamp = update.signed_content.timestamp; currentGroup = update.signed_content.content.group; } theirAgents.push(update.provenance); } for (const messageHash of group.messages) { const message = privateMessengerEntries.value.privateMessengerEntries[ messageHash ] as Signed<GroupMessage>; messages[messageHash] = message; theirAgents.push(message.provenance); } for (const deleteHash of group.deletes) { const deleteChat = privateMessengerEntries.value .privateMessengerEntries[deleteHash] as Signed<DeleteGroupChat>; deletes[deleteHash] = deleteChat; theirAgents.push(deleteChat.provenance); } for (const admin of currentGroup.admins) { theirAgents.push(admin); } for (const member of currentGroup.members) { theirAgents.push(member); } theirAgents = uniquify(theirAgents).filter( theirAgent => !myAgents.value.find( myAgent => encodeHashToBase64(myAgent) === encodeHashToBase64(theirAgent), ), ); const agentsLinkedDevices = joinAsyncMap( mapValues(slice(this.allAgentsFor, theirAgents), s => s.get()), ); if (agentsLinkedDevices.status !== 'completed') return agentsLinkedDevices; const theirAgentSets: Array<Array<AgentPubKey>> = []; for (const agents of Array.from(agentsLinkedDevices.value.values())) { const currentAgentSet = theirAgentSets.findIndex(agentSet => agentSet.find(agent => agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(agent), ), ), ); if (currentAgentSet === -1) { theirAgentSets.push(agents); } else { theirAgentSets[currentAgentSet] = uniquify([ ...theirAgentSets[currentAgentSet], ...agents, ]); } } const typingPeers: Array<AgentPubKey> = []; for (const agentSet of theirAgentSets) { for (const agent of agentSet) { const isTyping = this.peerIsTypingInGroup .get(groupHash) .get(agent) .get(); if (isTyping) typingPeers.push(agent); } } return { status: 'completed', value: { originalGroup, currentGroup, messages, updates, deletes, myAgentSet: myAgents.value, theirAgentSets, typingPeers, myReadMessages: group.myReadMessages, }, }; }), )"
             },
             {
               "kind": "field",
@@ -387,7 +405,7 @@
             {
               "kind": "field",
               "name": "allGroupChats",
-              "default": "new AsyncComputed<Array<GroupChat>>(() => { const privateMessengerEntries = this.internalEntries.get(); if (privateMessengerEntries.status !== 'completed') return privateMessengerEntries; const chats: Array<GroupChat> = []; for (const [groupHash, group] of Object.entries( privateMessengerEntries.value.groups, )) { const createGroup = privateMessengerEntries.value.privateMessengerEntries[ groupHash ] as Signed<{ type: 'CreateGroupChat' } & Group>; let lastActivity: GroupMessengerEntry = createGroup; let lastGroupVersion: [Timestamp, Group] = [ createGroup.signed_content.timestamp, createGroup.signed_content.content, ]; for (const messageHash of group.messages) { const message = privateMessengerEntries.value.privateMessengerEntries[messageHash]; if ( lastActivity.signed_content.timestamp < message.signed_content.timestamp ) { lastActivity = message as Signed< { type: 'GroupMessage' } & GroupMessage >; } } for (const updateHash of group.updates) { const update = privateMessengerEntries.value.privateMessengerEntries[ updateHash ] as Signed<{ type: 'UpdateGroupChat' } & UpdateGroupChat>; if ( lastActivity.signed_content.timestamp < update.signed_content.timestamp ) { lastActivity = update; } if (lastGroupVersion[0] < update.signed_content.timestamp) { lastGroupVersion = [ update.signed_content.timestamp, update.signed_content.content.group, ]; } } for (const deleteHash of group.deletes) { const deleteGroup = privateMessengerEntries.value .privateMessengerEntries[deleteHash] as Signed< { type: 'DeleteGroupChat' } & DeleteGroupChat >; lastActivity = deleteGroup; } chats.push({ lastActivity, currentGroup: lastGroupVersion[1], groupHash: decodeHashFromBase64(groupHash), }); } return { status: 'completed', value: chats, }; })"
+              "default": "new AsyncComputed<Array<GroupChat>>(() => { const privateMessengerEntries = this.internalEntries.get(); if (privateMessengerEntries.status !== 'completed') return privateMessengerEntries; const myAgents = this.allMyAgents.get(); if (myAgents.status !== 'completed') return myAgents; const myAgentsB64 = myAgents.value.map(encodeHashToBase64); const chats: Array<GroupChat> = []; for (const [groupHash, group] of Object.entries( privateMessengerEntries.value.groups, )) { const createGroup = privateMessengerEntries.value.privateMessengerEntries[ groupHash ] as Signed<{ type: 'CreateGroupChat' } & Group>; let lastActivity: GroupMessengerEntry = createGroup; let lastGroupVersion: [Timestamp, Group] = [ createGroup.signed_content.timestamp, createGroup.signed_content.content, ]; const myUnreadMessages: EntryHash[] = []; for (const messageHash of group.messages) { const message = privateMessengerEntries.value.privateMessengerEntries[messageHash]; if ( lastActivity.signed_content.timestamp < message.signed_content.timestamp ) { lastActivity = message as Signed< { type: 'GroupMessage' } & GroupMessage >; } if ( !myAgentsB64.includes(encodeHashToBase64(message.provenance)) && !group.myReadMessages.includes(messageHash) ) { myUnreadMessages.push(decodeHashFromBase64(messageHash)); } } for (const updateHash of group.updates) { const update = privateMessengerEntries.value.privateMessengerEntries[ updateHash ] as Signed<{ type: 'UpdateGroupChat' } & UpdateGroupChat>; if ( lastActivity.signed_content.timestamp < update.signed_content.timestamp ) { lastActivity = update; } if (lastGroupVersion[0] < update.signed_content.timestamp) { lastGroupVersion = [ update.signed_content.timestamp, update.signed_content.content.group, ]; } } for (const deleteHash of group.deletes) { const deleteGroup = privateMessengerEntries.value .privateMessengerEntries[deleteHash] as Signed< { type: 'DeleteGroupChat' } & DeleteGroupChat >; lastActivity = deleteGroup; } chats.push({ lastActivity, currentGroup: lastGroupVersion[1], groupHash: decodeHashFromBase64(groupHash), myUnreadMessages, }); } return { status: 'completed', value: chats, }; })"
             },
             {
               "kind": "field",
@@ -443,7 +461,7 @@
           "type": {
             "text": "array"
           },
-          "default": "[ ...sharedStyles, css` lit-virtualizer { height: 100%; flex: 1; overflow: auto; min-height: unset !important; } .message { border-radius: 4px; border: 1px solid lightgrey; padding: 4px; box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px; background-color: var(--sl-color-neutral-100, white); } .from-me { right: 0; } .from-me .message { background-color: var(--sl-color-primary-600, blue); align-self: end; color: var(--sl-color-neutral-0, white); } .from-me .message sl-relative-time { color: var(--sl-color-neutral-100, white); } .from-me .message sl-format-date { color: var(--sl-color-neutral-100, white); } .from-me .message span { color: var(--sl-color-neutral-100, white); } .typing-indicator { display: flex; flex-direction: row; align-items: end; border-radius: 4px; height: 16px; padding: 0 4px; background: var(--sl-color-neutral-300); color: var(--sl-color-neutral-500); font-size: 24px; } `, ]"
+          "default": "[ ...sharedStyles, css` .message { border-radius: 4px; border: 1px solid lightgrey; padding: 4px; box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px; background-color: var(--sl-color-neutral-100, white); } .from-me { right: 0; } .from-me .message { background-color: var(--sl-color-primary-600, blue); align-self: end; color: var(--sl-color-neutral-0, white); } .from-me .message sl-relative-time { color: var(--sl-color-neutral-100, white); } .from-me .message sl-format-date { color: var(--sl-color-neutral-100, white); } .from-me .message span { color: var(--sl-color-neutral-100, white); } .typing-indicator { display: flex; flex-direction: row; align-items: end; border-radius: 4px; height: 16px; padding: 0 4px; background: var(--sl-color-neutral-300); color: var(--sl-color-neutral-500); font-size: 24px; } `, ]"
         }
       ],
       "exports": [
@@ -595,6 +613,12 @@
                   "type": {
                     "text": "GroupMessengerEntry"
                   }
+                },
+                {
+                  "name": "myUnreadMessages",
+                  "type": {
+                    "text": "EntryHash[]"
+                  }
                 }
               ]
             },
@@ -740,6 +764,12 @@
                   "name": "typingPeers",
                   "type": {
                     "text": "Array<AgentPubKey>"
+                  }
+                },
+                {
+                  "name": "myReadMessages",
+                  "type": {
+                    "text": "EntryHashB64[]"
                   }
                 }
               ]
@@ -1058,35 +1088,8 @@
             },
             {
               "kind": "method",
-              "name": "virtualizerIsOnBottom"
-            },
-            {
-              "kind": "method",
-              "name": "virtualizer"
-            },
-            {
-              "kind": "field",
-              "name": "lastScroll",
-              "type": {
-                "text": "number | undefined"
-              }
-            },
-            {
-              "kind": "method",
-              "name": "syncScrolledBottom"
-            },
-            {
-              "kind": "method",
               "name": "renderTypingIndicator",
               "privacy": "private"
-            },
-            {
-              "kind": "field",
-              "name": "initVirtualizer",
-              "type": {
-                "text": "boolean"
-              },
-              "default": "false"
             },
             {
               "kind": "method",
@@ -1126,14 +1129,6 @@
               ]
             },
             {
-              "kind": "field",
-              "name": "initMessageSets",
-              "type": {
-                "text": "Record<string, boolean>"
-              },
-              "default": "{}"
-            },
-            {
               "kind": "method",
               "name": "renderMessageSet",
               "privacy": "private",
@@ -1145,21 +1140,9 @@
                   }
                 },
                 {
-                  "name": "myReadMessages",
-                  "type": {
-                    "text": "Array<EntryHashB64>"
-                  }
-                },
-                {
                   "name": "myAgentsB64",
                   "type": {
                     "text": "AgentPubKeyB64[]"
-                  }
-                },
-                {
-                  "name": "last",
-                  "type": {
-                    "text": "boolean"
                   }
                 }
               ]

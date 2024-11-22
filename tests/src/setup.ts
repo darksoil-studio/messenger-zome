@@ -106,11 +106,11 @@ export async function linkDevices(
 	await store1.client.prepareLinkDevices(store1Passcode);
 	await store2.client.prepareLinkDevices(store2Passcode);
 
-	await store1.client.initLinkDevices(
+	await store1.client.requestLinkDevices(
 		store2.client.client.myPubKey,
 		store2Passcode,
 	);
-	await store2.client.requestLinkDevices(
+	await store2.client.acceptLinkDevices(
 		store1.client.client.myPubKey,
 		store1Passcode,
 	);
