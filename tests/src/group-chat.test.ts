@@ -13,13 +13,18 @@ test('create a group chat, send message and read it', async () => {
 			members: [bob.player.agentPubKey],
 			info: {
 				name: 'mygroup',
+				avatar_hash: undefined,
 			},
 		});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
 		let groupChat = await toPromise(bob.store.groupChats.get(groupHash));
-		assert.equal(groupChat.group.signed_content.content.info.name, 'mygroup');
+		assert.equal(groupChat.currentGroup.info.name, 'mygroup');
+		assert.equal(
+			groupChat.originalGroup.signed_content.content.info.name,
+			'mygroup',
+		);
 
 		await alice.store.client.sendGroupMessage(groupHash, groupHash, {
 			message: 'hey!',

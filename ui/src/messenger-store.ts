@@ -90,7 +90,10 @@ export class MessengerStore {
 					HashType.AGENT,
 				);
 
-				this.client.synchronizeWithLinkedDevice(linkedDevice);
+				// Wait for the whole processing to finish
+				setTimeout(() => {
+					this.client.synchronizeWithLinkedDevice(linkedDevice);
+				}, 1000);
 			});
 		}
 	}

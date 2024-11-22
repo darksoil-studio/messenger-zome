@@ -8,10 +8,10 @@ test('send message and read it', async () => {
 	await runScenario(async scenario => {
 		const [alice, bob] = await setup(scenario);
 
-		let messages = await toPromise(
+		let peerChat = await toPromise(
 			bob.store.peerChats.get(alice.player.agentPubKey),
 		);
-		assert.equal(Object.keys(messages).length, 0);
+		assert.equal(Object.keys(peerChat.messages).length, 0);
 
 		await alice.store.client.sendPeerMessage(
 			bob.player.agentPubKey,
@@ -24,12 +24,13 @@ test('send message and read it', async () => {
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		messages = await toPromise(
+		peerChat = await toPromise(
 			bob.store.peerChats.get(alice.player.agentPubKey),
 		);
-		assert.equal(Object.keys(messages).length, 1);
+		assert.equal(Object.keys(peerChat.messages).length, 1);
 		assert.equal(
-			Object.values(messages)[0].signed_content.content.message.message,
+			Object.values(peerChat.messages)[0].signed_content.content.message
+				.message,
 			'hey!',
 		);
 
@@ -40,13 +41,13 @@ test('send message and read it', async () => {
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		messages = await toPromise(
+		peerChat = await toPromise(
 			bob.store.peerChats.get(alice.player.agentPubKey),
 		);
-		assert.equal(Object.keys(messages).length, 2);
-		messages = await toPromise(
+		assert.equal(Object.keys(peerChat.messages).length, 2);
+		peerChat = await toPromise(
 			alice.store.peerChats.get(bob.player.agentPubKey),
 		);
-		assert.equal(Object.keys(messages).length, 2);
+		assert.equal(Object.keys(peerChat.messages).length, 2);
 	});
 });
