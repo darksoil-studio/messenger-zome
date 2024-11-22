@@ -66,7 +66,7 @@ export interface Group {
 }
 export interface UpdateGroupChat {
 	original_group_hash: EntryHash;
-	previous_group_hash: EntryHash;
+	previous_group_hashes: Array<EntryHash>;
 	group: Group;
 }
 export interface DeleteGroupChat {

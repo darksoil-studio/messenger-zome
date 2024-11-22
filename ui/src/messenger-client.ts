@@ -70,6 +70,28 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		return this.callZome('create_group_chat', group);
 	}
 
+	async updateGroupChat(
+		originalGroupHash: EntryHash,
+		previousGroupHashes: Array<EntryHash>,
+		group: Group,
+	): Promise<EntryHash> {
+		return this.callZome('update_group_chat', {
+			original_group_hash: originalGroupHash,
+			previous_group_hashes: previousGroupHashes,
+			group,
+		});
+	}
+
+	async deleteGroupChat(
+		originalGroupHash: EntryHash,
+		previousGroupHash: EntryHash,
+	): Promise<void> {
+		return this.callZome('delete_group_chat', {
+			original_group_hash: originalGroupHash,
+			previous_group_hash: previousGroupHash,
+		});
+	}
+
 	async sendGroupMessage(
 		originalGroupHash: EntryHash,
 		currentGroupHash: EntryHash,

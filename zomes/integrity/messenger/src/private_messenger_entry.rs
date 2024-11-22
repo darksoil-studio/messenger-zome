@@ -37,7 +37,7 @@ pub struct Group {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UpdateGroupChat {
     pub original_group_hash: EntryHash,
-    pub previous_group_hash: EntryHash,
+    pub previous_group_hashes: Vec<EntryHash>,
 
     pub group: Group,
 }

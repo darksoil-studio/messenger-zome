@@ -20,6 +20,38 @@ pub fn create_group_chat(group: Group) -> ExternResult<EntryHash> {
 }
 
 #[hdk_extern]
+pub fn update_group_chat(update_group: UpdateGroupChat) -> ExternResult<EntryHash> {
+    if update_group.previous_group_hashes.len() == 0 {
+        return Err(wasm_error!(
+            "UpdateGroupChat must have at least one prevous_group_hash"
+        ));
+    }
+
+    let content = PrivateMessengerEntryContent::UpdateGroupChat(update_group.clone());
+    let signed = build_signed(content)?;
+    let private_messenger_entry = PrivateMessengerEntry(signed.clone());
+    let entry = EntryTypes::PrivateMessengerEntry(private_messenger_entry.clone());
+    let entry_hash = hash_entry(&entry)?;
+
+    create_entry(entry)?;
+
+    Ok(entry_hash)
+}
+
+#[hdk_extern]
+pub fn delete_group_chat(delete_group: DeleteGroupChat) -> ExternResult<EntryHash> {
+    let content = PrivateMessengerEntryContent::DeleteGroupChat(delete_group.clone());
+    let signed = build_signed(content)?;
+    let private_messenger_entry = PrivateMessengerEntry(signed.clone());
+    let entry = EntryTypes::PrivateMessengerEntry(private_messenger_entry.clone());
+    let entry_hash = hash_entry(&entry)?;
+
+    create_entry(entry)?;
+
+    Ok(entry_hash)
+}
+
+#[hdk_extern]
 pub fn send_group_message(group_message: GroupMessage) -> ExternResult<()> {
     let content = PrivateMessengerEntryContent::GroupMessage(group_message.clone());
     let signed = build_signed(content)?;
