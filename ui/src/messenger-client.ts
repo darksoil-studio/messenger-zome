@@ -3,6 +3,7 @@ import {
 	AppClient,
 	EntryHash,
 	EntryHashB64,
+	encodeHashToBase64,
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@tnesh-stack/utils';
 
@@ -26,13 +27,20 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 	async queryPrivateMessengerEntries(): Promise<
 		Record<EntryHashB64, PrivateMessengerEntry>
 	> {
-		return this.callZome('query_private_messenger_entries', undefined);
+		const privateEntries = await this.callZome(
+			'query_private_messenger_entries',
+			undefined,
+		);
+		return privateEntries.entries;
 	}
 
 	/** Peer Chat */
 
-	async sendPeerMessage(recipient: AgentPubKey, message: Message) {
-		await this.callZome('send_peer_message', {
+	async sendPeerMessage(
+		recipient: AgentPubKey,
+		message: Message,
+	): Promise<EntryHash> {
+		const entryHash: EntryHash = await this.callZome('send_peer_message', {
 			recipient,
 			message,
 		});
@@ -46,10 +54,10 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 				)
 					return;
 				if (
-					signal.app_entry.signed_content.content.message.message ===
-					message.message
+					encodeHashToBase64(signal.action.hashed.content.entry_hash) ===
+					encodeHashToBase64(entryHash)
 				)
-					resolve(undefined);
+					resolve(entryHash);
 			});
 		});
 	}
@@ -96,8 +104,8 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		originalGroupHash: EntryHash,
 		currentGroupHash: EntryHash,
 		message: Message,
-	) {
-		await this.callZome('send_group_message', {
+	): Promise<EntryHash> {
+		const entryHash: EntryHash = await this.callZome('send_group_message', {
 			original_group_hash: originalGroupHash,
 			current_group_hash: currentGroupHash,
 			message,
@@ -112,20 +120,22 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 				)
 					return;
 				if (
-					signal.app_entry.signed_content.content.message.message ===
-					message.message
+					encodeHashToBase64(signal.action.hashed.content.entry_hash) ===
+					encodeHashToBase64(entryHash)
 				)
-					resolve(undefined);
+					resolve(entryHash);
 			});
 		});
 	}
 
 	async markGroupMessagesAsRead(
-		groupHash: EntryHash,
+		originalGroupHash: EntryHash,
+		currentGroupHash: EntryHash,
 		readMessagesHashes: Array<EntryHash>,
 	) {
 		await this.callZome('mark_group_messages_as_read', {
-			group_hash: groupHash,
+			original_group_hash: originalGroupHash,
+			current_group_hash: currentGroupHash,
 			read_messages_hashes: readMessagesHashes,
 		});
 	}

@@ -55,6 +55,12 @@ pub fn get_all_agents_for(agent: AgentPubKey) -> ExternResult<Vec<AgentPubKey>> 
     Ok(agents)
 }
 
+pub fn query_all_my_agents() -> ExternResult<Vec<AgentPubKey>> {
+    let mut agents = query_my_linked_devices()?;
+    agents.push(agent_info()?.agent_latest_pubkey);
+    Ok(agents)
+}
+
 pub fn query_my_linked_devices() -> ExternResult<Vec<AgentPubKey>> {
     let Some(zome_name) = linked_devices_zome_name() else {
         return Ok(vec![]);

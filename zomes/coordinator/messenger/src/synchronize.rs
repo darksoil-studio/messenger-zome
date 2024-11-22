@@ -56,14 +56,24 @@ pub fn synchronize_with_linked_devices() -> ExternResult<()> {
             .filter_map(|r| r.action().entry_hash().cloned())
             .collect();
 
-        let missing_private_messenger_entries: Vec<(EntryHashB64, PrivateMessengerEntry)> =
-            private_messenger_entries
-                .clone()
-                .into_iter()
-                .filter(|(entry_hash, _)| {
-                    !existing_private_messenger_entries_hashes.contains(&entry_hash.clone().into())
-                })
-                .collect();
+        let missing_private_entry_hashes: Vec<EntryHashB64> = private_messenger_entries
+            .entry_hashes
+            .clone()
+            .into_iter()
+            .filter(|entry_hash| {
+                !existing_private_messenger_entries_hashes.contains(&entry_hash.clone().into())
+            })
+            .collect();
+
+        let mut missing_private_messenger_entries: Vec<(EntryHashB64, PrivateMessengerEntry)> =
+            Vec::new();
+
+        for entry_hash in missing_private_entry_hashes {
+            let Some(entry) = private_messenger_entries.entries.get(&entry_hash) else {
+                return Err(wasm_error!("Unreachable: QueriedPrivateMessengerEntries entries did not contain one of its entry hashes."));
+            };
+            missing_private_messenger_entries.push((entry_hash.clone(), entry.clone()));
+        }
 
         let mut offline = false;
 
@@ -96,8 +106,17 @@ pub fn synchronize_with_linked_devices() -> ExternResult<()> {
 pub fn synchronize_with_linked_device(linked_device: AgentPubKey) -> ExternResult<()> {
     let entries = query_private_messenger_entries(())?;
 
+    let mut entries_vec: Vec<(EntryHashB64, PrivateMessengerEntry)> = Vec::new();
+
+    for entry_hash in entries.entry_hashes {
+        let Some(entry) = entries.entries.get(&entry_hash) else {
+            return Err(wasm_error!("Unreachable: QueriedPrivateMessengerEntries entries did not contain one of its entry hashes."));
+        };
+        entries_vec.push((entry_hash, entry.clone()));
+    }
+
     send_remote_signal(
-        MessengerRemoteSignal::SynchronizeEntries(entries),
+        MessengerRemoteSignal::SynchronizeEntriesWithLinkedDevice(entries_vec),
         vec![linked_device],
     )?;
 

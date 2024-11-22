@@ -2,9 +2,11 @@ use hdk::prelude::*;
 use messenger_integrity::{EntryTypes, LinkTypes, PrivateMessengerEntry};
 
 use crate::{
-    private_messenger_entries::query_private_messenger_entries,
+    private_messenger_entries::{
+        query_private_messenger_entries, validate_private_messenger_entry,
+    },
     signed::verify_signed,
-    utils::{create_link_relaxed, create_relaxed, delete_link_relaxed},
+    utils::{create_link_relaxed, create_relaxed, delete_link_relaxed, delete_relaxed},
 };
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes)]
@@ -67,16 +69,37 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
 
         let private_messenger_entry = message.0;
 
-        let valid = verify_signed(private_messenger_entry.0.clone())?;
+        let signature_valid = verify_signed(private_messenger_entry.0.clone())?;
 
-        if valid {
-            let private_messager_entry_hash = hash_entry(&private_messenger_entry)?;
-            if !private_messenger_entries.contains_key(&private_messager_entry_hash.into()) {
-                create_relaxed(EntryTypes::PrivateMessengerEntry(private_messenger_entry))?;
-            }
+        if !signature_valid {
+            delete_link_relaxed(link.create_link_hash)?;
+            continue;
         }
 
-        delete_link_relaxed(link.create_link_hash)?;
+        let private_messager_entry_hash = hash_entry(&private_messenger_entry)?;
+        if private_messenger_entries
+            .entries
+            .contains_key(&private_messager_entry_hash.into())
+        {
+            delete_link_relaxed(link.create_link_hash)?;
+            continue;
+        }
+
+        let valid = validate_private_messenger_entry(&private_messenger_entry)?;
+
+        match valid {
+            ValidateCallbackResult::Valid => {
+                create_relaxed(EntryTypes::PrivateMessengerEntry(private_messenger_entry))?;
+                delete_link_relaxed(link.create_link_hash)?;
+            }
+            ValidateCallbackResult::Invalid(invalid_reason) => {
+                error!("Invalid PrivateMessengerEntry: {invalid_reason}");
+                delete_link_relaxed(link.create_link_hash)?;
+            }
+            ValidateCallbackResult::UnresolvedDependencies(_deps) => {
+                // Do nothing, next round we'll commit it when we actually have the dependencies
+            }
+        }
     }
 
     Ok(())

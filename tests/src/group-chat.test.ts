@@ -72,13 +72,13 @@ test('only admins can update and delete groups', async () => {
 			alice.player.cells[0].cell_id[0],
 		);
 
-		expect(() =>
+		await expect(() =>
 			bob.store.client.updateGroupChat(groupHash, [groupHash], {
 				admins: [bob.player.agentPubKey],
 				members: [],
 				info,
 			}),
-		).toThrow();
+		).rejects.toThrow();
 
 		expect(() =>
 			bob.store.client.deleteGroupChat(groupHash, groupHash),
@@ -138,13 +138,13 @@ test('only admins can update and delete groups', async () => {
 
 		assert.equal(Object.keys(group.deletes).length, 1);
 
-		expect(() =>
+		await expect(async () =>
 			alice.store.client.updateGroupChat(groupHash, [currentGroupHash], {
 				admins: [alice.player.agentPubKey, carol.player.agentPubKey],
 				members: [],
 				info,
 			}),
-		).toThrow();
+		).rejects.toThrow();
 	});
 });
 
@@ -236,11 +236,11 @@ test('members removed from the group cannot send messages anymore', async () => 
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		expect(async () =>
+		await expect(async () =>
 			bob.store.client.sendGroupMessage(groupHash, groupHash, {
 				message: 'hey!',
 				reply_to: undefined,
 			}),
-		).toThrow();
+		).rejects.toThrow();
 	});
 });

@@ -74,7 +74,8 @@ pub enum MessengerRemoteSignal {
     NewPrivateMessengerEntry(PrivateMessengerEntry),
     PeerChatTypingIndicator,
     GroupChatTypingIndicator { group_hash: EntryHash },
-    SynchronizeEntries(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
+    SynchronizeEntriesWithLinkedDevice(Vec<(EntryHashB64, PrivateMessengerEntry)>),
+    SynchronizeGroupEntriesWithNewGroupMember(Vec<(EntryHashB64, PrivateMessengerEntry)>),
 }
 
 #[hdk_extern]
@@ -84,7 +85,7 @@ pub fn recv_remote_signal(signal: MessengerRemoteSignal) -> ExternResult<()> {
         MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry) => {
             receive_private_messenger_entry(private_messenger_entry)
         }
-        MessengerRemoteSignal::SynchronizeEntries(entries) => {
+        MessengerRemoteSignal::SynchronizeEntriesWithLinkedDevice(entries) => {
             let call_info = call_info()?;
             let my_devices = query_my_linked_devices()?;
 
@@ -92,6 +93,9 @@ pub fn recv_remote_signal(signal: MessengerRemoteSignal) -> ExternResult<()> {
                 return Err(wasm_error!("Agent {} tried to synchronize its entries with us but we have not linked devices", call_info.provenance));
             }
 
+            receive_private_messenger_entries(entries)
+        }
+        MessengerRemoteSignal::SynchronizeGroupEntriesWithNewGroupMember(entries) => {
             receive_private_messenger_entries(entries)
         }
         MessengerRemoteSignal::PeerChatTypingIndicator => {

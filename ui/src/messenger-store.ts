@@ -318,7 +318,7 @@ export class MessengerStore {
 					const author = encodeHashToBase64(readGroupMessages.provenance);
 					const fromMe2 = allMyAgentsB64.includes(author);
 					const groupHash4 = encodeHashToBase64(
-						readGroupMessages.signed_content.content.group_hash,
+						readGroupMessages.signed_content.content.original_group_hash,
 					);
 					if (!value.groups[groupHash4]) {
 						value.groups[groupHash4] = {

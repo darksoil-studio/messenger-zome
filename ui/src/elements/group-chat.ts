@@ -125,6 +125,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 							if (unreadMessages.length > 0) {
 								this.store.client.markGroupMessagesAsRead(
 									this.groupHash,
+									currentGroupHash,
 									unreadMessages,
 								);
 							}

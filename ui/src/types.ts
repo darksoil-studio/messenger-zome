@@ -87,7 +87,8 @@ export interface ReadPeerMessages {
 
 export interface ReadGroupMessages {
 	read_messages_hashes: EntryHash[];
-	group_hash: EntryHash;
+	original_group_hash: EntryHash;
+	current_group_hash: EntryHash;
 }
 
 export type PrivateMessengerEntry = PeerMessengerEntry | GroupMessengerEntry;

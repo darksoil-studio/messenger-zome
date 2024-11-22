@@ -56,7 +56,8 @@ pub struct ReadPeerMessages {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReadGroupMessages {
-    pub group_hash: EntryHash,
+    pub original_group_hash: EntryHash,
+    pub current_group_hash: EntryHash,
     pub read_messages_hashes: Vec<EntryHash>,
 }
 
