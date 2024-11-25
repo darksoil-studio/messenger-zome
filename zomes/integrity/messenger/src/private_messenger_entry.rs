@@ -1,6 +1,7 @@
 use hdi::prelude::*;
+use linked_devices_types::LinkedDevicesProof;
 
-use crate::Signed;
+use crate::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Message {
@@ -8,67 +9,44 @@ pub struct Message {
     pub message: String,
 }
 
+/** Peer Chat */
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PeerChat {
+    pub my_agents: Vec<AgentPubKey>,
+    pub peer_agents: Vec<AgentPubKey>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PeerMessage {
-    pub recipient: AgentPubKey,
+    pub peer_chat_hash: EntryHash,
     pub message: Message,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GroupMessage {
-    pub original_group_hash: EntryHash,
-    pub current_group_hash: EntryHash,
-
-    pub message: Message,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GroupInfo {
-    pub name: String,
-    pub avatar_hash: Option<EntryHash>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Group {
-    pub admins: Vec<AgentPubKey>,
-    pub members: Vec<AgentPubKey>,
-    pub info: GroupInfo,
-}
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct UpdateGroupChat {
-    pub original_group_hash: EntryHash,
-    pub previous_group_hashes: Vec<EntryHash>,
-
-    pub group: Group,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct DeleteGroupChat {
-    pub original_group_hash: EntryHash,
-    pub previous_group_hash: EntryHash,
+pub struct NewPeerAgent {
+    pub peer_chat_hash: EntryHash,
+    pub new_agent: AgentPubKey,
+    pub proofs: Vec<LinkedDevicesProof>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReadPeerMessages {
-    pub peer: AgentPubKey,
+    pub peer_chat_hash: EntryHash,
     pub read_messages_hashes: Vec<EntryHash>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReadGroupMessages {
-    pub original_group_hash: EntryHash,
-    pub current_group_hash: EntryHash,
-    pub read_messages_hashes: Vec<EntryHash>,
-}
+/** Group Chat */
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum PrivateMessengerEntryContent {
+    CreatePeerChat(PeerChat),
     PeerMessage(PeerMessage),
+    NewPeerAgent(NewPeerAgent),
     ReadPeerMessages(ReadPeerMessages),
-    CreateGroupChat(Group),
-    UpdateGroupChat(UpdateGroupChat),
-    DeleteGroupChat(DeleteGroupChat),
+    CreateGroupChat(GroupChat),
+    GroupChatEvent(GroupChatEvent),
     GroupMessage(GroupMessage),
     ReadGroupMessages(ReadGroupMessages),
 }

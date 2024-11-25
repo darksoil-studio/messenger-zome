@@ -15,7 +15,7 @@ mod synchronize;
 mod utils;
 
 mod group_chat;
-mod peer_messages;
+mod peer_chat;
 mod typing_indicator;
 
 #[hdk_extern]
@@ -169,13 +169,18 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
                     app_entry: app_entry.clone(),
                 })?;
                 match app_entry {
-                    EntryTypes::PrivateMessengerEntry(entry) => call_remote(
-                        agent_info()?.agent_latest_pubkey,
-                        zome_info()?.name,
-                        "notify_private_messenger_entry_recipients".into(),
-                        None,
-                        entry,
-                    )?,
+                    EntryTypes::PrivateMessengerEntry(entry) => {
+                        let agent_info = agent_info()?;
+                        if entry.0.provenance.eq(&agent_info.agent_latest_pubkey) {
+                            call_remote(
+                                agent_info.agent_latest_pubkey,
+                                zome_info()?.name,
+                                "notify_private_messenger_entry_recipients".into(),
+                                None,
+                                entry,
+                            )?;
+                        }
+                    }
                 };
             }
             Ok(())

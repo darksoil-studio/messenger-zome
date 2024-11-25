@@ -5,12 +5,14 @@ use std::collections::BTreeMap;
 use crate::{
     agent_encrypted_message::{create_encrypted_message, MessengerEncryptedMessage},
     group_chat::{
-        get_all_agent_sets_for_agents, get_all_agent_sets_for_current_group, query_current_group,
-        query_entries_for_group, validate_create_group_chat, validate_delete_group_chat,
-        validate_group_message, validate_read_group_messages, validate_update_group_chat,
+        query_current_group_chat, query_entries_for_group, validate_create_group_chat,
+        validate_group_chat_event, validate_group_message, validate_read_group_messages,
     },
-    linked_devices::{get_all_agents_for, query_my_linked_devices},
-    peer_messages::{validate_peer_message, validate_read_peer_messages},
+    linked_devices::query_my_linked_devices,
+    peer_chat::{
+        query_current_peer_chat, validate_create_peer_chat, validate_new_peer_agent,
+        validate_peer_message, validate_read_peer_messages,
+    },
     signed::{build_signed, verify_signed},
     utils::create_relaxed,
     MessengerRemoteSignal,
@@ -52,6 +54,25 @@ pub fn query_private_messenger_entries() -> ExternResult<QueriedPrivateMessenger
         entry_hashes,
         entries,
     })
+}
+
+pub fn query_private_messanger_entry(
+    entry_hash: &EntryHash,
+) -> ExternResult<Option<PrivateMessengerEntry>> {
+    let Some(record) = get(entry_hash.clone(), GetOptions::local())? else {
+        return Ok(None);
+    };
+    let Ok(Some(private_messenger_entry)) = record
+        .entry()
+        .to_app_option::<PrivateMessengerEntry>()
+        .map_err(|err| wasm_error!(err))
+    else {
+        return Err(wasm_error!(
+            "Given entry does not correspond to a PrivateMessengerEntry"
+        ));
+    };
+
+    Ok(Some(private_messenger_entry))
 }
 
 fn internal_create_private_messenger_entry(
@@ -137,6 +158,12 @@ pub fn validate_private_messenger_entry(
     let provenance = &private_messenger_entry.0.provenance;
 
     match &private_messenger_entry.0.signed_content.content {
+        PrivateMessengerEntryContent::CreatePeerChat(peer_chat) => {
+            validate_create_peer_chat(provenance, peer_chat)
+        }
+        PrivateMessengerEntryContent::NewPeerAgent(new_peer_agent) => {
+            validate_new_peer_agent(provenance, new_peer_agent)
+        }
         PrivateMessengerEntryContent::PeerMessage(peer_message) => {
             validate_peer_message(provenance, peer_message)
         }
@@ -146,11 +173,8 @@ pub fn validate_private_messenger_entry(
         PrivateMessengerEntryContent::CreateGroupChat(create_group_chat) => {
             validate_create_group_chat(provenance, create_group_chat)
         }
-        PrivateMessengerEntryContent::UpdateGroupChat(update_group_chat) => {
-            validate_update_group_chat(provenance, update_group_chat)
-        }
-        PrivateMessengerEntryContent::DeleteGroupChat(delete_group_chat) => {
-            validate_delete_group_chat(provenance, delete_group_chat)
+        PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) => {
+            validate_group_chat_event(provenance, group_chat_event)
         }
         PrivateMessengerEntryContent::GroupMessage(group_message) => {
             validate_group_message(provenance, group_message)
@@ -184,176 +208,104 @@ pub fn receive_private_messenger_entries(
     Ok(())
 }
 
+fn peer_chat_recipients(
+    provenance: &AgentPubKey,
+    peer_chat: &PeerChat,
+) -> ExternResult<Vec<AgentPubKey>> {
+    if peer_chat.my_agents.contains(&provenance) {
+        Ok(peer_chat.peer_agents.clone())
+    } else {
+        Ok(peer_chat.my_agents.clone())
+    }
+}
+
+fn peer_chat_recipients_for_hash(
+    provenance: &AgentPubKey,
+    peer_chat_hash: &EntryHash,
+) -> ExternResult<Vec<AgentPubKey>> {
+    let Some(peer_chat) = query_current_peer_chat(&peer_chat_hash)? else {
+        return Err(wasm_error!("PeerChat not found"));
+    };
+
+    peer_chat_recipients(provenance, &peer_chat)
+}
+
+fn group_chat_recipients(provenance: &AgentPubKey, group_chat: &GroupChat) -> Vec<AgentPubKey> {
+    let members: Vec<AgentPubKey> = group_chat
+        .members
+        .iter()
+        .map(|m| m.agents.clone())
+        .filter(|agents| !agents.contains(provenance))
+        .flatten()
+        .collect();
+    members
+}
+
+fn group_chat_recipients_for_hash(
+    provenance: &AgentPubKey,
+    group_chat_hash: &EntryHash,
+    current_event_hash: &EntryHash,
+) -> ExternResult<Vec<AgentPubKey>> {
+    let Some(group_chat) = query_current_group_chat(&group_chat_hash, current_event_hash)? else {
+        return Err(wasm_error!("GroupChat not found"));
+    };
+
+    Ok(group_chat_recipients(provenance, &group_chat))
+}
+
 fn recipients(private_messenger_entry: &PrivateMessengerEntry) -> ExternResult<Vec<AgentPubKey>> {
+    let provenance = private_messenger_entry.0.provenance.clone();
     match &private_messenger_entry.0.signed_content.content {
+        PrivateMessengerEntryContent::CreatePeerChat(peer_chat) => {
+            peer_chat_recipients(&provenance, &peer_chat)
+        }
         PrivateMessengerEntryContent::PeerMessage(peer_message) => {
-            get_all_agents_for(peer_message.recipient.clone())
+            peer_chat_recipients_for_hash(&provenance, &peer_message.peer_chat_hash)
+        }
+        PrivateMessengerEntryContent::NewPeerAgent(new_peer_agent) => {
+            peer_chat_recipients_for_hash(&provenance, &new_peer_agent.peer_chat_hash)
         }
         PrivateMessengerEntryContent::ReadPeerMessages(read_peer_messages) => {
-            get_all_agents_for(read_peer_messages.peer.clone())
+            peer_chat_recipients_for_hash(&provenance, &read_peer_messages.peer_chat_hash)
         }
         PrivateMessengerEntryContent::CreateGroupChat(group) => {
-            let mut all_chat_members = group.members.clone();
-
-            all_chat_members.append(&mut group.admins.clone());
-
-            let all_chat_agents = get_all_agent_sets_for_agents(all_chat_members)?;
-            Ok(all_chat_agents.into_iter().flatten().collect())
+            Ok(group_chat_recipients(&provenance, group))
         }
-        PrivateMessengerEntryContent::UpdateGroupChat(update_group) => {
-            // Need to notify all members of previous groups, plus all members of the new group
-
+        PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) => {
             let entry_hash = hash_entry(private_messenger_entry)?;
-            let Some(all_chat_agents) = get_all_agent_sets_for_current_group(
-                &update_group.original_group_hash,
-                &entry_hash,
-            )?
-            else {
-                return Err(wasm_error!("Group not found"));
-            };
-            let mut all_agents: HashSet<AgentPubKey> =
-                all_chat_agents.into_iter().flatten().collect();
-
-            for previous_group_hash in &update_group.previous_group_hashes {
-                let Some(all_chat_agents) = get_all_agent_sets_for_current_group(
-                    &update_group.original_group_hash,
-                    previous_group_hash,
-                )?
-                else {
-                    return Err(wasm_error!("Group not found"));
-                };
-
-                for agent_set in all_chat_agents {
-                    for agent in agent_set {
-                        all_agents.insert(agent);
-                    }
-                }
-            }
-
-            Ok(all_agents.into_iter().collect())
-        }
-        PrivateMessengerEntryContent::DeleteGroupChat(delete_group) => {
-            let Some(all_chat_agents) = get_all_agent_sets_for_current_group(
-                &delete_group.original_group_hash,
-                &delete_group.previous_group_hash,
-            )?
-            else {
-                return Err(wasm_error!("Group not found"));
-            };
-            Ok(all_chat_agents.into_iter().flatten().collect())
+            group_chat_recipients_for_hash(&provenance, &group_chat_event.group_hash, &entry_hash)
         }
         PrivateMessengerEntryContent::GroupMessage(group_message) => {
-            let Some(all_chat_agents) = get_all_agent_sets_for_current_group(
-                &group_message.original_group_hash,
-                &group_message.current_group_hash,
-            )?
-            else {
-                return Err(wasm_error!("Group not found"));
-            };
-            Ok(all_chat_agents.into_iter().flatten().collect())
+            group_chat_recipients_for_hash(
+                &provenance,
+                &group_message.group_hash,
+                &group_message.current_event_hash,
+            )
         }
         PrivateMessengerEntryContent::ReadGroupMessages(read_group_messages) => {
-            let Some(all_chat_agents) = get_all_agent_sets_for_current_group(
-                &read_group_messages.original_group_hash,
-                &read_group_messages.current_group_hash,
-            )?
-            else {
-                return Err(wasm_error!("Group not found"));
-            };
-            Ok(all_chat_agents.into_iter().flatten().collect())
+            group_chat_recipients_for_hash(
+                &provenance,
+                &read_group_messages.group_hash,
+                &read_group_messages.current_event_hash,
+            )
         }
     }
 }
 
 pub fn send_group_entries_to_new_member(
-    new_member: &AgentPubKey,
-    all_entries_for_group: &Vec<(EntryHashB64, PrivateMessengerEntry)>,
+    group_chat_hash: &EntryHash,
+    previous_event_hash: &EntryHash,
+    member: &GroupMember,
 ) -> ExternResult<()> {
-    let private_messenger_entries_unit_entry_types: EntryType =
-        UnitEntryTypes::PrivateMessengerEntry.try_into()?;
-    let private_messenger_entries_agent_activity = get_agent_activity(
-        new_member.clone(),
-        ChainQueryFilter::new()
-            .entry_type(private_messenger_entries_unit_entry_types.clone())
-            .clone(),
-        ActivityRequest::Full,
-    )?;
-
-    let actions_get_inputs = private_messenger_entries_agent_activity
-        .valid_activity
-        .into_iter()
-        .map(|(_, action_hash)| GetInput::new(action_hash.into(), GetOptions::network()))
-        .collect();
-
-    let records = HDK.with(|hdk| hdk.borrow().get(actions_get_inputs))?;
-    let existing_private_messenger_entries_hashes: HashSet<EntryHash> = records
-        .into_iter()
-        .filter_map(|r| r)
-        .filter_map(|r| r.action().entry_hash().cloned())
-        .collect();
-
-    let missing_private_messenger_entries: Vec<(EntryHashB64, PrivateMessengerEntry)> =
-        all_entries_for_group
-            .clone()
-            .into_iter()
-            .filter(|(entry_hash, _)| {
-                !existing_private_messenger_entries_hashes.contains(&entry_hash.clone().into())
-            })
-            .collect();
-
-    send_remote_signal(
-        MessengerRemoteSignal::SynchronizeGroupEntriesWithNewGroupMember(
-            missing_private_messenger_entries.clone(),
-        ),
-        vec![new_member.clone()],
-    )?;
-
-    for (_, private_messenger_entry) in missing_private_messenger_entries {
-        create_encrypted_message(
-            new_member.clone(),
-            MessengerEncryptedMessage(private_messenger_entry.clone()),
-        )?;
-    }
-
-    Ok(())
-}
-
-pub fn send_group_entries_to_new_members(
-    update_group_chat: &UpdateGroupChat,
-    send_previous_messages: bool,
-) -> ExternResult<()> {
-    if update_group_chat.previous_group_hashes.len() > 1 {
-        return Ok(()); // No new members allowed in a merge
-    }
-
-    let Some(previous_group) = query_current_group(
-        &update_group_chat.original_group_hash,
-        &update_group_chat.previous_group_hashes[0],
-    )?
-    else {
+    let Some(group) = query_current_group_chat(group_chat_hash, previous_event_hash)? else {
         return Err(wasm_error!(
             "Error sending group entries to new member: group not found"
         ));
     };
 
-    let mut previous_members = previous_group.admins.clone();
-    previous_members.append(&mut previous_group.members.clone());
-
-    let mut current_members = update_group_chat.group.admins.clone();
-    current_members.append(&mut update_group_chat.group.members.clone());
-
-    let new_members: Vec<AgentPubKey> = current_members
-        .into_iter()
-        .filter(|current_member| !previous_members.contains(current_member))
-        .collect();
-
-    if new_members.len() == 0 {
-        return Ok(());
-    }
-
     let Some(group_entries) = query_entries_for_group(
-        &update_group_chat.original_group_hash,
-        send_previous_messages,
+        &group_chat_hash,
+        group.settings.sync_message_history_with_new_members,
     )?
     else {
         return Err(wasm_error!(
@@ -361,8 +313,18 @@ pub fn send_group_entries_to_new_members(
         ));
     };
 
-    for new_member in new_members {
-        send_group_entries_to_new_member(&new_member, &group_entries)?;
+    send_remote_signal(
+        MessengerRemoteSignal::SynchronizeGroupEntriesWithNewGroupMember(group_entries.clone()),
+        member.agents.clone(),
+    )?;
+
+    for (_, private_messenger_entry) in group_entries {
+        for agent in &member.agents {
+            create_encrypted_message(
+                agent.clone(),
+                MessengerEncryptedMessage(private_messenger_entry.clone()),
+            )?;
+        }
     }
 
     Ok(())
@@ -372,10 +334,16 @@ pub fn send_group_entries_to_new_members(
 pub fn notify_private_messenger_entry_recipients(
     private_messenger_entry: PrivateMessengerEntry,
 ) -> ExternResult<()> {
-    if let PrivateMessengerEntryContent::UpdateGroupChat(update_group_chat) =
+    if let PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) =
         &private_messenger_entry.0.signed_content.content
     {
-        send_group_entries_to_new_members(update_group_chat, false)?;
+        if let GroupEvent::AddMember(member) = &group_chat_event.event {
+            send_group_entries_to_new_member(
+                &group_chat_event.group_hash,
+                &group_chat_event.previous_event_hash,
+                member,
+            )?;
+        }
     }
 
     let recipients = recipients(&private_messenger_entry)?;

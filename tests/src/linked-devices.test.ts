@@ -84,6 +84,51 @@ test('messages get to all devices', async () => {
 	});
 });
 
+test('add new device while receiving message is reconciled', async () => {
+	await runScenario(async scenario => {
+		const [alice, bob, bob2] = await setup(scenario, 3);
+
+		await dhtSync(
+			[alice.player, bob.player, bob2.player],
+			alice.player.cells[0].cell_id[0],
+		);
+
+		await alice.store.client.sendPeerMessage(bob2.player.agentPubKey, {
+			message: 'hey!',
+			reply_to: undefined,
+		});
+
+		let peerChat = await toPromise(
+			bob.store.peerChats.get(alice.player.agentPubKey),
+		);
+		assert.equal(Object.keys(peerChat.messages).length, 0);
+
+		await alice.store.client.sendPeerMessage(bob.player.agentPubKey, {
+			message: 'hey!',
+			reply_to: undefined,
+		});
+		await linkDevices(bob.linkedDevicesStore, bob2.linkedDevicesStore);
+
+		await dhtSync(
+			[alice.player, bob.player, bob2.player],
+			alice.player.cells[0].cell_id[0],
+		);
+
+		await waitUntil(
+			async () =>
+				Object.keys(
+					(await toPromise(bob2.store.peerChats.get(alice.player.agentPubKey)))
+						.messages,
+				).length === 2,
+			3_000,
+		);
+		peerChat = await toPromise(
+			bob.store.peerChats.get(alice.player.agentPubKey),
+		);
+		assert.equal(Object.keys(peerChat.messages).length, 2);
+	});
+});
+
 test('messages get synchronized even when offline', async () => {
 	await runScenario(async scenario => {
 		const [alice, bob, bob2] = await setup(scenario, 3);

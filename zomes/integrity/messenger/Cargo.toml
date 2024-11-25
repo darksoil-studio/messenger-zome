@@ -8,6 +8,8 @@ crate-type = ["cdylib", "rlib"]
 name = "messenger_integrity"
 
 [dependencies]
-hdi = { workspace = true }
 
 serde = { workspace = true }
+hdi = { workspace = true }
+
+linked_devices_types = { git = "https://github.com/darksoil-studio/linked-devices-zome", branch = "main-0.3" }

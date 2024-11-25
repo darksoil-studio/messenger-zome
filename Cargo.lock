@@ -1513,6 +1513,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "linked_devices_types"
+version = "0.1.0"
+source = "git+https://github.com/darksoil-studio/linked-devices-zome?branch=main-0.3#5bf7466cc8091d1a69b3c4be07a2f2367c1eb65e"
+dependencies = [
+ "hdi",
+ "serde",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1602,6 +1611,7 @@ name = "messenger"
 version = "0.0.1"
 dependencies = [
  "hdk",
+ "linked_devices_types",
  "messenger_integrity",
  "serde",
 ]
@@ -1611,6 +1621,7 @@ name = "messenger_integrity"
 version = "0.0.1"
 dependencies = [
  "hdi",
+ "linked_devices_types",
  "serde",
 ]
 

@@ -51,8 +51,13 @@ export interface Message {
 }
 
 export interface PeerMessage {
-	recipient: AgentPubKey;
+	peer_devices: AgentPubKey[];
 	message: Message;
+}
+
+export interface ReadPeerMessages {
+	read_messages_hashes: EntryHash[];
+	peer_devices: AgentPubKey[];
 }
 
 export interface GroupInfo {
@@ -78,11 +83,6 @@ export interface GroupMessage {
 	original_group_hash: EntryHash;
 	current_group_hash: EntryHash;
 	message: Message;
-}
-
-export interface ReadPeerMessages {
-	read_messages_hashes: EntryHash[];
-	peer: AgentPubKey;
 }
 
 export interface ReadGroupMessages {

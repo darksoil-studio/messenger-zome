@@ -13,3 +13,4 @@ hdk = { workspace = true }
 serde = { workspace = true }
 
 messenger_integrity = { path = "../../integrity/messenger", package = "messenger_integrity" }
+linked_devices_types = { git = "https://github.com/darksoil-studio/linked-devices-zome", branch = "main-0.3" }

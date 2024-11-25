@@ -195,10 +195,10 @@ export class MessengerStore {
 		const privateMessengerEntriesResult = this.privateMessengerEntries.get();
 		if (privateMessengerEntriesResult.status !== 'completed')
 			return privateMessengerEntriesResult;
-		const allMyAgents = this.allMyAgents.get();
-		if (allMyAgents.status !== 'completed') return allMyAgents;
+		const allMyDevices = this.allMyDevices.get();
+		if (allMyDevices.status !== 'completed') return allMyDevices;
 
-		const allMyAgentsB64 = allMyAgents.value.map(encodeHashToBase64);
+		const allMyDevicesB64 = allMyDevices.value.map(encodeHashToBase64);
 
 		const privateMessengerEntries = privateMessengerEntriesResult.value;
 
@@ -214,7 +214,7 @@ export class MessengerStore {
 			switch (privateMessengerEntry.signed_content.content.type) {
 				case 'PeerMessage':
 					const peerMessage = privateMessengerEntry as Signed<PeerMessage>;
-					const peer = !allMyAgentsB64.includes(
+					const peer = !allMyDevicesB64.includes(
 						encodeHashToBase64(peerMessage.provenance),
 					)
 						? peerMessage.provenance
@@ -233,7 +233,7 @@ export class MessengerStore {
 				case 'ReadPeerMessages':
 					const readPeerMessages =
 						privateMessengerEntry as Signed<ReadPeerMessages>;
-					const fromMe = allMyAgentsB64.includes(
+					const fromMe = allMyDevicesB64.includes(
 						encodeHashToBase64(readPeerMessages.provenance),
 					);
 					const peer2 = fromMe
@@ -316,7 +316,7 @@ export class MessengerStore {
 					const readGroupMessages =
 						privateMessengerEntry as Signed<ReadGroupMessages>;
 					const author = encodeHashToBase64(readGroupMessages.provenance);
-					const fromMe2 = allMyAgentsB64.includes(author);
+					const fromMe2 = allMyDevicesB64.includes(author);
 					const groupHash4 = encodeHashToBase64(
 						readGroupMessages.signed_content.content.original_group_hash,
 					);
@@ -369,7 +369,7 @@ export class MessengerStore {
 		};
 	});
 
-	private allAgentsFor = new MemoHoloHashMap((agent: AgentPubKey) => {
+	private allDevicesFor = new MemoHoloHashMap((agent: AgentPubKey) => {
 		if (this.linkedDevicesStore) {
 			return new AsyncComputed(() => {
 				const devices =
@@ -386,14 +386,22 @@ export class MessengerStore {
 		}
 	});
 
-	allMyAgents = this.allAgentsFor.get(this.client.client.myPubKey);
+	allMyDevices = new AsyncComputed(() => {
+		if (!this.linkedDevicesStore)
+			return {
+				status: 'completed',
+				value: [this.client.client.myPubKey],
+			};
+
+		return this.linkedDevicesStore.myLinkedDevices.get();
+	});
 
 	peerChats = new MemoHoloHashMap(
 		(agent: AgentPubKey) =>
 			new AsyncComputed(() => {
 				const messages = this.internalEntries.get();
-				const myAgents = this.allMyAgents.get();
-				const theirAgents = this.allAgentsFor.get(agent).get();
+				const myAgents = this.allMyDevices.get();
+				const theirAgents = this.allDevicesFor.get(agent).get();
 				if (messages.status !== 'completed') return messages;
 				if (theirAgents.status !== 'completed') return theirAgents;
 				if (myAgents.status !== 'completed') return myAgents;
@@ -451,7 +459,7 @@ export class MessengerStore {
 				const privateMessengerEntries = this.internalEntries.get();
 				if (privateMessengerEntries.status !== 'completed')
 					return privateMessengerEntries;
-				const myAgents = this.allMyAgents.get();
+				const myAgents = this.allMyDevices.get();
 				if (myAgents.status !== 'completed') return myAgents;
 				const groupHashB64 = encodeHashToBase64(groupHash);
 				const group = privateMessengerEntries.value.groups[groupHashB64];
@@ -514,7 +522,7 @@ export class MessengerStore {
 						),
 				);
 				const agentsLinkedDevices = joinAsyncMap(
-					mapValues(slice(this.allAgentsFor, theirAgents), s => s.get()),
+					mapValues(slice(this.allDevicesFor, theirAgents), s => s.get()),
 				);
 				if (agentsLinkedDevices.status !== 'completed')
 					return agentsLinkedDevices;
@@ -573,7 +581,7 @@ export class MessengerStore {
 		const privateMessengerEntries = this.internalEntries.get();
 		if (privateMessengerEntries.status !== 'completed')
 			return privateMessengerEntries;
-		const myAgents = this.allMyAgents.get();
+		const myAgents = this.allMyDevices.get();
 		if (myAgents.status !== 'completed') return myAgents;
 
 		let allPeerAgents: AgentPubKey[] = Object.keys(
@@ -581,7 +589,7 @@ export class MessengerStore {
 		).map(decodeHashFromBase64);
 
 		const linkedDevicesForAllPeerAgents = joinAsyncMap(
-			mapValues(slice(this.allAgentsFor, allPeerAgents), s => s.get()),
+			mapValues(slice(this.allDevicesFor, allPeerAgents), s => s.get()),
 		);
 		if (linkedDevicesForAllPeerAgents.status !== 'completed')
 			return linkedDevicesForAllPeerAgents;
@@ -665,7 +673,7 @@ export class MessengerStore {
 		const privateMessengerEntries = this.internalEntries.get();
 		if (privateMessengerEntries.status !== 'completed')
 			return privateMessengerEntries;
-		const myAgents = this.allMyAgents.get();
+		const myAgents = this.allMyDevices.get();
 		if (myAgents.status !== 'completed') return myAgents;
 		const myAgentsB64 = myAgents.value.map(encodeHashToBase64);
 

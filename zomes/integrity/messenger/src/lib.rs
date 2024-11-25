@@ -9,6 +9,9 @@ pub use private_messenger_entry::*;
 mod signed;
 pub use signed::*;
 
+mod group_chat;
+pub use group_chat::*;
+
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 #[hdk_entry_types]

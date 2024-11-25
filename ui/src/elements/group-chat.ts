@@ -378,7 +378,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 	}
 
 	messages() {
-		const myAgents = this.store.allMyAgents.get();
+		const myAgents = this.store.allMyDevices.get();
 		const group = this.store.groupChats.get(this.groupHash).get();
 		if (myAgents.status !== 'completed') return myAgents;
 		if (group.status !== 'completed') return group;
