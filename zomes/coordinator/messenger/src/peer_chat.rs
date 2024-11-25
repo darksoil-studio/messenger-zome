@@ -26,7 +26,9 @@ pub fn validate_create_peer_chat(
 
 #[hdk_extern]
 pub fn add_new_peer_agent(new_peer_agent: NewPeerAgent) -> ExternResult<EntryHash> {
-    create_private_messenger_entry(PrivateMessengerEntryContent::NewPeerAgent(new_peer_agent))
+    create_relaxed_private_messenger_entry(PrivateMessengerEntryContent::NewPeerAgent(
+        new_peer_agent,
+    ))
 }
 
 pub fn validate_new_peer_agent(

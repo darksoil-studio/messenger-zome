@@ -122,25 +122,75 @@ pub fn create_relaxed_private_messenger_entry(
     internal_create_private_messenger_entry(content, true)
 }
 
-pub fn receive_private_messenger_entry(
+pub fn post_receive_entry(
+    existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
     private_messenger_entry: PrivateMessengerEntry,
 ) -> ExternResult<()> {
-    let private_messenger_entries = query_private_messenger_entries(())?;
+    match &private_messenger_entry.0.signed_content.content {
+        PrivateMessengerEntryContent::PeerMessage(peer_message) => {
+            // If we have linked a device at the same time that a peer sent us a message
+            // we need to re-propagate this message to our newly linked device
+            let Some(current_peer_chat) = query_current_peer_chat(&peer_message.peer_chat_hash)?
+            else {
+                return Err(wasm_error!("PeerChat was not found"));
+            };
 
-    let entry_hash = hash_entry(&private_messenger_entry)?;
+            let bytes =
+                SerializedBytes::try_from(current_peer_chat).map_err(|err| wasm_error!(err))?;
 
-    if private_messenger_entries
-        .entries
-        .contains_key(&entry_hash.clone().into())
-    {
-        // We already have this message committed
-        return Ok(());
-    };
+            let current_hash = hash_blake2b(bytes.bytes().to_vec(), 32)?;
 
-    let valid = validate_private_messenger_entry(&private_messenger_entry)?;
+            if peer_message.current_peer_chat_hash.ne(&current_hash) {
+                let my_agents = query_my_linked_devices()?;
 
-    if let ValidateCallbackResult::Valid = valid {
-        create_relaxed(EntryTypes::PrivateMessengerEntry(private_messenger_entry))?;
+                send_remote_signal(
+                    MessengerRemoteSignal::NewPrivateMessengerEntry(
+                        private_messenger_entry.clone(),
+                    ),
+                    my_agents.clone(),
+                )?;
+
+                for agent in &my_agents {
+                    create_encrypted_message(
+                        agent.clone(),
+                        MessengerEncryptedMessage(private_messenger_entry.clone()),
+                    )?;
+                }
+            }
+        }
+        PrivateMessengerEntryContent::ReadPeerMessages(read_peer_messages) => {
+            // If we have linked a device at the same time that a peer sent us a message
+            // we need to re-propagate this message to our newly linked device
+            let Some(current_peer_chat) =
+                query_current_peer_chat(&read_peer_messages.peer_chat_hash)?
+            else {
+                return Err(wasm_error!("PeerChat was not found"));
+            };
+
+            let bytes =
+                SerializedBytes::try_from(current_peer_chat).map_err(|err| wasm_error!(err))?;
+
+            let current_hash = hash_blake2b(bytes.bytes().to_vec(), 32)?;
+
+            if read_peer_messages.current_peer_chat_hash.ne(&current_hash) {
+                let my_agents = query_my_linked_devices()?;
+
+                send_remote_signal(
+                    MessengerRemoteSignal::NewPrivateMessengerEntry(
+                        private_messenger_entry.clone(),
+                    ),
+                    my_agents.clone(),
+                )?;
+
+                for agent in &my_agents {
+                    create_encrypted_message(
+                        agent.clone(),
+                        MessengerEncryptedMessage(private_messenger_entry.clone()),
+                    )?;
+                }
+            }
+        }
+        _ => {}
     }
 
     Ok(())
@@ -149,9 +199,9 @@ pub fn receive_private_messenger_entry(
 pub fn validate_private_messenger_entry(
     private_messenger_entry: &PrivateMessengerEntry,
 ) -> ExternResult<ValidateCallbackResult> {
-    let valid = verify_signed(private_messenger_entry.0.clone())?;
+    let signature_valid = verify_signed(private_messenger_entry.0.clone())?;
 
-    if !valid {
+    if !signature_valid {
         return Err(wasm_error!("Invalid signature for PeerMessage"));
     }
 
@@ -185,6 +235,31 @@ pub fn validate_private_messenger_entry(
     }
 }
 
+pub fn receive_private_messenger_entry(
+    private_messenger_entry: PrivateMessengerEntry,
+) -> ExternResult<()> {
+    let private_messenger_entries = query_private_messenger_entries(())?;
+    let entry_hash = hash_entry(&private_messenger_entry)?;
+
+    if private_messenger_entries
+        .entries
+        .contains_key(&entry_hash.clone().into())
+    {
+        // We already have this message committed
+        return Ok(());
+    };
+
+    let valid = validate_private_messenger_entry(&private_messenger_entry)?;
+
+    if let ValidateCallbackResult::Valid = valid {
+        create_relaxed(EntryTypes::PrivateMessengerEntry(
+            private_messenger_entry.clone(),
+        ))?;
+        post_receive_entry(&private_messenger_entries.entries, private_messenger_entry)?;
+    }
+
+    Ok(())
+}
 pub fn receive_private_messenger_entries(
     their_private_messenger_entries: Vec<(EntryHashB64, PrivateMessengerEntry)>,
 ) -> ExternResult<()> {
@@ -201,7 +276,13 @@ pub fn receive_private_messenger_entries(
         let valid = validate_private_messenger_entry(&private_messenger_entry)?;
 
         if let ValidateCallbackResult::Valid = valid {
-            create_relaxed(EntryTypes::PrivateMessengerEntry(private_messenger_entry))?;
+            create_relaxed(EntryTypes::PrivateMessengerEntry(
+                private_messenger_entry.clone(),
+            ))?;
+            post_receive_entry(
+                &my_private_messenger_entries.entries,
+                private_messenger_entry,
+            )?;
         }
     }
 

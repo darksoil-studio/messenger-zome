@@ -3,10 +3,9 @@ use messenger_integrity::{EntryTypes, LinkTypes, PrivateMessengerEntry};
 
 use crate::{
     private_messenger_entries::{
-        query_private_messenger_entries, validate_private_messenger_entry,
+        post_receive_entry, query_private_messenger_entries, validate_private_messenger_entry,
     },
-    signed::verify_signed,
-    utils::{create_link_relaxed, create_relaxed, delete_link_relaxed, delete_relaxed},
+    utils::{create_link_relaxed, create_relaxed, delete_link_relaxed},
 };
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes)]
@@ -45,7 +44,6 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
         GetLinksInputBuilder::try_new(my_pub_key.clone(), LinkTypes::AgentEncryptedMessage)?
             .build(),
     )?;
-    // let my_linked_devices = query_my_linked_devices()?;
 
     let private_messenger_entries = query_private_messenger_entries(())?;
 
@@ -69,13 +67,6 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
 
         let private_messenger_entry = message.0;
 
-        let signature_valid = verify_signed(private_messenger_entry.0.clone())?;
-
-        if !signature_valid {
-            delete_link_relaxed(link.create_link_hash)?;
-            continue;
-        }
-
         let private_messager_entry_hash = hash_entry(&private_messenger_entry)?;
         if private_messenger_entries
             .entries
@@ -89,7 +80,10 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
 
         match valid {
             ValidateCallbackResult::Valid => {
-                create_relaxed(EntryTypes::PrivateMessengerEntry(private_messenger_entry))?;
+                create_relaxed(EntryTypes::PrivateMessengerEntry(
+                    private_messenger_entry.clone(),
+                ))?;
+                post_receive_entry(&private_messenger_entries.entries, private_messenger_entry)?;
                 delete_link_relaxed(link.create_link_hash)?;
             }
             ValidateCallbackResult::Invalid(invalid_reason) => {

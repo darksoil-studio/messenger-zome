@@ -11,6 +11,8 @@ pub use signed::*;
 
 mod group_chat;
 pub use group_chat::*;
+mod peer_chat;
+pub use peer_chat::*;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
