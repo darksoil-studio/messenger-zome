@@ -101,6 +101,7 @@ fn scheduled_synchronize_with_linked_devices(_: Option<Schedule>) -> Option<Sche
 
 //     Ok(())
 // }
+
 #[hdk_extern]
 pub fn synchronize_with_linked_device(linked_device: AgentPubKey) -> ExternResult<()> {
     let entries = query_private_messenger_entries(())?;

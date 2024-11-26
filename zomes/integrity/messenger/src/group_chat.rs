@@ -1,7 +1,7 @@
 use hdi::prelude::*;
 use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 
-use crate::Message;
+use crate::{Message, Profile};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateGroupChat {
@@ -28,12 +28,14 @@ impl GroupChat {
                 agents: agents.into_iter().collect(),
                 add_member_count: 1,
                 admin_promotions_count: 0,
+                profile: None,
             })
             .collect();
         members.push(GroupMember {
             agents: create_group_chat.my_agents.into_iter().collect(),
             add_member_count: 1,
             admin_promotions_count: 1,
+            profile: None,
         });
         Self {
             settings: create_group_chat.settings,
@@ -88,6 +90,7 @@ impl GroupChat {
                         agents: member_agents.clone().into_iter().collect(),
                         add_member_count: 1,
                         admin_promotions_count: 0,
+                        profile: None,
                     });
                 }
             }
@@ -241,6 +244,14 @@ impl GroupChat {
                 group_1_members[group_1_member_index].add_member_count = add_count;
                 group_1_members[group_1_member_index].admin_promotions_count =
                     admin_promotions_count;
+
+                let profile = match (group_1_member.profile, group_2_member.profile) {
+                    (Some(p1), Some(p2)) => Some(if p1 < p2 { p2 } else { p1 }),
+                    (Some(p1), None) => Some(p1),
+                    (None, Some(p2)) => Some(p2),
+                    (None, None) => None,
+                };
+                group_1_members[group_1_member_index].profile = profile;
             } else {
                 group_1_members.push(group_2_member);
             }
@@ -276,6 +287,7 @@ pub struct GroupMember {
     pub agents: BTreeSet<AgentPubKey>,
     pub add_member_count: i32,
     pub admin_promotions_count: i32,
+    pub profile: Option<Profile>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

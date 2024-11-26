@@ -118,6 +118,12 @@ pub fn create_relaxed_private_messenger_entry(
     internal_create_private_messenger_entry(content, true)
 }
 
+pub fn query_missed_peer_events(
+    peer_chat_hash: &EntryHash,
+    current_peer_chat_events_hashes: &Vec<EntryHash>,
+) -> ExternResult<BTreeMap<EntryHash, PeerChatEvent>> {
+}
+
 pub fn post_receive_entry(
     existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
     private_messenger_entry: PrivateMessengerEntry,
@@ -126,64 +132,53 @@ pub fn post_receive_entry(
         PrivateMessengerEntryContent::PeerMessage(peer_message) => {
             // If we have linked a device at the same time that a peer sent us a message
             // we need to re-propagate this message to our newly linked device
-            let Some(current_peer_chat) = query_latest_peer_chat(&peer_message.peer_chat_hash)?
-            else {
-                return Err(wasm_error!("PeerChat was not found"));
-            };
+            let missed_events = query_missed_peer_events(
+                &peer_message.peer_chat_hash,
+                &peer_message.current_peer_chat_events,
+            )?;
 
-            let bytes =
-                SerializedBytes::try_from(current_peer_chat).map_err(|err| wasm_error!(err))?;
-
-            let current_hash = hash_blake2b(bytes.bytes().to_vec(), 32)?;
-
-            if peer_message.current_peer_chat_hash.ne(&current_hash) {
-                let my_agents = query_my_linked_devices()?;
+            for (_event_hash, peer_chat_event) in missed_events {
+                let PeerEvent::NewPeerAgent(new_peer_agent) = peer_chat_event.event else {
+                    continue;
+                };
 
                 send_remote_signal(
                     MessengerRemoteSignal::NewPrivateMessengerEntry(
                         private_messenger_entry.clone(),
                     ),
-                    my_agents.clone(),
+                    vec![new_peer_agent.new_agent.clone()],
                 )?;
 
-                for agent in &my_agents {
-                    create_encrypted_message(
-                        agent.clone(),
-                        MessengerEncryptedMessage(private_messenger_entry.clone()),
-                    )?;
-                }
+                create_encrypted_message(
+                    new_peer_agent.new_agent.clone(),
+                    MessengerEncryptedMessage(private_messenger_entry.clone()),
+                )?;
             }
         }
         PrivateMessengerEntryContent::ReadPeerMessages(read_peer_messages) => {
             // If we have linked a device at the same time that a peer sent us a message
             // we need to re-propagate this message to our newly linked device
-            let Some(current_peer_chat) =
-                query_latest_peer_chat(&read_peer_messages.peer_chat_hash)?
-            else {
-                return Err(wasm_error!("PeerChat was not found"));
-            };
+            let missed_events = query_missed_peer_events(
+                &read_peer_messages.peer_chat_hash,
+                &read_peer_messages.current_peer_chat_events,
+            )?;
 
-            let bytes =
-                SerializedBytes::try_from(current_peer_chat).map_err(|err| wasm_error!(err))?;
-
-            let current_hash = hash_blake2b(bytes.bytes().to_vec(), 32)?;
-
-            if read_peer_messages.current_peer_chat_hash.ne(&current_hash) {
-                let my_agents = query_my_linked_devices()?;
+            for (_event_hash, peer_chat_event) in missed_events {
+                let PeerEvent::NewPeerAgent(new_peer_agent) = peer_chat_event.event else {
+                    continue;
+                };
 
                 send_remote_signal(
                     MessengerRemoteSignal::NewPrivateMessengerEntry(
                         private_messenger_entry.clone(),
                     ),
-                    my_agents.clone(),
+                    vec![new_peer_agent.new_agent.clone()],
                 )?;
 
-                for agent in &my_agents {
-                    create_encrypted_message(
-                        agent.clone(),
-                        MessengerEncryptedMessage(private_messenger_entry.clone()),
-                    )?;
-                }
+                create_encrypted_message(
+                    new_peer_agent.new_agent.clone(),
+                    MessengerEncryptedMessage(private_messenger_entry.clone()),
+                )?;
             }
         }
         _ => {}
