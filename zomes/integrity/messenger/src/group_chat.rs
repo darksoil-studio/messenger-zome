@@ -4,6 +4,14 @@ use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 use crate::Message;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreateGroupChat {
+    pub my_agents: Vec<AgentPubKey>,
+    pub other_members: Vec<Vec<AgentPubKey>>,
+    pub info: GroupInfo,
+    pub settings: GroupSettings,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GroupChat {
     pub members: Vec<GroupMember>,
     pub info: GroupInfo,
@@ -12,6 +20,29 @@ pub struct GroupChat {
 }
 
 impl GroupChat {
+    pub fn new(create_group_chat: CreateGroupChat) -> Self {
+        let mut members: Vec<GroupMember> = create_group_chat
+            .other_members
+            .into_iter()
+            .map(|agents| GroupMember {
+                agents: agents.into_iter().collect(),
+                add_member_count: 1,
+                admin_promotions_count: 0,
+            })
+            .collect();
+        members.push(GroupMember {
+            agents: create_group_chat.my_agents.into_iter().collect(),
+            add_member_count: 1,
+            admin_promotions_count: 1,
+        });
+        Self {
+            settings: create_group_chat.settings,
+            info: create_group_chat.info,
+            members,
+            deleted: false,
+        }
+    }
+
     pub fn apply(mut self, provenance: &AgentPubKey, event: &GroupEvent) -> ExternResult<Self> {
         let author_member = self.members.iter().find(|m| m.agents.contains(&provenance));
         let Some(author_member) = author_member else {
@@ -19,7 +50,7 @@ impl GroupChat {
                 "Author of the GroupEvent is not a member of the group"
             ));
         };
-        let author_is_admin = author_member.admin;
+        let author_is_admin = author_member.admin_promotions_count > 0;
         match event {
             GroupEvent::UpdateGroupInfo(group_info) => {
                 if self.settings.only_admins_can_edit_group_info && !author_is_admin {
@@ -33,16 +64,36 @@ impl GroupChat {
                 }
                 self.settings = group_settings.clone();
             }
-            GroupEvent::AddMember(member) => {
-                if self.settings.only_admins_can_manage_members && !author_is_admin {
-                    return Err(wasm_error!("Only admins can update the group's info"));
+            GroupEvent::AddMember { member_agents } => {
+                if self.settings.only_admins_can_add_members && !author_is_admin {
+                    return Err(wasm_error!("Only admins can add members"));
                 }
 
-                self.members.push(member.clone())
+                let existing_member_index = self.members.iter().position(|m| {
+                    member_agents
+                        .iter()
+                        .find(|m2| m.agents.contains(&m2))
+                        .is_some()
+                });
+
+                if let Some(existing_member_index) = existing_member_index {
+                    for agent in member_agents {
+                        self.members[existing_member_index]
+                            .agents
+                            .insert(agent.clone());
+                    }
+                    self.members[existing_member_index].add_member_count += 1;
+                } else {
+                    self.members.push(GroupMember {
+                        agents: member_agents.clone().into_iter().collect(),
+                        add_member_count: 1,
+                        admin_promotions_count: 0,
+                    });
+                }
             }
             GroupEvent::RemoveMember { member_agents } => {
-                if self.settings.only_admins_can_manage_members && !author_is_admin {
-                    return Err(wasm_error!("Only admins can update the group's info"));
+                if !author_is_admin {
+                    return Err(wasm_error!("Only admins can remove members"));
                 }
 
                 let pos = self.members.iter().position(|m| {
@@ -54,7 +105,7 @@ impl GroupChat {
                 let Some(p) = pos else {
                     return Err(wasm_error!("Member not found"));
                 };
-                self.members.remove(p);
+                self.members[p].add_member_count -= 1;
             }
             GroupEvent::NewAgentForMember {
                 new_agent,
@@ -71,7 +122,7 @@ impl GroupChat {
                 if !linked {
                     return Err(wasm_error!("Invalid proof"));
                 }
-                self.members[p].agents.push(new_agent.clone());
+                self.members[p].agents.insert(new_agent.clone());
             }
             GroupEvent::PromoteMemberToAdmin { member_agents } => {
                 if !author_is_admin {
@@ -86,7 +137,7 @@ impl GroupChat {
                 let Some(p) = pos else {
                     return Err(wasm_error!("Member not found"));
                 };
-                self.members[p].admin = true;
+                self.members[p].admin_promotions_count += 1;
             }
             GroupEvent::DemoteMemberFromAdmin { member_agents } => {
                 if !author_is_admin {
@@ -101,12 +152,13 @@ impl GroupChat {
                 let Some(p) = pos else {
                     return Err(wasm_error!("Member not found"));
                 };
-                self.members[p].admin = false;
+                self.members[p].admin_promotions_count -= 1;
             }
             GroupEvent::DeleteGroup => {
                 if !author_is_admin {
                     return Err(wasm_error!("Only admins can delete groups"));
                 }
+                self.deleted = true;
             }
             GroupEvent::LeaveGroup => {
                 let author_member_index = self
@@ -116,12 +168,92 @@ impl GroupChat {
                 let Some(i) = author_member_index else {
                     return Err(wasm_error!("Unreachable: member position not found?"));
                 };
-                self.members.remove(i);
+                self.members[i].add_member_count -= 1;
             }
-            _ => {}
         };
 
         Ok(self)
+    }
+
+    pub fn merge(group_1: GroupChat, group_2: GroupChat) -> GroupChat {
+        let settings = GroupSettings {
+            only_admins_can_edit_group_info: group_1.settings.only_admins_can_edit_group_info
+                && group_2.settings.only_admins_can_edit_group_info,
+            only_admins_can_add_members: group_1.settings.only_admins_can_add_members
+                && group_2.settings.only_admins_can_add_members,
+            sync_message_history_with_new_members: group_1
+                .settings
+                .sync_message_history_with_new_members
+                && group_2.settings.sync_message_history_with_new_members,
+        };
+        let name = if group_1.info.name < group_2.info.name {
+            group_2.info.name
+        } else {
+            group_1.info.name
+        };
+        let description = if group_1.info.description < group_2.info.description {
+            group_2.info.description
+        } else {
+            group_1.info.description
+        };
+        let avatar_hash = match (group_1.info.avatar_hash, group_2.info.avatar_hash) {
+            (Some(hash_1), Some(hash_2)) => Some(if hash_1 < hash_2 { hash_2 } else { hash_1 }),
+            (Some(hash_1), None) => Some(hash_1),
+            (None, Some(hash_2)) => Some(hash_2),
+            (None, None) => None,
+        };
+        let info = GroupInfo {
+            name,
+            description,
+            avatar_hash,
+        };
+
+        let mut group_1_members = group_1.members.clone();
+
+        for group_2_member in group_2.members {
+            let existing_in_group_1 = group_1_members.iter().position(|m1| {
+                group_2_member
+                    .agents
+                    .iter()
+                    .find(|a2| m1.agents.contains(&a2))
+                    .is_some()
+            });
+            if let Some(group_1_member_index) = existing_in_group_1 {
+                let group_1_member = group_1_members[group_1_member_index].clone();
+                for agent in group_2_member.agents {
+                    group_1_members[group_1_member_index]
+                        .agents
+                        .insert(agent.clone());
+                }
+                let add_count = if group_2_member.add_member_count < group_1_member.add_member_count
+                {
+                    group_2_member.add_member_count
+                } else {
+                    group_1_member.add_member_count
+                };
+                let admin_promotions_count = if group_2_member.admin_promotions_count
+                    < group_1_member.admin_promotions_count
+                {
+                    group_2_member.admin_promotions_count
+                } else {
+                    group_1_member.admin_promotions_count
+                };
+                group_1_members[group_1_member_index].add_member_count = add_count;
+                group_1_members[group_1_member_index].admin_promotions_count =
+                    admin_promotions_count;
+            } else {
+                group_1_members.push(group_2_member);
+            }
+        }
+
+        let deleted = group_1.deleted || group_2.deleted;
+
+        GroupChat {
+            members: group_1_members,
+            info,
+            settings,
+            deleted,
+        }
     }
 }
 
@@ -135,14 +267,15 @@ pub struct GroupInfo {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GroupSettings {
     pub only_admins_can_edit_group_info: bool,
-    pub only_admins_can_manage_members: bool,
+    pub only_admins_can_add_members: bool,
     pub sync_message_history_with_new_members: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct GroupMember {
-    pub agents: Vec<AgentPubKey>,
-    pub admin: bool,
+    pub agents: BTreeSet<AgentPubKey>,
+    pub add_member_count: i32,
+    pub admin_promotions_count: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -150,7 +283,9 @@ pub struct GroupMember {
 pub enum GroupEvent {
     UpdateGroupInfo(GroupInfo),
     UpdateGroupSettings(GroupSettings),
-    AddMember(GroupMember),
+    AddMember {
+        member_agents: Vec<AgentPubKey>,
+    },
     RemoveMember {
         member_agents: Vec<AgentPubKey>,
     },
@@ -164,35 +299,29 @@ pub enum GroupEvent {
     DemoteMemberFromAdmin {
         member_agents: Vec<AgentPubKey>,
     },
-    DeleteGroup,
-    ReconcileHistories {
-        accepted_previous_event: EntryHash,
-    },
-    RejectHistory {
-        rejected_previous_event: EntryHash,
-    },
     LeaveGroup,
+    DeleteGroup,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GroupChatEvent {
-    pub group_hash: EntryHash,
-    pub previous_event_hash: EntryHash,
+    pub group_chat_hash: EntryHash,
+    pub previous_group_chat_event_hashes: Vec<EntryHash>,
 
     pub event: GroupEvent,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GroupMessage {
-    pub group_hash: EntryHash,
-    pub current_event_hash: EntryHash,
+    pub group_chat_hash: EntryHash,
+    pub current_group_chat_events_hashes: Vec<EntryHash>,
 
     pub message: Message,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReadGroupMessages {
-    pub group_hash: EntryHash,
-    pub current_event_hash: EntryHash,
+    pub group_chat_hash: EntryHash,
+    pub current_group_chat_events_hashes: Vec<EntryHash>,
     pub read_messages_hashes: Vec<EntryHash>,
 }

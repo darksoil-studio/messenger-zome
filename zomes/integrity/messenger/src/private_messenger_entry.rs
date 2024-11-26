@@ -13,9 +13,9 @@ pub struct Message {
 pub enum PrivateMessengerEntryContent {
     CreatePeerChat(PeerChat),
     PeerMessage(PeerMessage),
-    NewPeerAgent(NewPeerAgent),
+    PeerChatEvent(PeerChatEvent),
     ReadPeerMessages(ReadPeerMessages),
-    CreateGroupChat(GroupChat),
+    CreateGroupChat(CreateGroupChat),
     GroupChatEvent(GroupChatEvent),
     GroupMessage(GroupMessage),
     ReadGroupMessages(ReadGroupMessages),
@@ -45,4 +45,24 @@ pub fn validate_delete_private_messenger_entry(
     Ok(ValidateCallbackResult::Invalid(format!(
         "PrivateMessengerEntries cannot be deleted"
     )))
+}
+
+pub fn validate_create_awaiting_deps_entry(
+    _action: EntryCreationAction,
+    _private_messenger_entry: PrivateMessengerEntry,
+) -> ExternResult<ValidateCallbackResult> {
+    Ok(ValidateCallbackResult::Valid)
+}
+pub fn validate_update_awaiting_deps_entry(
+    _action: Update,
+    _private_messenger_entry: PrivateMessengerEntry,
+) -> ExternResult<ValidateCallbackResult> {
+    Ok(ValidateCallbackResult::Invalid(format!(
+        "PrivateMessengerEntries cannot be updated"
+    )))
+}
+pub fn validate_delete_awaiting_deps_entry(
+    _action: Delete,
+) -> ExternResult<ValidateCallbackResult> {
+    Ok(ValidateCallbackResult::Valid)
 }

@@ -74,8 +74,8 @@ pub enum MessengerRemoteSignal {
     NewPrivateMessengerEntry(PrivateMessengerEntry),
     PeerChatTypingIndicator,
     GroupChatTypingIndicator { group_hash: EntryHash },
-    SynchronizeEntriesWithLinkedDevice(Vec<(EntryHashB64, PrivateMessengerEntry)>),
-    SynchronizeGroupEntriesWithNewGroupMember(Vec<(EntryHashB64, PrivateMessengerEntry)>),
+    SynchronizeEntriesWithLinkedDevice(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
+    SynchronizeGroupEntriesWithNewGroupMember(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
 }
 
 #[hdk_extern]
@@ -168,20 +168,18 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
                     action: action.clone(),
                     app_entry: app_entry.clone(),
                 })?;
-                match app_entry {
-                    EntryTypes::PrivateMessengerEntry(entry) => {
-                        let agent_info = agent_info()?;
-                        if entry.0.provenance.eq(&agent_info.agent_latest_pubkey) {
-                            call_remote(
-                                agent_info.agent_latest_pubkey,
-                                zome_info()?.name,
-                                "notify_private_messenger_entry_recipients".into(),
-                                None,
-                                entry,
-                            )?;
-                        }
+                if let EntryTypes::PrivateMessengerEntry(entry) = app_entry {
+                    let agent_info = agent_info()?;
+                    if entry.0.provenance.eq(&agent_info.agent_latest_pubkey) {
+                        call_remote(
+                            agent_info.agent_latest_pubkey,
+                            zome_info()?.name,
+                            "notify_private_messenger_entry_recipients".into(),
+                            None,
+                            entry,
+                        )?;
                     }
-                };
+                }
             }
             Ok(())
         }

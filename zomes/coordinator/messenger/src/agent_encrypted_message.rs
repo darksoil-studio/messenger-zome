@@ -1,5 +1,5 @@
 use hdk::prelude::*;
-use messenger_integrity::{EntryTypes, LinkTypes, PrivateMessengerEntry};
+use messenger_integrity::{EncryptedMessage, EntryTypes, LinkTypes, PrivateMessengerEntry};
 
 use crate::{
     private_messenger_entries::{
@@ -25,17 +25,61 @@ pub fn create_encrypted_message(
         message_bytes.bytes().clone().into(),
     )?;
 
-    let tag_bytes = SerializedBytes::try_from(EncryptedMessageBytes(encrypted_data))
+    let bytes = SerializedBytes::try_from(EncryptedMessageBytes(encrypted_data))
         .map_err(|err| wasm_error!(err))?;
 
-    create_link_relaxed(
-        recipient.clone(),
-        recipient,
-        LinkTypes::AgentEncryptedMessage,
-        tag_bytes.bytes().clone(),
-    )?;
+    if bytes.bytes().len() > 900 {
+        let entry = EncryptedMessage {
+            recipient: recipient.clone(),
+            content: bytes,
+        };
+        let entry_hash = hash_entry(&entry)?;
+        create_relaxed(EntryTypes::EncryptedMessage(entry))?;
+        create_link_relaxed(
+            recipient.clone(),
+            entry_hash,
+            LinkTypes::AgentEncryptedMessage,
+            (),
+        )?;
+    } else {
+        create_link_relaxed(
+            recipient.clone(),
+            recipient,
+            LinkTypes::AgentEncryptedMessage,
+            bytes.bytes().clone(),
+        )?;
+    }
 
     Ok(())
+}
+
+fn get_message(agent_encrypted_message_link: &Link) -> ExternResult<Option<SerializedBytes>> {
+    if agent_encrypted_message_link
+        .base
+        .eq(&agent_encrypted_message_link.target)
+    {
+        let tag = agent_encrypted_message_link.tag.clone();
+        let bytes = SerializedBytes::from(UnsafeBytes::from(tag.into_inner()));
+        Ok(Some(bytes))
+    } else {
+        let Some(entry_hash) = agent_encrypted_message_link
+            .target
+            .clone()
+            .into_entry_hash()
+        else {
+            return Err(wasm_error!(
+                "AgentToEncryptedMessage link does not have an entry hash as its target"
+            ));
+        };
+        let Some(record) = get(entry_hash, GetOptions::default())? else {
+            return Ok(None);
+        };
+
+        let Ok(Some(encrypted_message)) = record.entry().to_app_option::<EncryptedMessage>() else {
+            return Err(wasm_error!("Invalid EncryptedMessage target"));
+        };
+        Ok(Some(encrypted_message.content))
+    }
 }
 
 pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
@@ -48,8 +92,9 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
     let private_messenger_entries = query_private_messenger_entries(())?;
 
     for link in links {
-        let tag = link.tag;
-        let bytes = SerializedBytes::from(UnsafeBytes::from(tag.into_inner()));
+        let Some(bytes) = get_message(&link)? else {
+            continue;
+        };
         let encrypted_data =
             EncryptedMessageBytes::try_from(bytes).map_err(|err| wasm_error!(err))?;
 
@@ -68,10 +113,7 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
         let private_messenger_entry = message.0;
 
         let private_messager_entry_hash = hash_entry(&private_messenger_entry)?;
-        if private_messenger_entries
-            .entries
-            .contains_key(&private_messager_entry_hash.into())
-        {
+        if private_messenger_entries.contains_key(&private_messager_entry_hash.into()) {
             delete_link_relaxed(link.create_link_hash)?;
             continue;
         }
@@ -83,7 +125,7 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
                 create_relaxed(EntryTypes::PrivateMessengerEntry(
                     private_messenger_entry.clone(),
                 ))?;
-                post_receive_entry(&private_messenger_entries.entries, private_messenger_entry)?;
+                post_receive_entry(&private_messenger_entries, private_messenger_entry)?; // TODOOOOO WHAT
                 delete_link_relaxed(link.create_link_hash)?;
             }
             ValidateCallbackResult::Invalid(invalid_reason) => {
@@ -91,7 +133,11 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
                 delete_link_relaxed(link.create_link_hash)?;
             }
             ValidateCallbackResult::UnresolvedDependencies(_deps) => {
-                // Do nothing, next round we'll commit it when we actually have the dependencies
+                create_relaxed(EntryTypes::AwaitingDepsEntry(
+                    private_messenger_entry.clone(),
+                ))?;
+
+                delete_link_relaxed(link.create_link_hash)?;
             }
         }
     }

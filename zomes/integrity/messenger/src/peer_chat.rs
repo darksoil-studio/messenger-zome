@@ -1,33 +1,125 @@
 use hdi::prelude::*;
-use linked_devices_types::LinkedDevicesProof;
+use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 
-use crate::Message;
+use crate::{Message, Profile};
+
+#[derive(Serialize, Deserialize, Debug, Clone, SerializedBytes)]
+pub struct Peer {
+    pub agents: BTreeSet<AgentPubKey>,
+    pub profile: Option<Profile>,
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone, SerializedBytes)]
 pub struct PeerChat {
-    pub my_agents: Vec<AgentPubKey>,
-    pub peer_agents: Vec<AgentPubKey>,
+    pub peer_1: Peer,
+    pub peer_2: Peer,
+}
+
+impl PeerChat {
+    pub fn apply(mut self, provenance: &AgentPubKey, event: &PeerEvent) -> ExternResult<Self> {
+        match event {
+            PeerEvent::NewPeerAgent(new_peer_agent) => {
+                if self.peer_1.agents.contains(&provenance) {
+                    let valid = are_agents_linked(
+                        &provenance,
+                        &new_peer_agent.new_agent,
+                        &new_peer_agent.proofs,
+                    );
+                    if !valid {
+                        return Err(wasm_error!("Invalid proof for NewPeerAgent"));
+                    }
+
+                    self.peer_1.agents.insert(new_peer_agent.new_agent.clone());
+                } else if self.peer_2.agents.contains(&provenance) {
+                    self.peer_2.agents.insert(new_peer_agent.new_agent.clone());
+                } else {
+                    return Err(wasm_error!(
+                        "Author of the PeerEvent is not a member of this PeerChat"
+                    ));
+                }
+            }
+            PeerEvent::UpdateProfile(profile) => {
+                if self.peer_1.agents.contains(&provenance) {
+                    self.peer_1.profile = Some(profile.clone());
+                } else if self.peer_2.agents.contains(&provenance) {
+                    self.peer_2.profile = Some(profile.clone());
+                } else {
+                    return Err(wasm_error!(
+                        "Author of the PeerEvent is not a member of this PeerChat"
+                    ));
+                }
+            }
+        }
+
+        Ok(self)
+    }
+
+    pub fn merge(peer_chat_1: PeerChat, mut peer_chat_2: PeerChat) -> PeerChat {
+        let mut agents_1 = peer_chat_1.peer_1.agents.clone();
+        agents_1.append(&mut peer_chat_2.peer_1.agents);
+
+        let profile_1 = match (peer_chat_1.peer_1.profile, peer_chat_2.peer_1.profile) {
+            (Some(p1), Some(p2)) => Some(if p1 < p2 { p2 } else { p1 }),
+            (Some(p1), None) => Some(p1),
+            (None, Some(p2)) => Some(p2),
+            (None, None) => None,
+        };
+
+        let mut agents_2 = peer_chat_1.peer_2.agents.clone();
+        agents_2.append(&mut peer_chat_2.peer_2.agents);
+
+        let profile_2 = match (peer_chat_1.peer_2.profile, peer_chat_2.peer_2.profile) {
+            (Some(p1), Some(p2)) => Some(if p1 < p2 { p2 } else { p1 }),
+            (Some(p1), None) => Some(p1),
+            (None, Some(p2)) => Some(p2),
+            (None, None) => None,
+        };
+
+        PeerChat {
+            peer_1: Peer {
+                agents: agents_1,
+                profile: profile_1,
+            },
+            peer_2: Peer {
+                agents: agents_2,
+                profile: profile_2,
+            },
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, SerializedBytes)]
+pub enum PeerEvent {
+    NewPeerAgent(NewPeerAgent),
+    UpdateProfile(Profile),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PeerMessage {
+pub struct PeerChatEvent {
     pub peer_chat_hash: EntryHash,
-    pub current_peer_chat_hash: Vec<u8>,
+    pub previous_peer_chat_events: Vec<EntryHash>,
 
-    pub message: Message,
+    pub event: PeerEvent,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewPeerAgent {
-    pub peer_chat_hash: EntryHash,
     pub new_agent: AgentPubKey,
     pub proofs: Vec<LinkedDevicesProof>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PeerMessage {
+    pub peer_chat_hash: EntryHash,
+    pub current_peer_chat_events: Vec<EntryHash>,
+
+    pub message: Message,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReadPeerMessages {
     pub peer_chat_hash: EntryHash,
-    pub current_peer_chat_hash: Vec<u8>,
+    pub current_peer_chat_events: Vec<EntryHash>,
 
     pub read_messages_hashes: Vec<EntryHash>,
 }

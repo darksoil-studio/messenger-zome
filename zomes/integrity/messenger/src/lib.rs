@@ -6,9 +6,14 @@ pub use agent_encrypted_message::*;
 mod private_messenger_entry;
 pub use private_messenger_entry::*;
 
+mod history;
+pub use history::*;
+
 mod signed;
 pub use signed::*;
 
+mod profile;
+pub use profile::*;
 mod group_chat;
 pub use group_chat::*;
 mod peer_chat;
@@ -20,7 +25,13 @@ pub use peer_chat::*;
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
     #[entry_type(visibility = "private")]
+    MessengerHistory(MessengerHistory),
+    #[entry_type(visibility = "private")]
     PrivateMessengerEntry(PrivateMessengerEntry),
+    #[entry_type(visibility = "private")]
+    AwaitingDepsEntry(PrivateMessengerEntry),
+    #[entry_type(visibility = "private")]
+    EncryptedMessage(EncryptedMessage),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -86,6 +97,24 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         private_messenger_entry,
                     )
                 }
+                EntryTypes::AwaitingDepsEntry(awaiting_deps_entry) => {
+                    validate_create_awaiting_deps_entry(
+                        EntryCreationAction::Create(action),
+                        awaiting_deps_entry,
+                    )
+                }
+                EntryTypes::MessengerHistory(messenger_history) => {
+                    validate_create_messenger_history(
+                        EntryCreationAction::Create(action),
+                        messenger_history,
+                    )
+                }
+                EntryTypes::EncryptedMessage(encrypted_message) => {
+                    validate_create_encrypted_message(
+                        EntryCreationAction::Create(action),
+                        encrypted_message,
+                    )
+                }
             },
             OpEntry::UpdateEntry {
                 app_entry, action, ..
@@ -96,6 +125,24 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         private_messenger_entry,
                     )
                 }
+                EntryTypes::AwaitingDepsEntry(awaiting_deps_entry) => {
+                    validate_create_awaiting_deps_entry(
+                        EntryCreationAction::Update(action),
+                        awaiting_deps_entry,
+                    )
+                }
+                EntryTypes::MessengerHistory(messenger_history) => {
+                    validate_create_messenger_history(
+                        EntryCreationAction::Update(action),
+                        messenger_history,
+                    )
+                }
+                EntryTypes::EncryptedMessage(encrypted_message) => {
+                    validate_create_encrypted_message(
+                        EntryCreationAction::Update(action),
+                        encrypted_message,
+                    )
+                }
             },
             _ => Ok(ValidateCallbackResult::Valid),
         },
@@ -103,6 +150,15 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             OpUpdate::Entry { app_entry, action } => match app_entry {
                 EntryTypes::PrivateMessengerEntry(private_messenger_entry) => {
                     validate_update_private_messenger_entry(action, private_messenger_entry)
+                }
+                EntryTypes::AwaitingDepsEntry(awaiting_deps_entry) => {
+                    validate_update_awaiting_deps_entry(action, awaiting_deps_entry)
+                }
+                EntryTypes::MessengerHistory(messenger_history) => {
+                    validate_update_messenger_history(action, messenger_history)
+                }
+                EntryTypes::EncryptedMessage(encrypted_message) => {
+                    validate_update_encrypted_message(action, encrypted_message)
                 }
             },
             _ => Ok(ValidateCallbackResult::Valid),
@@ -153,6 +209,9 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 EntryTypes::PrivateMessengerEntry(_) => {
                     validate_delete_private_messenger_entry(action)
                 }
+                EntryTypes::AwaitingDepsEntry(_) => validate_delete_awaiting_deps_entry(action),
+                EntryTypes::MessengerHistory(_) => validate_delete_messenger_history(action),
+                EntryTypes::EncryptedMessage(_) => validate_delete_encrypted_message(action),
             }
         }
         FlatOp::RegisterCreateLink {
@@ -194,6 +253,24 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         private_messenger_entry,
                     )
                 }
+                EntryTypes::AwaitingDepsEntry(awaiting_deps_entry) => {
+                    validate_create_awaiting_deps_entry(
+                        EntryCreationAction::Create(action),
+                        awaiting_deps_entry,
+                    )
+                }
+                EntryTypes::MessengerHistory(messenger_history) => {
+                    validate_create_messenger_history(
+                        EntryCreationAction::Create(action),
+                        messenger_history,
+                    )
+                }
+                EntryTypes::EncryptedMessage(encrypted_message) => {
+                    validate_create_encrypted_message(
+                        EntryCreationAction::Create(action),
+                        encrypted_message,
+                    )
+                }
             },
             OpRecord::UpdateEntry {
                 app_entry, action, ..
@@ -207,6 +284,36 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         return Ok(result);
                     };
                     validate_update_private_messenger_entry(action, private_messenger_entry)
+                }
+                EntryTypes::MessengerHistory(messenger_history) => {
+                    let result = validate_create_messenger_history(
+                        EntryCreationAction::Update(action.clone()),
+                        messenger_history.clone(),
+                    )?;
+                    let ValidateCallbackResult::Valid = result else {
+                        return Ok(result);
+                    };
+                    validate_update_messenger_history(action, messenger_history)
+                }
+                EntryTypes::AwaitingDepsEntry(awaiting_deps_entry) => {
+                    let result = validate_create_awaiting_deps_entry(
+                        EntryCreationAction::Update(action.clone()),
+                        awaiting_deps_entry.clone(),
+                    )?;
+                    let ValidateCallbackResult::Valid = result else {
+                        return Ok(result);
+                    };
+                    validate_update_awaiting_deps_entry(action, awaiting_deps_entry)
+                }
+                EntryTypes::EncryptedMessage(encrypted_message) => {
+                    let result = validate_create_encrypted_message(
+                        EntryCreationAction::Update(action.clone()),
+                        encrypted_message.clone(),
+                    )?;
+                    let ValidateCallbackResult::Valid = result else {
+                        return Ok(result);
+                    };
+                    validate_update_encrypted_message(action, encrypted_message)
                 }
             },
             OpRecord::DeleteEntry {
@@ -248,17 +355,20 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     Some(app_entry) => app_entry,
                     None => {
                         return Ok(
-                ValidateCallbackResult::Invalid(
-                    "Original app entry must be one of the defined entry types for this zome"
-                        .to_string(),
-                ),
-            );
+                            ValidateCallbackResult::Invalid(
+                                "Original app entry must be one of the defined entry types for this zome"
+                                    .to_string(),
+                            ),
+                        );
                     }
                 };
                 match original_app_entry {
                     EntryTypes::PrivateMessengerEntry(_) => {
                         validate_delete_private_messenger_entry(action)
                     }
+                    EntryTypes::AwaitingDepsEntry(_) => validate_delete_awaiting_deps_entry(action),
+                    EntryTypes::MessengerHistory(_) => validate_delete_messenger_history(action),
+                    EntryTypes::EncryptedMessage(_) => validate_delete_encrypted_message(action),
                 }
             }
             OpRecord::CreateLink {

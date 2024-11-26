@@ -9,34 +9,27 @@ use crate::private_messenger_entries::{
 };
 
 #[hdk_extern]
-pub fn create_group_chat(group: GroupChat) -> ExternResult<EntryHash> {
+pub fn create_group_chat(group: CreateGroupChat) -> ExternResult<EntryHash> {
     let content = PrivateMessengerEntryContent::CreateGroupChat(group.clone());
     create_private_messenger_entry(content)
 }
 
 pub fn validate_create_group_chat(
-    provenance: &AgentPubKey,
-    create_group_chat: &GroupChat,
+    _provenance: &AgentPubKey,
+    _create_group_chat: &CreateGroupChat,
 ) -> ExternResult<ValidateCallbackResult> {
-    let creator_admin_member = create_group_chat
-        .members
-        .iter()
-        .find(|m| m.admin && m.agents.contains(provenance));
-    if creator_admin_member.is_none() {
-        return Ok(ValidateCallbackResult::Invalid(format!(
-            "The creator of a group must be an admin for it as well"
-        )));
-    }
     return Ok(ValidateCallbackResult::Valid);
 }
 
 #[hdk_extern]
-pub fn create_group_event(group_event: GroupChatEvent) -> ExternResult<EntryHash> {
-    let content = PrivateMessengerEntryContent::GroupChatEvent(group_event);
+pub fn create_group_chat_event(group_chat_event: GroupChatEvent) -> ExternResult<EntryHash> {
+    let content = PrivateMessengerEntryContent::GroupChatEvent(group_chat_event);
     create_private_messenger_entry(content)
 }
 
-pub fn query_group_chat(group_chat_hash: &EntryHash) -> ExternResult<Option<GroupChat>> {
+pub fn query_create_group_chat(
+    group_chat_hash: &EntryHash,
+) -> ExternResult<Option<CreateGroupChat>> {
     let Some(entry) = query_private_messanger_entry(group_chat_hash)? else {
         return Ok(None);
     };
@@ -50,7 +43,16 @@ pub fn query_group_chat(group_chat_hash: &EntryHash) -> ExternResult<Option<Grou
     Ok(Some(group_chat))
 }
 
-pub fn query_group_chat_event(group_chat_hash: &EntryHash) -> ExternResult<Option<GroupChatEvent>> {
+pub fn query_original_group_chat(group_chat_hash: &EntryHash) -> ExternResult<Option<GroupChat>> {
+    let Some(create_group_chat) = query_create_group_chat(group_chat_hash)? else {
+        return Ok(None);
+    };
+    Ok(Some(GroupChat::new(create_group_chat)))
+}
+
+pub fn query_group_chat_event(
+    group_chat_hash: &EntryHash,
+) -> ExternResult<Option<(AgentPubKey, GroupChatEvent)>> {
     let Some(entry) = query_private_messanger_entry(group_chat_hash)? else {
         return Ok(None);
     };
@@ -62,77 +64,71 @@ pub fn query_group_chat_event(group_chat_hash: &EntryHash) -> ExternResult<Optio
             "Given group_hash is not for a GroupChatEvent entry"
         ));
     };
-    Ok(Some(group_chat_event))
-}
-
-pub fn query_all_valid_group_events(
-    group_chat_hash: &EntryHash,
-    current_event_hash: &EntryHash,
-) -> ExternResult<BTreeMap<EntryHash, (Timestamp, AgentPubKey, GroupEvent)>> {
-    let mut event_hash = current_event_hash.clone();
-    let mut group_events: BTreeMap<EntryHash, (Timestamp, AgentPubKey, GroupEvent)> =
-        BTreeMap::new();
-
-    while event_hash.ne(group_chat_hash) && !group_events.contains_key(&event_hash) {
-        let Some(entry) = query_private_messanger_entry(&event_hash)? else {
-            return Err(wasm_error!("GroupEvent not found"));
-        };
-
-        let PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) =
-            entry.0.signed_content.content
-        else {
-            return Err(wasm_error!(
-                "Given group_hash is not for a GroupChatEvent entry"
-            ));
-        };
-
-        group_events.insert(
-            event_hash.clone(),
-            (
-                entry.0.signed_content.timestamp,
-                entry.0.provenance,
-                group_chat_event.event.clone(),
-            ),
-        );
-        event_hash = group_chat_event.previous_event_hash;
-
-        if let GroupEvent::ReconcileHistories {
-            accepted_previous_event,
-        } = group_chat_event.event
-        {
-            if !group_events.contains_key(&accepted_previous_event) {
-                let history_events =
-                    query_all_valid_group_events(group_chat_hash, &accepted_previous_event)?;
-
-                for (entry_hash, event) in history_events {
-                    group_events.insert(entry_hash, event);
-                }
-            }
-        }
-    }
-
-    Ok(group_events)
+    Ok(Some((entry.0.provenance, group_chat_event)))
 }
 
 pub fn query_current_group_chat(
     group_chat_hash: &EntryHash,
-    current_event_hash: &EntryHash,
+    current_group_chat_events: &Vec<EntryHash>,
 ) -> ExternResult<Option<GroupChat>> {
-    let Some(mut group_chat) = query_group_chat(group_chat_hash)? else {
-        return Ok(None);
-    };
+    if current_group_chat_events.is_empty() {
+        let Some(group_chat) = query_original_group_chat(group_chat_hash)? else {
+            return Ok(None);
+        };
+        return Ok(Some(group_chat));
+    }
 
-    let mut events: Vec<(Timestamp, AgentPubKey, GroupEvent)> =
-        query_all_valid_group_events(group_chat_hash, current_event_hash)?
-            .into_values()
-            .collect();
+    let mut group_chats_at_events: BTreeMap<EntryHash, GroupChat> = BTreeMap::new();
 
-    events.sort_by(|e1, e2| e1.0.cmp(&e2.0));
+    fn group_chat_at_event(
+        event_hash: &EntryHash,
+        group_chats_at_events: &mut BTreeMap<HoloHash<hash_type::Entry>, GroupChat>,
+    ) -> ExternResult<GroupChat> {
+        if let Some(group_chat) = group_chats_at_events.get(&event_hash) {
+            return Ok(group_chat.clone());
+        }
 
-    for (_, provenance, event) in events {
-        if let Ok(next_group_chat) = group_chat.clone().apply(&provenance, &event) {
-            group_chat = next_group_chat;
-        } // TODO: What to do here if there is an error?
+        let Some((provenance, group_chat_event)) = query_group_chat_event(&event_hash)? else {
+            return Err(wasm_error!(
+                "Failed to find groupChatEvent {group_chat_event:?}"
+            ));
+        };
+
+        let previous_chat = if group_chat_event.previous_group_chat_event_hashes.is_empty() {
+            let Some(group_chat) = query_original_group_chat(&group_chat_event.group_chat_hash)?
+            else {
+                return Err(wasm_error!("Could not find GroupChat for GroupChatEvent"));
+            };
+            group_chat
+        } else {
+            let previous_chats = group_chat_event
+                .previous_group_chat_event_hashes
+                .into_iter()
+                .map(|event_hash| group_chat_at_event(&event_hash, group_chats_at_events))
+                .collect::<ExternResult<Vec<GroupChat>>>()?;
+
+            let mut chat = previous_chats[0].clone();
+            for previous_chat in &previous_chats[1..] {
+                chat = GroupChat::merge(chat, previous_chat.clone());
+            }
+            chat
+        };
+
+        let current_chat = previous_chat.apply(&provenance, &group_chat_event.event)?;
+
+        group_chats_at_events.insert(event_hash.clone(), current_chat.clone());
+
+        Ok(current_chat)
+    }
+
+    let previous_chats = current_group_chat_events
+        .into_iter()
+        .map(|event_hash| group_chat_at_event(event_hash, &mut group_chats_at_events))
+        .collect::<ExternResult<Vec<GroupChat>>>()?;
+
+    let mut group_chat = previous_chats[0].clone();
+    for previous_chat in &previous_chats[1..] {
+        group_chat = GroupChat::merge(group_chat, previous_chat.clone());
     }
 
     Ok(Some(group_chat))
@@ -140,17 +136,19 @@ pub fn query_current_group_chat(
 
 pub fn validate_group_chat_event(
     provenance: &AgentPubKey,
-    group_event: &GroupChatEvent,
+    group_chat_event: &GroupChatEvent,
 ) -> ExternResult<ValidateCallbackResult> {
-    let Some(current_group) =
-        query_current_group_chat(&group_event.group_hash, &group_event.previous_event_hash)?
+    let Some(current_group) = query_current_group_chat(
+        &group_chat_event.group_chat_hash,
+        &group_chat_event.previous_group_chat_event_hashes,
+    )?
     else {
         return Ok(ValidateCallbackResult::UnresolvedDependencies(
-            UnresolvedDependencies::Hashes(vec![group_event.group_hash.clone().into()]),
+            UnresolvedDependencies::Hashes(vec![group_chat_event.group_chat_hash.clone().into()]),
         ));
     };
 
-    match current_group.apply(provenance, &group_event.event) {
+    match current_group.apply(provenance, &group_chat_event.event) {
         Ok(_) => Ok(ValidateCallbackResult::Valid),
         Err(err) => Ok(ValidateCallbackResult::Invalid(format!(
             "Invalid GroupEvent: {err:?}"
@@ -168,11 +166,13 @@ pub fn validate_group_message(
     provenance: &AgentPubKey,
     group_message: &GroupMessage,
 ) -> ExternResult<ValidateCallbackResult> {
-    let Some(current_group) =
-        query_current_group_chat(&group_message.group_hash, &group_message.current_event_hash)?
+    let Some(current_group) = query_current_group_chat(
+        &group_message.group_chat_hash,
+        &group_message.current_group_chat_events_hashes,
+    )?
     else {
         return Ok(ValidateCallbackResult::UnresolvedDependencies(
-            UnresolvedDependencies::Hashes(vec![group_message.group_hash.clone().into()]),
+            UnresolvedDependencies::Hashes(vec![group_message.group_chat_hash.clone().into()]),
         ));
     };
     if !current_group
@@ -190,21 +190,8 @@ pub fn validate_group_message(
 
 #[hdk_extern]
 pub fn mark_group_messages_as_read(read_group_messages: ReadGroupMessages) -> ExternResult<()> {
-    let read_messages_hashes_chunks: Vec<Vec<EntryHash>> = read_group_messages
-        .read_messages_hashes
-        .chunks(16)
-        .into_iter()
-        .map(|chunk| chunk.iter().cloned().collect())
-        .collect();
-
-    for chunk in read_messages_hashes_chunks {
-        let content = PrivateMessengerEntryContent::ReadGroupMessages(ReadGroupMessages {
-            group_hash: read_group_messages.group_hash.clone(),
-            current_event_hash: read_group_messages.current_event_hash.clone(),
-            read_messages_hashes: chunk,
-        });
-        create_relaxed_private_messenger_entry(content)?;
-    }
+    let content = PrivateMessengerEntryContent::ReadGroupMessages(read_group_messages);
+    create_relaxed_private_messenger_entry(content)?;
 
     Ok(())
 }
@@ -214,12 +201,15 @@ pub fn validate_read_group_messages(
     read_group_messages: &ReadGroupMessages,
 ) -> ExternResult<ValidateCallbackResult> {
     let Some(current_group) = query_current_group_chat(
-        &read_group_messages.group_hash,
-        &read_group_messages.current_event_hash,
+        &read_group_messages.group_chat_hash,
+        &read_group_messages.current_group_chat_events_hashes,
     )?
     else {
         return Ok(ValidateCallbackResult::UnresolvedDependencies(
-            UnresolvedDependencies::Hashes(vec![read_group_messages.group_hash.clone().into()]),
+            UnresolvedDependencies::Hashes(vec![read_group_messages
+                .group_chat_hash
+                .clone()
+                .into()]),
         ));
     };
     if !current_group
@@ -326,12 +316,10 @@ pub fn validate_read_group_messages(
 pub fn query_entries_for_group(
     group_hash: &EntryHash,
     include_messages: bool,
-) -> ExternResult<Option<Vec<(EntryHashB64, PrivateMessengerEntry)>>> {
+) -> ExternResult<Option<BTreeMap<EntryHashB64, PrivateMessengerEntry>>> {
     let private_messenger_entries = query_private_messenger_entries(())?;
 
-    let Some(group_entry) = private_messenger_entries
-        .entries
-        .get(&EntryHashB64::from(group_hash.clone()))
+    let Some(group_entry) = private_messenger_entries.get(&EntryHashB64::from(group_hash.clone()))
     else {
         return Ok(None);
     };
@@ -342,28 +330,25 @@ pub fn query_entries_for_group(
         ));
     };
 
-    let mut entries_for_group: Vec<(EntryHashB64, PrivateMessengerEntry)> = Vec::new();
+    let mut entries_for_group: BTreeMap<EntryHashB64, PrivateMessengerEntry> = BTreeMap::new();
 
-    entries_for_group.push((group_hash.clone().into(), group_entry.clone()));
+    entries_for_group.insert(group_hash.clone().into(), group_entry.clone());
 
-    for entry_hash in private_messenger_entries.entry_hashes {
-        let Some(entry) = private_messenger_entries.entries.get(&entry_hash).cloned() else {
-            return Err(wasm_error!("Unreachable: QueriedPrivateMessengerEntries entries did not contain one of its entry hashes."));
-        };
+    for (entry_hash, entry) in private_messenger_entries {
         match &entry.0.signed_content.content {
             PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) => {
-                if group_chat_event.group_hash.eq(group_hash) {
-                    entries_for_group.push((entry_hash, entry));
+                if group_chat_event.group_chat_hash.eq(group_hash) {
+                    entries_for_group.insert(entry_hash, entry);
                 }
             }
             PrivateMessengerEntryContent::GroupMessage(group_message) => {
-                if include_messages && group_message.group_hash.eq(group_hash) {
-                    entries_for_group.push((entry_hash, entry));
+                if include_messages && group_message.group_chat_hash.eq(group_hash) {
+                    entries_for_group.insert(entry_hash, entry);
                 }
             }
             PrivateMessengerEntryContent::ReadGroupMessages(read_group_messages) => {
-                if include_messages && read_group_messages.group_hash.eq(group_hash) {
-                    entries_for_group.push((entry_hash, entry));
+                if include_messages && read_group_messages.group_chat_hash.eq(group_hash) {
+                    entries_for_group.insert(entry_hash, entry);
                 }
             }
             _ => {}
