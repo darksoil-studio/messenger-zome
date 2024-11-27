@@ -6,6 +6,7 @@ import {
 	decodeHashFromBase64,
 	encodeHashToBase64,
 } from '@holochain/client';
+import { msg } from '@lit/localize';
 import {
 	AsyncComputed,
 	AsyncResult,
@@ -76,6 +77,11 @@ export class PeerChatStore {
 		const peerChatHashB64 = encodeHashToBase64(this.peerChatHash);
 		const peerChatEntries =
 			privateMessengerEntriesResult.value.peerChats[peerChatHashB64];
+		if (!peerChatEntries)
+			return {
+				status: 'error',
+				error: msg('Peer Chat not found'),
+			};
 
 		const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {};
 		const initialEventsHashes: Array<EntryHashB64> = [];
@@ -170,6 +176,13 @@ export class PeerChatStore {
 	currentPeerChat = new AsyncComputed<PeerChat>(() => {
 		const entries = this.peerChatEntries.get();
 		if (entries.status !== 'completed') return entries;
+
+		if (entries.value.currentEventsHashes.length === 0) {
+			return {
+				status: 'completed',
+				value: entries.value.createPeerChat.signed_content.content,
+			};
+		}
 
 		const previousPeerChats = joinAsync(
 			entries.value.currentEventsHashes.map(

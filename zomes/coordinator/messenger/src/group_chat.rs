@@ -182,10 +182,10 @@ pub fn validate_group_message(
             UnresolvedDependencies::Hashes(vec![group_message.group_chat_hash.clone().into()]),
         ));
     };
-    if !current_group
+    if current_group
         .members
         .iter()
-        .find(|m| m.agents.contains(provenance))
+        .find(|m| m.agents.contains(provenance) && !m.removed)
         .is_none()
     {
         return Ok(ValidateCallbackResult::Invalid(format!(
@@ -219,10 +219,10 @@ pub fn validate_read_group_messages(
                 .into()]),
         ));
     };
-    if !current_group
+    if current_group
         .members
         .iter()
-        .find(|m| m.agents.contains(provenance))
+        .find(|m| m.agents.contains(provenance) && !m.removed)
         .is_none()
     {
         return Ok(ValidateCallbackResult::Invalid(format!(

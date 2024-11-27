@@ -62,6 +62,8 @@ test('send message and read it', async () => {
 			.get(peerChatHash)
 			.markMessagesAsRead([aliceMessageHash]);
 
+		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
+
 		messages = await toPromise(
 			alice.store.peerChats.get(peerChatHash).messages,
 		);

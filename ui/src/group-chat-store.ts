@@ -7,6 +7,7 @@ import {
 	decodeHashFromBase64,
 	encodeHashToBase64,
 } from '@holochain/client';
+import { msg } from '@lit/localize';
 import {
 	AsyncComputed,
 	AsyncResult,
@@ -143,6 +144,13 @@ export class GroupChatStore {
 
 				const event = entries.value.events[eventHashB64];
 
+				if (!event) {
+					return {
+						status: 'error' as const,
+						error: msg('Group Chat not found'),
+					};
+				}
+
 				const previousEventsHashes =
 					event.signed_content.content.previous_group_chat_events_hashes;
 
@@ -197,6 +205,15 @@ export class GroupChatStore {
 		const entries = this.groupChatEntries.get();
 		if (entries.status !== 'completed') return entries;
 
+		if (entries.value.currentEventsHashes.length === 0) {
+			return {
+				status: 'completed' as const,
+				value: initialGroupChat(
+					entries.value.createGroupChat.signed_content.content,
+				),
+			};
+		}
+
 		const previousGroupChats = joinAsync(
 			entries.value.currentEventsHashes.map(
 				eventHash =>
@@ -214,7 +231,7 @@ export class GroupChatStore {
 		}
 
 		return {
-			status: 'completed',
+			status: 'completed' as const,
 			value: currentGroupChat,
 		};
 	});
