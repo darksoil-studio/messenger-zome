@@ -22,9 +22,11 @@ import { customElement } from 'lit/decorators.js';
 import { join } from 'lit/directives/join.js';
 
 import { messengerStoreContext } from '../context.js';
-import { Chat, MessengerStore, PeerChat } from '../messenger-store.js';
+import { GroupChatSummary } from '../group-chat-store.js';
+import { ChatSummary, MessengerStore } from '../messenger-store.js';
+import { PeerChatSummary } from '../peer-chat-store.js';
 import { messengerStyles } from '../styles.js';
-import { Group, GroupMessengerEntry, PeerMessage } from '../types.js';
+import { GroupChatEntry, PeerMessage } from '../types.js';
 
 @localized()
 @customElement('all-chats')
@@ -35,7 +37,8 @@ export class AllChats extends SignalWatcher(LitElement) {
 	@consume({ context: profilesStoreContext, subscribe: true })
 	profilesStore!: ProfilesStore;
 
-	renderPeerChat(chat: PeerChat) {
+	renderPeerChat(chat: PeerChatSummary) {
+		const lastActivityContent = chat.lastActivity.signed_content.content;
 		return html`<div
 			class="row"
 			style="gap: 8px; cursor: pointer;"
@@ -53,12 +56,14 @@ export class AllChats extends SignalWatcher(LitElement) {
 		>
 			<agent-avatar
 				style="align-self: center"
-				.agentPubKey=${chat.theirAgentSet[0]}
+				.agentPubKey=${chat.peer.agents[0]}
 			></agent-avatar>
 			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
-				<span>${this.renderAgentNickname(chat.theirAgentSet[0])}</span>
+				<span>${this.renderAgentNickname(chat.peer.agents[0])}</span>
 				<span class="placeholder last-activity"
-					>${chat.lastActivity.signed_content.content.message.message}</span
+					>${lastActivityContent.type === 'PeerMessage'
+						? lastActivityContent.message.message
+						: ''}</span
 				>
 			</div>
 
@@ -141,7 +146,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 		return html`<span>${latestValue.value?.entry.nickname}</span>`;
 	}
 
-	renderGroupLastActivity(groupMessengerEntry: GroupMessengerEntry) {
+	renderGroupLastActivity(groupMessengerEntry: GroupChatEntry) {
 		if (groupMessengerEntry.signed_content.content.type === 'GroupMessage')
 			return html`<span
 				>${this.renderAgentNickname(groupMessengerEntry.provenance)}:
@@ -149,12 +154,8 @@ export class AllChats extends SignalWatcher(LitElement) {
 			>`;
 	}
 
-	renderGroupChat(
-		groupHash: EntryHash,
-		group: Group,
-		lastActivity: GroupMessengerEntry,
-		myUnreadMessages: EntryHash[],
-	) {
+	renderGroupChat(groupChatSummary: GroupChatSummary) {
+		const info = groupChatSummary.currentGroup.info;
 		return html`<div
 			class="row"
 			style="gap: 8px; cursor: pointer"
@@ -164,49 +165,51 @@ export class AllChats extends SignalWatcher(LitElement) {
 						composed: true,
 						bubbles: true,
 						detail: {
-							groupHash,
+							groupChatHash: groupChatSummary.groupChatHash,
 						},
 					}),
 				);
 			}}
 		>
-			${!group.info.avatar_hash
+			${!info.avatar_hash
 				? html`
 						<sl-avatar
 							style="align-self: center; --size: 32px"
-							.initials=${group.info.name.slice(0, 2)}
+							.initials=${info.name.slice(0, 2)}
 						></sl-avatar>
 					`
 				: html`
 						<show-avatar-image
-							.initials=${group.info.name.slice(0, 2)}
-							.imageHash=${group.info.avatar_hash}
+							.initials=${info.name.slice(0, 2)}
+							.imageHash=${info.avatar_hash}
 							style="--size: 32px; align-self: center"
 						>
 						</show-avatar-image>
 					`}
 			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
-				<span class="chat-name">${group.info.name}</span>
+				<span class="chat-name">${info.name}</span>
 				<span class="placeholder last-activity"
-					>${this.renderGroupLastActivity(lastActivity)}</span
+					>${this.renderGroupLastActivity(groupChatSummary.lastActivity)}</span
 				>
 			</div>
 
 			<div class="column" style="gap: 2px; align-items: end">
 				<div class="placeholder time" style="display: contents">
-					${this.renderTime(lastActivity.signed_content.timestamp)}
+					${this.renderTime(
+						groupChatSummary.lastActivity.signed_content.timestamp,
+					)}
 				</div>
 				<div style="flex: 1"></div>
-				${myUnreadMessages.length !== 0
+				${groupChatSummary.myUnreadMessages.length !== 0
 					? html`<sl-badge variant="primary" pill
-							>${myUnreadMessages.length}</sl-badge
+							>${groupChatSummary.myUnreadMessages.length}</sl-badge
 						>`
 					: html``}
 			</div>
 		</div>`;
 	}
 
-	renderChats(chats: Array<Chat>) {
+	renderChats(chats: Array<ChatSummary>) {
 		if (chats.length === 0) {
 			return html`<div
 				class="column placeholder"
@@ -230,12 +233,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 				chats.map(chat =>
 					chat.type === 'PeerChat'
 						? this.renderPeerChat(chat)
-						: this.renderGroupChat(
-								chat.groupHash,
-								chat.currentGroup,
-								chat.lastActivity,
-								chat.myUnreadMessages,
-							),
+						: this.renderGroupChat(chat),
 				),
 				html`<sl-divider></sl-divider>`,
 			)}

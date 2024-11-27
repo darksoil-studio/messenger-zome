@@ -1,7 +1,7 @@
 use hdi::prelude::*;
 use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 
-use crate::{Message, Profile};
+use crate::{merge_profiles, Message, MessengerProfile};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateGroupChat {
@@ -54,17 +54,17 @@ impl GroupChat {
         };
         let author_is_admin = author_member.admin;
         match event {
-            GroupEvent::UpdateGroupInfo(group_info) => {
+            GroupEvent::UpdateGroupInfo(info) => {
                 if self.settings.only_admins_can_edit_group_info && !author_is_admin {
                     return Err(wasm_error!("Only admins can update the group's info"));
                 }
-                self.info = group_info.clone();
+                self.info = info.clone();
             }
-            GroupEvent::UpdateGroupSettings(group_settings) => {
+            GroupEvent::UpdateGroupSettings(settings) => {
                 if !author_is_admin {
                     return Err(wasm_error!("Only admins can update the group's settings"));
                 }
-                self.settings = group_settings.clone();
+                self.settings = settings.clone();
             }
             GroupEvent::AddMember { member_agents } => {
                 if self.settings.only_admins_can_add_members && !author_is_admin {
@@ -231,16 +231,11 @@ impl GroupChat {
                         .insert(agent.clone());
                 }
                 group_1_members[group_1_member_index].removed =
-                    group_1_member.removed && group_2_member.removed;
+                    group_1_member.removed || group_2_member.removed;
                 group_1_members[group_1_member_index].admin =
                     group_1_member.admin && group_2_member.admin;
 
-                let profile = match (group_1_member.profile, group_2_member.profile) {
-                    (Some(p1), Some(p2)) => Some(if p1 < p2 { p2 } else { p1 }),
-                    (Some(p1), None) => Some(p1),
-                    (None, Some(p2)) => Some(p2),
-                    (None, None) => None,
-                };
+                let profile = merge_profiles(group_1_member.profile, group_2_member.profile);
                 group_1_members[group_1_member_index].profile = profile;
             } else {
                 group_1_members.push(group_2_member);
@@ -277,7 +272,7 @@ pub struct GroupMember {
     pub agents: BTreeSet<AgentPubKey>,
     pub admin: bool,
     pub removed: bool,
-    pub profile: Option<Profile>,
+    pub profile: Option<MessengerProfile>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

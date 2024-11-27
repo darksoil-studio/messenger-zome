@@ -2,11 +2,21 @@ use hdk::prelude::*;
 
 use crate::MessengerRemoteSignal;
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SendPeerChatTypingIndicatorInput {
+    peer_chat_hash: EntryHash,
+    peer_agents: Vec<AgentPubKey>,
+}
+
 #[hdk_extern]
-pub fn send_peer_chat_typing_indicator(their_agent_set: Vec<AgentPubKey>) -> ExternResult<()> {
+pub fn send_peer_chat_typing_indicator(
+    input: SendPeerChatTypingIndicatorInput,
+) -> ExternResult<()> {
     send_remote_signal(
-        MessengerRemoteSignal::PeerChatTypingIndicator,
-        their_agent_set,
+        MessengerRemoteSignal::PeerChatTypingIndicator {
+            peer_chat_hash: input.peer_chat_hash,
+        },
+        input.peer_agents,
     )?;
 
     Ok(())
@@ -23,7 +33,7 @@ pub fn send_group_chat_typing_indicator(
 ) -> ExternResult<()> {
     send_remote_signal(
         MessengerRemoteSignal::GroupChatTypingIndicator {
-            group_hash: input.group_hash,
+            group_chat_hash: input.group_hash,
         },
         input
             .all_members_agents_sets

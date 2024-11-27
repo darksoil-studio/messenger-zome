@@ -23,14 +23,23 @@ import { messengerStoreContext } from '../context.js';
 import { MessageSet, orderInMessageSets } from '../message-set.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
-import { GroupMessage, Message, PeerMessage, Signed } from '../types.js';
+import {
+	GroupMessage,
+	Message,
+	PeerChat,
+	PeerMessage,
+	Signed,
+} from '../types.js';
 import './message-input.js';
 
 @localized()
 @customElement('peer-chat')
-export class PeerChat extends SignalWatcher(LitElement) {
-	@property(hashProperty('peer'))
-	peer!: AgentPubKey;
+export class PeerChatEl extends SignalWatcher(LitElement) {
+	@property(hashProperty('peer-chat-hash'))
+	peerChatHash!: EntryHash;
+
+	// @property(hashProperty('peer'))
+	// peer!: AgentPubKey;
 
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
@@ -46,14 +55,27 @@ export class PeerChat extends SignalWatcher(LitElement) {
 	}
 
 	private renderChat(
+		peerChat: PeerChat,
 		messages: Record<EntryHashB64, Signed<PeerMessage>>,
-		myAgents: AgentPubKey[],
-		theirAgents: AgentPubKey[],
-		peerIsTyping: boolean,
 		myReadMessages: Array<EntryHashB64>,
 	) {
+		const peerIsTyping = this.store.peerChats
+			.get(this.peerChatHash)
+			.peerIsTyping.get();
+		const imPeer1 = peerChat.peer_1.agents.find(
+			a =>
+				encodeHashToBase64(a) ===
+				encodeHashToBase64(this.store.client.client.myPubKey),
+		);
+		const myAgents = imPeer1 ? peerChat.peer_1.agents : peerChat.peer_2.agents;
+		const theirAgents = imPeer1
+			? peerChat.peer_2.agents
+			: peerChat.peer_1.agents;
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
-		const messageSets = orderInMessageSets(messages, [myAgents, theirAgents]);
+		const messageSets = orderInMessageSets(messages, [
+			peerChat.peer_1.agents,
+			peerChat.peer_2.agents,
+		]);
 
 		return html`<div class="column" style="flex: 1;">
 			<div class="flex-scrollable-parent">
@@ -79,10 +101,9 @@ export class PeerChat extends SignalWatcher(LitElement) {
 							}
 
 							if (unreadMessages.length > 0) {
-								this.store.client.markPeerMessagesAsRead(
-									this.peer,
-									unreadMessages,
-								);
+								this.store.peerChats
+									.get(this.peerChatHash)
+									.markMessagesAsRead(unreadMessages);
 							}
 						})}
 						class="flex-scrollable-y"
@@ -99,7 +120,10 @@ export class PeerChat extends SignalWatcher(LitElement) {
 			</div>
 			<message-input
 				@input=${() =>
-					this.store.client.sendPeerChatTypingIndicator(theirAgents)}
+					this.store.client.sendPeerChatTypingIndicator(
+						this.peerChatHash,
+						theirAgents,
+					)}
 				@send-message=${(e: CustomEvent) =>
 					this.sendMessage(e.detail.message as Message)}
 			></message-input>
@@ -173,7 +197,7 @@ export class PeerChat extends SignalWatcher(LitElement) {
 
 	async sendMessage(message: Message) {
 		try {
-			await this.store.client.sendPeerMessage(this.peer, message);
+			await this.store.peerChats.get(this.peerChatHash).sendMessage(message);
 
 			// setTimeout(() => {
 			// 	virtualizer.scrollTo({
@@ -188,9 +212,14 @@ export class PeerChat extends SignalWatcher(LitElement) {
 	}
 
 	render() {
-		const messages = this.store.peerChats.get(this.peer).get();
+		const peerChatStore = this.store.peerChats.get(this.peerChatHash);
+		const chatInfo = joinAsync([
+			peerChatStore.currentPeerChat.get(),
+			peerChatStore.messages.get(),
+			peerChatStore.readMessages.get(),
+		]);
 
-		switch (messages.status) {
+		switch (chatInfo.status) {
 			case 'pending':
 				return html`
 					<sl-skeleton
@@ -201,16 +230,11 @@ export class PeerChat extends SignalWatcher(LitElement) {
 			case 'error':
 				return html`<display-error
 					.headline=${msg('Error fetching the messages')}
-					.error=${messages.error}
+					.error=${chatInfo.error}
 				></display-error>`;
 			case 'completed':
-				return this.renderChat(
-					messages.value.messages,
-					messages.value.myAgentSet,
-					messages.value.theirAgentSet,
-					messages.value.peerIsTyping,
-					messages.value.myReadMessages,
-				);
+				const [peerChat, messages, readMessages] = chatInfo.value;
+				return this.renderChat(peerChat, messages, readMessages.myReadMessages);
 		}
 	}
 

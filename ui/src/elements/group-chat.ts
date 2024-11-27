@@ -31,17 +31,18 @@ import { ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { messengerStoreContext } from '../context.js';
+import { GroupChatStore } from '../group-chat-store.js';
 import { MessageSet, orderInMessageSets } from '../message-set.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
 import {
-	DeleteGroupChat,
-	Group,
+	CreateGroupChat,
+	GroupChat,
+	GroupChatEvent,
 	GroupMessage,
 	Message,
 	PeerMessage,
 	Signed,
-	UpdateGroupChat,
 } from '../types.js';
 import './message-input.js';
 
@@ -49,9 +50,9 @@ const colorHash = new ColorHash({ lightness: [0.1, 0.2, 0.3, 0.4] });
 
 @localized()
 @customElement('group-chat')
-export class GroupChat extends SignalWatcher(LitElement) {
+export class GroupChatEl extends SignalWatcher(LitElement) {
 	@property(hashProperty('group-hash'))
-	groupHash!: EntryHash;
+	groupChatHash!: EntryHash;
 
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
@@ -60,41 +61,40 @@ export class GroupChat extends SignalWatcher(LitElement) {
 	profilesStore!: ProfilesStore;
 
 	private renderChat(
-		myAgents: AgentPubKey[],
-		originalGroup: Signed<Group>,
-		currentGroup: Group,
-		updates: Record<EntryHashB64, Signed<UpdateGroupChat>>,
-		deletes: Record<EntryHashB64, Signed<DeleteGroupChat>>,
+		createGroupChat: Signed<CreateGroupChat>,
+		currentGroup: GroupChat,
 		messages: Record<EntryHashB64, Signed<GroupMessage>>,
-		theirAgentSets: Array<Array<AgentPubKey>>,
-		typingPeers: Array<AgentPubKey>,
+		events: Record<EntryHashB64, Signed<GroupChatEvent>>,
 		myReadMessages: EntryHashB64[],
 	) {
+		const me = currentGroup.members.find(
+			m =>
+				!!m.agents.find(
+					a =>
+						encodeHashToBase64(a) ===
+						encodeHashToBase64(this.store.client.client.myPubKey),
+				),
+		)!;
+		const otherMembers = currentGroup.members.filter(
+			m =>
+				!m.agents.find(
+					a =>
+						encodeHashToBase64(a) ===
+						encodeHashToBase64(this.store.client.client.myPubKey),
+				),
+		)!;
+		const myAgents = me.agents;
+		const theirAgentSets = otherMembers.map(m => m.agents);
+
 		const messageSets = orderInMessageSets(messages, [
 			myAgents,
 			...theirAgentSets,
 		]);
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
-		const currentMembers = [...currentGroup.admins, ...currentGroup.members];
-		const currentGroupAgentSets = theirAgentSets.filter(
-			agentSet =>
-				!!currentMembers.find(currentMember =>
-					agentSet.find(
-						agent =>
-							encodeHashToBase64(agent) === encodeHashToBase64(currentMember),
-					),
-				),
-		);
 
-		const orderedUpdates = Object.entries(updates).sort(
-			(m1, m2) =>
-				m2[1].signed_content.timestamp - m1[1].signed_content.timestamp,
-		);
-		const lastUpdate = orderedUpdates[0];
-		const currentGroupHash =
-			lastUpdate === undefined
-				? this.groupHash
-				: decodeHashFromBase64(lastUpdate[0]);
+		const typingPeers = this.store.groupChats
+			.get(this.groupChatHash)
+			.typingPeers.get();
 
 		return html`<div class="column" style="flex: 1;">
 			<div class="flex-scrollable-parent">
@@ -123,11 +123,9 @@ export class GroupChat extends SignalWatcher(LitElement) {
 							}
 
 							if (unreadMessages.length > 0) {
-								this.store.client.markGroupMessagesAsRead(
-									this.groupHash,
-									currentGroupHash,
-									unreadMessages,
-								);
+								this.store.groupChats
+									.get(this.groupChatHash)
+									.markMessagesAsRead(unreadMessages);
 							}
 						})}
 					>
@@ -142,7 +140,7 @@ export class GroupChat extends SignalWatcher(LitElement) {
 						)}
 						<sl-tag style="align-self: center; margin: 8px">
 							${msg(str`Group was created by`)}&nbsp;
-							${this.renderAgentNickname(originalGroup.provenance)}
+							${this.renderAgentNickname(createGroupChat.provenance)}
 						</sl-tag>
 					</div>
 				</div>
@@ -150,11 +148,11 @@ export class GroupChat extends SignalWatcher(LitElement) {
 			<message-input
 				@input=${() =>
 					this.store.client.sendGroupChatTypingIndicator(
-						this.groupHash,
-						currentGroupAgentSets,
+						this.groupChatHash,
+						theirAgentSets,
 					)}
 				@send-message=${(e: CustomEvent) =>
-					this.sendMessage(currentGroupHash, e.detail.message as Message)}
+					this.sendMessage(e.detail.message as Message)}
 			>
 			</message-input>
 		</div> `;
@@ -357,13 +355,9 @@ export class GroupChat extends SignalWatcher(LitElement) {
 			</div>
 		</div>`;
 	}
-	async sendMessage(currentGroupHash: EntryHash, message: Message) {
+	async sendMessage(message: Message) {
 		try {
-			await this.store.client.sendGroupMessage(
-				this.groupHash,
-				currentGroupHash,
-				message,
-			);
+			await this.store.groupChats.get(this.groupChatHash).sendMessage(message);
 
 			const scrollingChat = this.shadowRoot!.getElementById('scrolling-chat')!;
 
@@ -377,24 +371,21 @@ export class GroupChat extends SignalWatcher(LitElement) {
 		}
 	}
 
-	messages() {
-		const myAgents = this.store.allMyDevices.get();
-		const group = this.store.groupChats.get(this.groupHash).get();
-		if (myAgents.status !== 'completed') return myAgents;
-		if (group.status !== 'completed') return group;
+	groupInfo() {
+		const groupStore = this.store.groupChats.get(this.groupChatHash);
 
-		return {
-			status: 'completed' as const,
-			value: {
-				myAgents: myAgents.value,
-				group: group.value,
-			},
-		};
+		return joinAsync([
+			groupStore.createGroupChat.get(),
+			groupStore.currentGroupChat.get(),
+			groupStore.messages.get(),
+			groupStore.events.get(),
+			groupStore.readMessages.get(),
+		]);
 	}
 
 	render() {
-		const messages = this.messages();
-		switch (messages.status) {
+		const groupInfo = this.groupInfo();
+		switch (groupInfo.status) {
 			case 'pending':
 				return html`
 					<sl-skeleton
@@ -405,25 +396,28 @@ export class GroupChat extends SignalWatcher(LitElement) {
 			case 'error':
 				return html`<display-error
 					.headline=${msg('Error fetching the messages')}
-					.error=${messages.error}
+					.error=${groupInfo.error}
 				></display-error>`;
 			case 'completed':
-				const group = messages.value.group;
-				if (!group) {
-					return html`<display-error
-						.headline=${msg('Group not found')}
-					></display-error>`;
-				}
+				// const group = messages.value.group;
+				// if (!group) {
+				// 	return html`<display-error
+				// 		.headline=${msg('Group not found')}
+				// 	></display-error>`;
+				// }
+				const [
+					createGroupChat,
+					currentGroupChat,
+					messages,
+					events,
+					readMessages,
+				] = groupInfo.value;
 				return this.renderChat(
-					messages.value.myAgents,
-					group.originalGroup,
-					group.currentGroup,
-					group.updates,
-					group.deletes,
-					group.messages,
-					group.theirAgentSets,
-					group.typingPeers,
-					group.myReadMessages,
+					createGroupChat,
+					currentGroupChat,
+					messages,
+					events,
+					readMessages.myReadMessages,
 				);
 		}
 	}

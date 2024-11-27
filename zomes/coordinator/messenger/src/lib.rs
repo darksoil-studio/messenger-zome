@@ -62,19 +62,20 @@ pub enum Signal {
         original_app_entry: EntryTypes,
     },
     PeerChatTypingIndicator {
+        peer_chat_hash: EntryHash,
         peer: AgentPubKey,
     },
     GroupChatTypingIndicator {
         peer: AgentPubKey,
-        group_hash: EntryHash,
+        group_chat_hash: EntryHash,
     },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum MessengerRemoteSignal {
     NewPrivateMessengerEntry(PrivateMessengerEntry),
-    PeerChatTypingIndicator,
-    GroupChatTypingIndicator { group_hash: EntryHash },
+    PeerChatTypingIndicator { peer_chat_hash: EntryHash },
+    GroupChatTypingIndicator { group_chat_hash: EntryHash },
     SynchronizeEntriesWithLinkedDevice(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
     SynchronizeGroupEntriesWithNewGroupMember(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
 }
@@ -99,20 +100,26 @@ pub fn recv_remote_signal(signal: MessengerRemoteSignal) -> ExternResult<()> {
         MessengerRemoteSignal::SynchronizeGroupEntriesWithNewGroupMember(entries) => {
             receive_private_messenger_entries(entries)
         }
-        MessengerRemoteSignal::PeerChatTypingIndicator => {
+        MessengerRemoteSignal::PeerChatTypingIndicator { peer_chat_hash } => {
             let call_info = call_info()?;
 
             let peer = call_info.provenance;
 
-            emit_signal(Signal::PeerChatTypingIndicator { peer })?;
+            emit_signal(Signal::PeerChatTypingIndicator {
+                peer_chat_hash,
+                peer,
+            })?;
             Ok(())
         }
-        MessengerRemoteSignal::GroupChatTypingIndicator { group_hash } => {
+        MessengerRemoteSignal::GroupChatTypingIndicator { group_chat_hash } => {
             let call_info = call_info()?;
 
             let peer = call_info.provenance;
 
-            emit_signal(Signal::GroupChatTypingIndicator { peer, group_hash })?;
+            emit_signal(Signal::GroupChatTypingIndicator {
+                peer,
+                group_chat_hash,
+            })?;
             Ok(())
         }
     }

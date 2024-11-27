@@ -1,3 +1,4 @@
+import { LinkedDevicesProof } from '@darksoil-studio/linked-devices-zome';
 import {
 	AgentPubKey,
 	AppClient,
@@ -8,9 +9,14 @@ import {
 import { EntryRecord, ZomeClient } from '@tnesh-stack/utils';
 
 import {
-	Group,
+	CreateGroupChat,
+	GroupChat,
+	GroupChatEvent,
+	GroupInfo,
+	GroupSettings,
 	Message,
 	MessengerSignal,
+	PeerChatEvent,
 	PeerMessage,
 	PrivateMessengerEntry,
 } from './types.js';
@@ -37,11 +43,13 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 	/** Peer Chat */
 
 	async sendPeerMessage(
-		recipient: AgentPubKey,
+		peerChatHash: EntryHash,
+		currentPeerChatEventsHashes: Array<EntryHash>,
 		message: Message,
 	): Promise<EntryHash> {
 		const entryHash: EntryHash = await this.callZome('send_peer_message', {
-			recipient,
+			peer_chat_hash: peerChatHash,
+			current_peer_chat_events_hashes: currentPeerChatEventsHashes,
 			message,
 		});
 
@@ -63,51 +71,39 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 	}
 
 	async markPeerMessagesAsRead(
-		peer: AgentPubKey,
+		peerChatHash: EntryHash,
+		currentPeerChatEventsHashes: Array<EntryHash>,
 		readMessagesHashes: Array<EntryHash>,
 	) {
 		await this.callZome('mark_peer_messages_as_read', {
-			peer,
+			peer_chat_hash: peerChatHash,
+			current_peer_chat_events_hashes: currentPeerChatEventsHashes,
 			read_messages_hashes: readMessagesHashes,
 		});
 	}
 
+	async createPeerChatEvent(peerChatEvent: PeerChatEvent) {
+		return this.callZome('create_peer_chat_event', peerChatEvent);
+	}
+
 	/** Group Chat */
 
-	async createGroupChat(group: Group): Promise<EntryHash> {
-		return this.callZome('create_group_chat', group);
+	async createGroupChat(createGroupChat: CreateGroupChat): Promise<EntryHash> {
+		return this.callZome('create_group_chat', createGroupChat);
 	}
 
-	async updateGroupChat(
-		originalGroupHash: EntryHash,
-		previousGroupHashes: Array<EntryHash>,
-		group: Group,
-	): Promise<EntryHash> {
-		return this.callZome('update_group_chat', {
-			original_group_hash: originalGroupHash,
-			previous_group_hashes: previousGroupHashes,
-			group,
-		});
-	}
-
-	async deleteGroupChat(
-		originalGroupHash: EntryHash,
-		previousGroupHash: EntryHash,
-	): Promise<void> {
-		return this.callZome('delete_group_chat', {
-			original_group_hash: originalGroupHash,
-			previous_group_hash: previousGroupHash,
-		});
+	async createGroupChatEvent(groupChatEvent: GroupChatEvent) {
+		return this.callZome('create_group_chat_event', groupChatEvent);
 	}
 
 	async sendGroupMessage(
-		originalGroupHash: EntryHash,
-		currentGroupHash: EntryHash,
+		groupChatHash: EntryHash,
+		currentGroupChatEventsHashes: EntryHash[],
 		message: Message,
 	): Promise<EntryHash> {
 		const entryHash: EntryHash = await this.callZome('send_group_message', {
-			original_group_hash: originalGroupHash,
-			current_group_hash: currentGroupHash,
+			group_chat_hash: groupChatHash,
+			current_group_chat_events_hashes: currentGroupChatEventsHashes,
 			message,
 		});
 
@@ -129,30 +125,36 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 	}
 
 	async markGroupMessagesAsRead(
-		originalGroupHash: EntryHash,
-		currentGroupHash: EntryHash,
+		groupChatHash: EntryHash,
+		currentGroupChatEventsHashes: EntryHash[],
 		readMessagesHashes: Array<EntryHash>,
 	) {
 		await this.callZome('mark_group_messages_as_read', {
-			original_group_hash: originalGroupHash,
-			current_group_hash: currentGroupHash,
+			group_chat_hash: groupChatHash,
+			current_group_chat_events_hashes: currentGroupChatEventsHashes,
 			read_messages_hashes: readMessagesHashes,
 		});
 	}
 
 	/** Typing Indicator */
 
-	async sendPeerChatTypingIndicator(peerAgentSet: AgentPubKey[]) {
-		await this.callZome('send_peer_chat_typing_indicator', peerAgentSet);
+	async sendPeerChatTypingIndicator(
+		peerChatHash: EntryHash,
+		peerAgents: AgentPubKey[],
+	) {
+		await this.callZome('send_peer_chat_typing_indicator', {
+			peer_agents: peerAgents,
+			peer_chat_hash: peerChatHash,
+		});
 	}
 
 	async sendGroupChatTypingIndicator(
 		groupHash: EntryHash,
-		allMembersAgentsSets: Array<Array<AgentPubKey>>,
+		allAgents: Array<Array<AgentPubKey>>,
 	) {
 		await this.callZome('send_group_chat_typing_indicator', {
 			group_hash: groupHash,
-			all_members_agents_sets: allMembersAgentsSets,
+			all_agents: allAgents,
 		});
 	}
 

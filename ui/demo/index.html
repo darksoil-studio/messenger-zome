@@ -119,12 +119,12 @@
 										style="flex: 1; margin-left: 8px"
 										@group-chat-selected=${e => {
 											this.peerChat = undefined;
-											this.groupHash = e.detail.groupHash;
+											this.groupChatHash = e.detail.groupChatHash;
 											this.requestUpdate();
 										}}
 										@peer-chat-selected=${e => {
 											this.peerChat = e.detail.peerChat.theirAgentSet[0];
-											this.groupHash = undefined;
+											this.groupChatHash = undefined;
 											this.requestUpdate();
 										}}
 									>
@@ -132,9 +132,9 @@
 								</div>
 								<div class="column" style="width: 300px; height: 400px">
 									<h2>Chat</h2>
-									${this.groupHash
+									${this.groupChatHash
 										? html`<group-chat
-												.groupHash=${this.groupHash}
+												.groupChatHash=${this.groupChatHash}
 												style="flex:1"
 											></group-chat>`
 										: html``}

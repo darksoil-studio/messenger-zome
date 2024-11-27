@@ -1,12 +1,12 @@
 use hdi::prelude::*;
 use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 
-use crate::{Message, Profile};
+use crate::{merge_profiles, Message, MessengerProfile};
 
 #[derive(Serialize, Deserialize, Debug, Clone, SerializedBytes)]
 pub struct Peer {
     pub agents: BTreeSet<AgentPubKey>,
-    pub profile: Option<Profile>,
+    pub profile: Option<MessengerProfile>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, SerializedBytes)]
@@ -58,22 +58,12 @@ impl PeerChat {
         let mut agents_1 = peer_chat_1.peer_1.agents.clone();
         agents_1.append(&mut peer_chat_2.peer_1.agents);
 
-        let profile_1 = match (peer_chat_1.peer_1.profile, peer_chat_2.peer_1.profile) {
-            (Some(p1), Some(p2)) => Some(if p1 < p2 { p2 } else { p1 }),
-            (Some(p1), None) => Some(p1),
-            (None, Some(p2)) => Some(p2),
-            (None, None) => None,
-        };
+        let profile_1 = merge_profiles(peer_chat_1.peer_1.profile, peer_chat_2.peer_1.profile);
 
         let mut agents_2 = peer_chat_1.peer_2.agents.clone();
         agents_2.append(&mut peer_chat_2.peer_2.agents);
 
-        let profile_2 = match (peer_chat_1.peer_2.profile, peer_chat_2.peer_2.profile) {
-            (Some(p1), Some(p2)) => Some(if p1 < p2 { p2 } else { p1 }),
-            (Some(p1), None) => Some(p1),
-            (None, Some(p2)) => Some(p2),
-            (None, None) => None,
-        };
+        let profile_2 = merge_profiles(peer_chat_1.peer_2.profile, peer_chat_2.peer_2.profile);
 
         PeerChat {
             peer_1: Peer {
@@ -89,9 +79,10 @@ impl PeerChat {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, SerializedBytes)]
+#[serde(tag = "type")]
 pub enum PeerEvent {
     NewPeerAgent(NewPeerAgent),
-    UpdateProfile(Profile),
+    UpdateProfile(MessengerProfile),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

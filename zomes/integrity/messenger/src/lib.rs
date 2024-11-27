@@ -12,8 +12,8 @@ pub use history::*;
 mod signed;
 pub use signed::*;
 
-mod profile;
-pub use profile::*;
+mod messenger_profile;
+pub use messenger_profile::*;
 mod group_chat;
 pub use group_chat::*;
 mod peer_chat;

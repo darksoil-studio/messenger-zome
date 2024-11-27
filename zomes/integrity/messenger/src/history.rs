@@ -2,11 +2,12 @@ use std::collections::BTreeMap;
 
 use hdi::prelude::*;
 
-use crate::PrivateMessengerEntry;
+use crate::{MessengerProfile, PrivateMessengerEntry};
 
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct MessengerHistory {
+    pub my_profile: Option<MessengerProfile>,
     pub entries: BTreeMap<EntryHashB64, PrivateMessengerEntry>,
 }
 
