@@ -1,4 +1,8 @@
 import {
+	LinkedDevicesStore,
+	linkedDevicesStoreContext,
+} from '@darksoil-studio/linked-devices-zome';
+import {
 	AgentPubKey,
 	AgentPubKeyB64,
 	EntryHash,
@@ -13,7 +17,7 @@ import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
 import { hashProperty, notifyError, sharedStyles } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
-import { SignalWatcher, joinAsync } from '@tnesh-stack/signals';
+import { SignalWatcher, joinAsync, toPromise } from '@tnesh-stack/signals';
 import { LitElement, css, html, render } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -38,11 +42,52 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 	@property(hashProperty('peer-chat-hash'))
 	peerChatHash!: EntryHash;
 
-	// @property(hashProperty('peer'))
-	// peer!: AgentPubKey;
+	@property(hashProperty('peer'))
+	peer: AgentPubKey | undefined;
 
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
+
+	@consume({ context: linkedDevicesStoreContext, subscribe: true })
+	linkedDevicesStore: LinkedDevicesStore | undefined;
+
+	async firstUpdated() {
+		if (!this.peer && !this.peerChatHash)
+			throw new Error(
+				'peer-chat must be initialized with either the "peerChatHash" or the "peer" input.',
+			);
+		if (this.peer && !this.peerChatHash) {
+			const peerChatsForThisPeer = await toPromise(
+				this.store.peerChatsForPeer.get(this.peer),
+			);
+
+			if (peerChatsForThisPeer.length === 0) {
+				const peerDevices = this.linkedDevicesStore
+					? await toPromise(
+							this.linkedDevicesStore.linkedDevicesForAgent.get(this.peer),
+						)
+					: [];
+				peerDevices.push(this.peer);
+				const myDevices = this.linkedDevicesStore
+					? await toPromise(this.linkedDevicesStore.myLinkedDevices)
+					: [];
+				myDevices.push(this.store.client.client.myPubKey);
+				this.peerChatHash = await this.store.client.createPeerChat({
+					peer_1: {
+						agents: myDevices,
+						profile: undefined,
+					},
+					peer_2: {
+						agents: peerDevices,
+						profile: undefined,
+					},
+				});
+			} else {
+				this.peerChatHash = peerChatsForThisPeer[0];
+			}
+			// TODO: what to do in the case of more than one PeerChat for this one peer?
+		}
+	}
 
 	private renderTypingIndicator() {
 		return html`
@@ -211,13 +256,26 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 		}
 	}
 
-	render() {
-		const peerChatStore = this.store.peerChats.get(this.peerChatHash);
+	get peerChatStore() {
+		return this.store.peerChats.get(this.peerChatHash);
+	}
+
+	chatInfo() {
+		if (!this.peerChatHash) {
+			return {
+				status: 'pending',
+			};
+		}
 		const chatInfo = joinAsync([
-			peerChatStore.currentPeerChat.get(),
-			peerChatStore.messages.get(),
-			peerChatStore.readMessages.get(),
+			this.peerChatStore.currentPeerChat.get(),
+			this.peerChatStore.messages.get(),
+			this.peerChatStore.readMessages.get(),
 		]);
+		return chatInfo;
+	}
+
+	render() {
+		const chatInfo = this.chatInfo();
 
 		switch (chatInfo.status) {
 			case 'pending':

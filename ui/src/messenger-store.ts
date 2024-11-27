@@ -231,6 +231,47 @@ export class MessengerStore {
 		(peerChatHash: EntryHash) => new PeerChatStore(this, peerChatHash),
 	);
 
+	peerChatsForPeer = new MemoHoloHashMap(
+		(agent: AgentPubKey) =>
+			new AsyncComputed(() => {
+				const entries = this.privateMessengerEntries.get();
+				if (entries.status !== 'completed') return entries;
+
+				const allPeerChatsHashes = Object.keys(entries.value.peerChats);
+				const allCurrentPeerChats = joinAsync(
+					allPeerChatsHashes.map(peerChatHash =>
+						this.peerChats
+							.get(decodeHashFromBase64(peerChatHash))
+							.currentPeerChat.get(),
+					),
+				);
+				if (allCurrentPeerChats.status !== 'completed')
+					return allCurrentPeerChats;
+
+				const peerChatsHashesForPeer: EntryHash[] = [];
+
+				for (let i = 0; i < allCurrentPeerChats.value.length; i++) {
+					if (
+						allCurrentPeerChats.value[i].peer_1.agents.find(
+							a => encodeHashToBase64(a) === encodeHashToBase64(agent),
+						) ||
+						allCurrentPeerChats.value[i].peer_2.agents.find(
+							a => encodeHashToBase64(a) === encodeHashToBase64(agent),
+						)
+					) {
+						peerChatsHashesForPeer.push(
+							decodeHashFromBase64(allPeerChatsHashes[i]),
+						);
+					}
+				}
+
+				return {
+					status: 'completed',
+					value: peerChatsHashesForPeer,
+				};
+			}),
+	);
+
 	allChats = new AsyncComputed<Array<ChatSummary>>(() => {
 		const entries = this.privateMessengerEntries.get();
 		if (entries.status !== 'completed') return entries;

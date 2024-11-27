@@ -16,6 +16,7 @@ import {
 	GroupSettings,
 	Message,
 	MessengerSignal,
+	PeerChat,
 	PeerChatEvent,
 	PeerMessage,
 	PrivateMessengerEntry,
@@ -41,6 +42,10 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 	}
 
 	/** Peer Chat */
+
+	async createPeerChat(peerChat: PeerChat): Promise<EntryHash> {
+		return this.callZome('create_peer_chat', peerChat);
+	}
 
 	async sendPeerMessage(
 		peerChatHash: EntryHash,

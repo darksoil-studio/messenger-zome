@@ -5,7 +5,12 @@ import {
 	profilesStoreContext,
 } from '@darksoil-studio/profiles-zome';
 import '@darksoil-studio/profiles-zome/dist/elements/agent-avatar.js';
-import { AgentPubKey, EntryHash, Timestamp } from '@holochain/client';
+import {
+	AgentPubKey,
+	EntryHash,
+	Timestamp,
+	encodeHashToBase64,
+} from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { mdiInformationOutline } from '@mdi/js';
@@ -26,7 +31,12 @@ import { GroupChatSummary } from '../group-chat-store.js';
 import { ChatSummary, MessengerStore } from '../messenger-store.js';
 import { PeerChatSummary } from '../peer-chat-store.js';
 import { messengerStyles } from '../styles.js';
-import { GroupChatEntry, PeerMessage } from '../types.js';
+import {
+	GroupChat,
+	GroupChatEntry,
+	MessengerProfile,
+	PeerMessage,
+} from '../types.js';
 
 @localized()
 @customElement('all-chats')
@@ -54,12 +64,16 @@ export class AllChats extends SignalWatcher(LitElement) {
 				);
 			}}
 		>
-			<agent-avatar
-				style="align-self: center"
-				.agentPubKey=${chat.peer.agents[0]}
-			></agent-avatar>
+			<div style="align-self: center">
+				${this.renderAvatar(chat.peer.agents[0], chat.peer.profile)}
+			</div>
 			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
-				<span>${this.renderAgentNickname(chat.peer.agents[0])}</span>
+				<span
+					>${this.renderAgentNickname(
+						chat.peer.agents[0],
+						chat.peer.profile,
+					)}</span
+				>
 				<span class="placeholder last-activity"
 					>${lastActivityContent.type === 'PeerMessage'
 						? lastActivityContent.message.message
@@ -133,7 +147,23 @@ export class AllChats extends SignalWatcher(LitElement) {
 		`;
 	}
 
-	renderAgentNickname(agent: AgentPubKey) {
+	renderAvatar(
+		agent: AgentPubKey,
+		messengerProfile: MessengerProfile | undefined,
+	) {
+		if (messengerProfile)
+			return html`<sl-avatar
+				.image=${messengerProfile.avatar_src}
+			></sl-avatar>`;
+		return html` <agent-avatar .agentPubKey=${agent}></agent-avatar> `;
+	}
+
+	renderAgentNickname(
+		agent: AgentPubKey,
+		messengerProfile: MessengerProfile | undefined,
+	) {
+		if (messengerProfile)
+			return html`<span>${messengerProfile.nickname}</span>`;
 		const profile = this.profilesStore.profileForAgent.get(agent).get();
 		if (profile.status !== 'completed') return html`${msg('Loading...')}`;
 		if (!profile.value) return html`${msg('Profile not found')}`;
@@ -146,12 +176,27 @@ export class AllChats extends SignalWatcher(LitElement) {
 		return html`<span>${latestValue.value?.entry.nickname}</span>`;
 	}
 
-	renderGroupLastActivity(groupMessengerEntry: GroupChatEntry) {
-		if (groupMessengerEntry.signed_content.content.type === 'GroupMessage')
+	renderGroupLastActivity(
+		groupChat: GroupChat,
+		groupMessengerEntry: GroupChatEntry,
+	) {
+		if (groupMessengerEntry.signed_content.content.type === 'GroupMessage') {
+			const author = groupChat.members.find(
+				m =>
+					!!m.agents.find(
+						a =>
+							encodeHashToBase64(a) ===
+							encodeHashToBase64(groupMessengerEntry.provenance),
+					),
+			)!;
 			return html`<span
-				>${this.renderAgentNickname(groupMessengerEntry.provenance)}:
+				>${this.renderAgentNickname(
+					groupMessengerEntry.provenance,
+					author.profile,
+				)}:
 				${groupMessengerEntry.signed_content.content.message.message}</span
 			>`;
+		}
 	}
 
 	renderGroupChat(groupChatSummary: GroupChatSummary) {
@@ -189,7 +234,10 @@ export class AllChats extends SignalWatcher(LitElement) {
 			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
 				<span class="chat-name">${info.name}</span>
 				<span class="placeholder last-activity"
-					>${this.renderGroupLastActivity(groupChatSummary.lastActivity)}</span
+					>${this.renderGroupLastActivity(
+						groupChatSummary.currentGroup,
+						groupChatSummary.lastActivity,
+					)}</span
 				>
 			</div>
 
