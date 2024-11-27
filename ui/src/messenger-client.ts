@@ -34,11 +34,7 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 	async queryPrivateMessengerEntries(): Promise<
 		Record<EntryHashB64, PrivateMessengerEntry>
 	> {
-		const privateEntries = await this.callZome(
-			'query_private_messenger_entries',
-			undefined,
-		);
-		return privateEntries.entries;
+		return this.callZome('query_private_messenger_entries', undefined);
 	}
 
 	/** Peer Chat */
