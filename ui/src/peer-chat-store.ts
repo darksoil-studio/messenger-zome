@@ -81,7 +81,7 @@ export class PeerChatStore {
 		const initialEventsHashes: Array<EntryHashB64> = [];
 
 		for (const [entryHash, peerChatEvent] of Object.entries(
-			peerChatEntries.events[peerChatHashB64],
+			peerChatEntries.events,
 		)) {
 			const previousEventsHashes =
 				peerChatEvent.signed_content.content.previous_peer_chat_events_hashes;

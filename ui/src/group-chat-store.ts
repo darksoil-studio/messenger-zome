@@ -101,7 +101,7 @@ export class GroupChatStore {
 		const initialEventsHashes: Array<EntryHashB64> = [];
 
 		for (const [entryHash, groupChatEvent] of Object.entries(
-			groupChatEntries.events[groupChatHashB64],
+			groupChatEntries.events,
 		)) {
 			const previousEventsHashes =
 				groupChatEvent.signed_content.content.previous_group_chat_events_hashes;

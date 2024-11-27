@@ -81,8 +81,8 @@ pub fn validate_peer_message(
         ));
     };
 
-    if peer_chat.peer_1.agents.contains(&provenance)
-        || peer_chat.peer_1.agents.contains(&provenance)
+    if !peer_chat.peer_1.agents.contains(&provenance)
+        && !peer_chat.peer_2.agents.contains(&provenance)
     {
         return Ok(ValidateCallbackResult::Invalid(format!(
             "Author of a PeerMessage must be listed in the devices of its PeerChat"
@@ -246,8 +246,8 @@ pub fn validate_read_peer_messages(
         ));
     };
 
-    if peer_chat.peer_1.agents.contains(&provenance)
-        || peer_chat.peer_1.agents.contains(&provenance)
+    if !peer_chat.peer_1.agents.contains(&provenance)
+        && !peer_chat.peer_2.agents.contains(&provenance)
     {
         return Ok(ValidateCallbackResult::Invalid(format!(
             "Author of a ReadPeerMessages must be listed in the devices of its PeerChat"

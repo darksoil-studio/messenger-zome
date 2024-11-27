@@ -96,7 +96,7 @@ fn internal_create_private_messenger_entry(
             };
         }
         ValidateCallbackResult::Invalid(reason) => {
-            return Err(wasm_error!("Invalid PrivateMessengerEntry: {reason}"));
+            return Err(wasm_error!("Invalid PrivateMessengerEntry: {}", reason));
         }
         ValidateCallbackResult::UnresolvedDependencies(_deps) => {
             return Err(wasm_error!(

@@ -1,4 +1,3 @@
-import { LinkedDevicesProof } from '@darksoil-studio/linked-devices-zome';
 import {
 	AgentPubKey,
 	AppClient,
@@ -6,19 +5,15 @@ import {
 	EntryHashB64,
 	encodeHashToBase64,
 } from '@holochain/client';
-import { EntryRecord, ZomeClient } from '@tnesh-stack/utils';
+import { ZomeClient } from '@tnesh-stack/utils';
 
 import {
 	CreateGroupChat,
-	GroupChat,
 	GroupChatEvent,
-	GroupInfo,
-	GroupSettings,
 	Message,
 	MessengerSignal,
 	PeerChat,
 	PeerChatEvent,
-	PeerMessage,
 	PrivateMessengerEntry,
 } from './types.js';
 
