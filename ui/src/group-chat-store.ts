@@ -376,6 +376,58 @@ export class GroupChatStore {
 		);
 	}
 
+	async addMember(newMemberAgents: AgentPubKey[]) {
+		const entries = await toPromise(this.groupChatEntries);
+		return this.messengerStore.client.createGroupChatEvent({
+			group_chat_hash: this.groupChatHash,
+			previous_group_chat_events_hashes:
+				entries.currentEventsHashes.map(decodeHashFromBase64),
+			event: {
+				type: 'AddMember',
+				member_agents: newMemberAgents,
+			},
+		});
+	}
+
+	async promoteMemberToAdmin(memberAgents: AgentPubKey[]) {
+		const entries = await toPromise(this.groupChatEntries);
+		return this.messengerStore.client.createGroupChatEvent({
+			group_chat_hash: this.groupChatHash,
+			previous_group_chat_events_hashes:
+				entries.currentEventsHashes.map(decodeHashFromBase64),
+			event: {
+				type: 'PromoteMemberToAdmin',
+				member_agents: memberAgents,
+			},
+		});
+	}
+
+	async demoteMemberFromAdmin(memberAgents: AgentPubKey[]) {
+		const entries = await toPromise(this.groupChatEntries);
+		return this.messengerStore.client.createGroupChatEvent({
+			group_chat_hash: this.groupChatHash,
+			previous_group_chat_events_hashes:
+				entries.currentEventsHashes.map(decodeHashFromBase64),
+			event: {
+				type: 'DemoteMemberFromAdmin',
+				member_agents: memberAgents,
+			},
+		});
+	}
+
+	async removeMember(memberAgents: AgentPubKey[]) {
+		const entries = await toPromise(this.groupChatEntries);
+		return this.messengerStore.client.createGroupChatEvent({
+			group_chat_hash: this.groupChatHash,
+			previous_group_chat_events_hashes:
+				entries.currentEventsHashes.map(decodeHashFromBase64),
+			event: {
+				type: 'RemoveMember',
+				member_agents: memberAgents,
+			},
+		});
+	}
+
 	async notifyNewAgent(
 		newAgent: AgentPubKey,
 		proofs: Array<LinkedDevicesProof>,

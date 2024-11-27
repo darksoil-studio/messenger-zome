@@ -9,49 +9,66 @@ test('create a group chat, send message and read it', async () => {
 		const [alice, bob] = await setup(scenario);
 
 		const groupHash = await alice.store.client.createGroupChat({
-			admins: [alice.player.agentPubKey],
-			members: [bob.player.agentPubKey],
+			my_agents: [alice.player.agentPubKey],
+			other_members: [[bob.player.agentPubKey]],
 			info: {
 				name: 'mygroup',
 				avatar_hash: undefined,
+				description: 'mydescription',
+			},
+			settings: {
+				only_admins_can_add_members: false,
+				only_admins_can_edit_group_info: false,
+				sync_message_history_with_new_members: false,
 			},
 		});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		let groupChat = await toPromise(bob.store.groupChats.get(groupHash));
-		assert.equal(groupChat.currentGroup.info.name, 'mygroup');
-		assert.equal(
-			groupChat.originalGroup.signed_content.content.info.name,
-			'mygroup',
+		let groupChat = await toPromise(
+			bob.store.groupChats.get(groupHash).currentGroupChat,
 		);
+		assert.equal(groupChat.info.name, 'mygroup');
 
-		await alice.store.client.sendGroupMessage(groupHash, groupHash, {
-			message: 'hey!',
-			reply_to: undefined,
-		});
+		const aliceMessageHash = await alice.store.groupChats
+			.get(groupHash)
+			.sendMessage({
+				message: 'hey!',
+				reply_to: undefined,
+			});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		groupChat = await toPromise(bob.store.groupChats.get(groupHash));
-		assert.equal(Object.keys(groupChat.messages).length, 1);
+		let messages = await toPromise(
+			bob.store.groupChats.get(groupHash).messages,
+		);
+		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(groupChat.messages)[0].signed_content.content.message
-				.message,
+			Object.values(messages)[0].signed_content.content.message.message,
 			'hey!',
 		);
 
-		await bob.store.client.sendGroupMessage(groupHash, groupHash, {
+		await bob.store.groupChats.get(groupHash).sendMessage({
 			message: 'hey yourself!',
 			reply_to: undefined,
 		});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		groupChat = await toPromise(alice.store.groupChats.get(groupHash));
-		assert.equal(Object.keys(groupChat.messages).length, 2);
+		messages = await toPromise(alice.store.groupChats.get(groupHash).messages);
+		assert.equal(Object.keys(messages).length, 2);
+
+		await bob.store.groupChats
+			.get(groupHash)
+			.markMessagesAsRead([aliceMessageHash]);
+
+		let readMessages = await toPromise(
+			bob.store.groupChats.get(groupHash).readMessages,
+		);
+		assert.equal(readMessages.myReadMessages.length, 2);
 	});
 });
+
 test('only admins can update and delete groups', async () => {
 	await runScenario(async scenario => {
 		const [alice, bob, carol] = await setup(scenario, 3);
@@ -59,11 +76,17 @@ test('only admins can update and delete groups', async () => {
 		const info = {
 			name: 'mygroup',
 			avatar_hash: undefined,
+			description: 'mydescription',
 		};
 
 		const groupHash = await alice.store.client.createGroupChat({
-			admins: [alice.player.agentPubKey],
-			members: [bob.player.agentPubKey],
+			my_agents: [alice.player.agentPubKey],
+			other_members: [[bob.player.agentPubKey]],
+			settings: {
+				only_admins_can_add_members: false,
+				only_admins_can_edit_group_info: false,
+				sync_message_history_with_new_members: false,
+			},
 			info,
 		});
 
@@ -73,15 +96,11 @@ test('only admins can update and delete groups', async () => {
 		);
 
 		await expect(() =>
-			bob.store.client.updateGroupChat(groupHash, [groupHash], {
-				admins: [bob.player.agentPubKey],
-				members: [],
-				info,
-			}),
+			bob.store.groupChats.get(groupHash).updateGroupChatInfo(info),
 		).rejects.toThrow();
 
 		expect(() =>
-			bob.store.client.deleteGroupChat(groupHash, groupHash),
+			bob.store.groupChats.get(groupHash).deleteGroupChat(),
 		).toThrow();
 
 		await dhtSync(
@@ -89,29 +108,22 @@ test('only admins can update and delete groups', async () => {
 			alice.player.cells[0].cell_id[0],
 		);
 
-		let currentGroupHash = await alice.store.client.updateGroupChat(
-			groupHash,
-			[groupHash],
-			{
-				admins: [alice.player.agentPubKey, carol.player.agentPubKey],
-				members: [bob.player.agentPubKey],
-				info,
-			},
-		);
+		await alice.store.groupChats
+			.get(groupHash)
+			.addMember([carol.player.agentPubKey]);
+
+		await alice.store.groupChats
+			.get(groupHash)
+			.promoteMemberToAdmin([carol.player.agentPubKey]);
 
 		await dhtSync(
 			[alice.player, bob.player, carol.player],
 			alice.player.cells[0].cell_id[0],
 		);
-		currentGroupHash = await carol.store.client.updateGroupChat(
-			groupHash,
-			[currentGroupHash],
-			{
-				admins: [alice.player.agentPubKey, carol.player.agentPubKey],
-				members: [],
-				info,
-			},
-		);
+
+		await carol.store.groupChats
+			.get(groupHash)
+			.removeMember([bob.player.agentPubKey]);
 
 		await dhtSync(
 			[alice.player, bob.player, carol.player],
@@ -121,12 +133,11 @@ test('only admins can update and delete groups', async () => {
 		// Carol deletes the group at the same time as Alice updates it
 		// Should result in the group being deleted
 
-		await carol.store.client.deleteGroupChat(groupHash, currentGroupHash);
+		await carol.store.groupChats.get(groupHash).deleteGroupChat();
 
-		await alice.store.client.updateGroupChat(groupHash, [currentGroupHash], {
-			admins: [alice.player.agentPubKey, carol.player.agentPubKey],
-			members: [],
-			info,
+		await alice.store.groupChats.get(groupHash).updateGroupChatInfo({
+			...info,
+			name: 'anothername',
 		});
 
 		await dhtSync(
@@ -134,15 +145,16 @@ test('only admins can update and delete groups', async () => {
 			alice.player.cells[0].cell_id[0],
 		);
 
-		const group = await toPromise(alice.store.groupChats.get(groupHash));
+		const group = await toPromise(
+			alice.store.groupChats.get(groupHash).currentGroupChat,
+		);
 
-		assert.equal(Object.keys(group.deletes).length, 1);
+		assert.ok(group.deleted);
 
 		await expect(async () =>
-			alice.store.client.updateGroupChat(groupHash, [currentGroupHash], {
-				admins: [alice.player.agentPubKey, carol.player.agentPubKey],
-				members: [],
-				info,
+			alice.store.groupChats.get(groupHash).updateGroupChatInfo({
+				...info,
+				name: 'anothername',
 			}),
 		).rejects.toThrow();
 	});
@@ -155,50 +167,43 @@ test('concurrent updates of groups get reconciled', async () => {
 		const info = {
 			name: 'mygroup',
 			avatar_hash: undefined,
+			description: 'mydescription',
 		};
 
 		const groupHash = await alice.store.client.createGroupChat({
-			admins: [alice.player.agentPubKey, bob.player.agentPubKey],
-			members: [],
+			my_agents: [alice.player.agentPubKey],
+			other_members: [[bob.player.agentPubKey]],
+			settings: {
+				only_admins_can_add_members: false,
+				only_admins_can_edit_group_info: false,
+				sync_message_history_with_new_members: false,
+			},
 			info,
 		});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		let currentGroupHash = await alice.store.client.updateGroupChat(
-			groupHash,
-			[groupHash],
-			{
-				admins: [alice.player.agentPubKey, bob.player.agentPubKey],
-				members: [],
-				info: {
-					name: 'alicename',
-					avatar_hash: undefined,
-				},
-			},
-		);
+		await alice.store.groupChats.get(groupHash).updateGroupChatInfo({
+			name: 'alicename',
+			avatar_hash: undefined,
+			description: 'mydescription',
+		});
 
-		await pause(1);
-
-		let currentGroupHash2 = await bob.store.client.updateGroupChat(
-			groupHash,
-			[groupHash],
-			{
-				admins: [alice.player.agentPubKey, bob.player.agentPubKey],
-				members: [],
-				info: {
-					name: 'bobname',
-					avatar_hash: undefined,
-				},
-			},
-		);
+		await bob.store.groupChats.get(groupHash).updateGroupChatInfo({
+			name: 'bobname',
+			avatar_hash: undefined,
+			description: 'mydescription',
+		});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
 		await waitUntil(
 			async () =>
-				(await toPromise(alice.store.groupChats.get(groupHash))).currentGroup
-					.info.name === 'bobname',
+				(
+					await toPromise(
+						alice.store.groupChats.get(groupHash).currentGroupChat,
+					)
+				).info.name === 'bobname',
 			20_000,
 		);
 	});
@@ -211,33 +216,37 @@ test('members removed from the group cannot send messages anymore', async () => 
 		const info = {
 			name: 'mygroup',
 			avatar_hash: undefined,
+			description: 'mydescription',
 		};
 
 		const groupHash = await alice.store.client.createGroupChat({
-			admins: [alice.player.agentPubKey],
-			members: [bob.player.agentPubKey],
+			my_agents: [alice.player.agentPubKey],
+			other_members: [[bob.player.agentPubKey]],
+			settings: {
+				only_admins_can_add_members: false,
+				only_admins_can_edit_group_info: false,
+				sync_message_history_with_new_members: false,
+			},
 			info,
 		});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		await bob.store.client.sendGroupMessage(groupHash, groupHash, {
+		await bob.store.groupChats.get(groupHash).sendMessage({
 			message: 'hey!',
 			reply_to: undefined,
 		});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		await alice.store.client.updateGroupChat(groupHash, [groupHash], {
-			admins: [alice.player.agentPubKey],
-			members: [],
-			info,
-		});
+		await alice.store.groupChats
+			.get(groupHash)
+			.removeMember([bob.player.agentPubKey]);
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
 		await expect(async () =>
-			bob.store.client.sendGroupMessage(groupHash, groupHash, {
+			bob.store.groupChats.get(groupHash).sendMessage({
 				message: 'hey!',
 				reply_to: undefined,
 			}),
