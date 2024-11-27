@@ -15,46 +15,47 @@ test('messages get to all devices', async () => {
 			alice.player.cells[0].cell_id[0],
 		);
 
-		let peerChat = await toPromise(
-			bob.store.peerChats.get(alice.player.agentPubKey),
-		);
-		assert.equal(Object.keys(peerChat.messages).length, 0);
-
-		await alice.store.client.sendPeerMessage(
-			bob.player.agentPubKey,
-
-			{
-				message: 'hey!',
-				reply_to: undefined,
+		const peerChatHash = await alice.store.client.createPeerChat({
+			peer_1: {
+				agents: [alice.player.agentPubKey],
+				profile: undefined,
 			},
+			peer_2: {
+				agents: [bob.player.agentPubKey, bob2.player.agentPubKey],
+				profile: undefined,
+			},
+		});
+
+		let messages = await toPromise(
+			bob.store.peerChats.get(peerChatHash).messages,
 		);
+		assert.equal(Object.keys(messages).length, 0);
+
+		await alice.store.groupChats.get(peerChatHash).sendMessage({
+			message: 'hey!',
+			reply_to: undefined,
+		});
 
 		await dhtSync(
 			[alice.player, bob.player, bob2.player],
 			alice.player.cells[0].cell_id[0],
 		);
 
-		peerChat = await toPromise(
-			bob.store.peerChats.get(alice.player.agentPubKey),
-		);
-		assert.equal(Object.keys(peerChat.messages).length, 1);
+		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
+		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(peerChat.messages)[0].signed_content.content.message
-				.message,
+			Object.values(messages)[0].signed_content.content.message.message,
 			'hey!',
 		);
 
-		peerChat = await toPromise(
-			bob2.store.peerChats.get(alice.player.agentPubKey),
-		);
-		assert.equal(Object.keys(peerChat.messages).length, 1);
+		messages = await toPromise(bob2.store.peerChats.get(peerChatHash).messages);
+		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(peerChat.messages)[0].signed_content.content.message
-				.message,
+			Object.values(messages)[0].signed_content.content.message.message,
 			'hey!',
 		);
 
-		await bob.store.client.sendPeerMessage(alice.player.agentPubKey, {
+		await bob.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey yourself!',
 			reply_to: undefined,
 		});
@@ -64,23 +65,19 @@ test('messages get to all devices', async () => {
 			alice.player.cells[0].cell_id[0],
 		);
 
-		peerChat = await toPromise(
-			bob.store.peerChats.get(alice.player.agentPubKey),
+		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
+		assert.equal(Object.keys(messages).length, 2);
+		messages = await toPromise(
+			alice.store.peerChats.get(peerChatHash).messages,
 		);
-		assert.equal(Object.keys(peerChat.messages).length, 2);
-		peerChat = await toPromise(
-			alice.store.peerChats.get(bob.player.agentPubKey),
-		);
-		assert.equal(Object.keys(peerChat.messages).length, 2);
+		assert.equal(Object.keys(messages).length, 2);
 
-		peerChat = await toPromise(
-			bob2.store.peerChats.get(alice.player.agentPubKey),
+		messages = await toPromise(bob2.store.peerChats.get(peerChatHash).messages);
+		assert.equal(Object.keys(messages).length, 2);
+		messages = await toPromise(
+			alice.store.peerChats.get(peerChatHash).messages,
 		);
-		assert.equal(Object.keys(peerChat.messages).length, 2);
-		peerChat = await toPromise(
-			alice.store.peerChats.get(bob2.player.agentPubKey),
-		);
-		assert.equal(Object.keys(peerChat.messages).length, 2);
+		assert.equal(Object.keys(messages).length, 2);
 	});
 });
 
@@ -93,17 +90,28 @@ test('add new device while receiving message is reconciled', async () => {
 			alice.player.cells[0].cell_id[0],
 		);
 
-		await alice.store.client.sendPeerMessage(bob2.player.agentPubKey, {
+		const peerChatHash = await alice.store.client.createPeerChat({
+			peer_1: {
+				agents: [alice.player.agentPubKey],
+				profile: undefined,
+			},
+			peer_2: {
+				agents: [bob.player.agentPubKey],
+				profile: undefined,
+			},
+		});
+
+		await alice.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey!',
 			reply_to: undefined,
 		});
 
-		let peerChat = await toPromise(
-			bob.store.peerChats.get(alice.player.agentPubKey),
+		let messages = await toPromise(
+			bob.store.peerChats.get(peerChatHash).messages,
 		);
-		assert.equal(Object.keys(peerChat.messages).length, 0);
+		assert.equal(Object.keys(messages).length, 0);
 
-		await alice.store.client.sendPeerMessage(bob.player.agentPubKey, {
+		await alice.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey!',
 			reply_to: undefined,
 		});
@@ -117,15 +125,12 @@ test('add new device while receiving message is reconciled', async () => {
 		await waitUntil(
 			async () =>
 				Object.keys(
-					(await toPromise(bob2.store.peerChats.get(alice.player.agentPubKey)))
-						.messages,
+					await toPromise(bob2.store.peerChats.get(peerChatHash).messages),
 				).length === 2,
 			3_000,
 		);
-		peerChat = await toPromise(
-			bob.store.peerChats.get(alice.player.agentPubKey),
-		);
-		assert.equal(Object.keys(peerChat.messages).length, 2);
+		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
+		assert.equal(Object.keys(messages).length, 2);
 	});
 });
 
@@ -135,47 +140,49 @@ test('messages get synchronized even when offline', async () => {
 
 		await bob2.player.conductor.shutDown();
 
-		let peerChat = await toPromise(
-			bob.store.peerChats.get(alice.player.agentPubKey),
-		);
-		assert.equal(Object.keys(peerChat.messages).length, 0);
-
-		await alice.store.client.sendPeerMessage(
-			bob.player.agentPubKey,
-
-			{
-				message: 'hey!',
-				reply_to: undefined,
+		const peerChatHash = await alice.store.client.createPeerChat({
+			peer_1: {
+				agents: [alice.player.agentPubKey],
+				profile: undefined,
 			},
+			peer_2: {
+				agents: [bob.player.agentPubKey],
+				profile: undefined,
+			},
+		});
+
+		let messages = await toPromise(
+			bob.store.peerChats.get(peerChatHash).messages,
 		);
+		assert.equal(Object.keys(messages).length, 0);
+
+		await alice.store.peerChats.get(peerChatHash).sendMessage({
+			message: 'hey!',
+			reply_to: undefined,
+		});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		peerChat = await toPromise(
-			bob.store.peerChats.get(alice.player.agentPubKey),
-		);
-		assert.equal(Object.keys(peerChat.messages).length, 1);
+		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
+		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(peerChat.messages)[0].signed_content.content.message
-				.message,
+			Object.values(messages)[0].signed_content.content.message.message,
 			'hey!',
 		);
 
-		await bob.store.client.sendPeerMessage(alice.player.agentPubKey, {
+		await bob.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey yourself!',
 			reply_to: undefined,
 		});
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		peerChat = await toPromise(
-			bob.store.peerChats.get(alice.player.agentPubKey),
+		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
+		assert.equal(Object.keys(messages).length, 2);
+		messages = await toPromise(
+			alice.store.peerChats.get(peerChatHash).messages,
 		);
-		assert.equal(Object.keys(peerChat.messages).length, 2);
-		peerChat = await toPromise(
-			alice.store.peerChats.get(bob.player.agentPubKey),
-		);
-		assert.equal(Object.keys(peerChat.messages).length, 2);
+		assert.equal(Object.keys(messages).length, 2);
 
 		await bob2.startUp();
 
@@ -190,10 +197,10 @@ test('messages get synchronized even when offline', async () => {
 		);
 
 		await waitUntil(async () => {
-			const peerChat = await toPromise(
-				bob.store.peerChats.get(alice.player.agentPubKey),
+			const messages = await toPromise(
+				bob.store.peerChats.get(peerChatHash).messages,
 			);
-			return Object.keys(peerChat.messages).length === 2;
+			return Object.keys(messages).length === 2;
 		}, 20_000);
 	});
 });
