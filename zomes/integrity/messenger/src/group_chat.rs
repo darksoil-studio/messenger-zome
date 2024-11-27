@@ -26,15 +26,15 @@ impl GroupChat {
             .into_iter()
             .map(|agents| GroupMember {
                 agents: agents.into_iter().collect(),
-                add_member_count: 1,
-                admin_promotions_count: 0,
+                admin: false,
+                removed: false,
                 profile: None,
             })
             .collect();
         members.push(GroupMember {
             agents: create_group_chat.my_agents.into_iter().collect(),
-            add_member_count: 1,
-            admin_promotions_count: 1,
+            admin: true,
+            removed: false,
             profile: None,
         });
         Self {
@@ -52,7 +52,7 @@ impl GroupChat {
                 "Author of the GroupEvent is not a member of the group"
             ));
         };
-        let author_is_admin = author_member.admin_promotions_count > 0;
+        let author_is_admin = author_member.admin;
         match event {
             GroupEvent::UpdateGroupInfo(group_info) => {
                 if self.settings.only_admins_can_edit_group_info && !author_is_admin {
@@ -84,12 +84,12 @@ impl GroupChat {
                             .agents
                             .insert(agent.clone());
                     }
-                    self.members[existing_member_index].add_member_count += 1;
+                    self.members[existing_member_index].removed = false;
                 } else {
                     self.members.push(GroupMember {
                         agents: member_agents.clone().into_iter().collect(),
-                        add_member_count: 1,
-                        admin_promotions_count: 0,
+                        removed: false,
+                        admin: false,
                         profile: None,
                     });
                 }
@@ -108,7 +108,8 @@ impl GroupChat {
                 let Some(p) = pos else {
                     return Err(wasm_error!("Member not found"));
                 };
-                self.members[p].add_member_count -= 1;
+                self.members[p].removed = true;
+                self.members[p].admin = false;
             }
             GroupEvent::NewAgentForMember {
                 new_agent,
@@ -140,7 +141,7 @@ impl GroupChat {
                 let Some(p) = pos else {
                     return Err(wasm_error!("Member not found"));
                 };
-                self.members[p].admin_promotions_count += 1;
+                self.members[p].admin = true;
             }
             GroupEvent::DemoteMemberFromAdmin { member_agents } => {
                 if !author_is_admin {
@@ -155,7 +156,7 @@ impl GroupChat {
                 let Some(p) = pos else {
                     return Err(wasm_error!("Member not found"));
                 };
-                self.members[p].admin_promotions_count -= 1;
+                self.members[p].admin = false;
             }
             GroupEvent::DeleteGroup => {
                 if !author_is_admin {
@@ -171,7 +172,8 @@ impl GroupChat {
                 let Some(i) = author_member_index else {
                     return Err(wasm_error!("Unreachable: member position not found?"));
                 };
-                self.members[i].add_member_count -= 1;
+                self.members[i].removed = true;
+                self.members[i].admin = false;
             }
         };
 
@@ -228,22 +230,10 @@ impl GroupChat {
                         .agents
                         .insert(agent.clone());
                 }
-                let add_count = if group_2_member.add_member_count < group_1_member.add_member_count
-                {
-                    group_2_member.add_member_count
-                } else {
-                    group_1_member.add_member_count
-                };
-                let admin_promotions_count = if group_2_member.admin_promotions_count
-                    < group_1_member.admin_promotions_count
-                {
-                    group_2_member.admin_promotions_count
-                } else {
-                    group_1_member.admin_promotions_count
-                };
-                group_1_members[group_1_member_index].add_member_count = add_count;
-                group_1_members[group_1_member_index].admin_promotions_count =
-                    admin_promotions_count;
+                group_1_members[group_1_member_index].removed =
+                    group_1_member.removed && group_2_member.removed;
+                group_1_members[group_1_member_index].admin =
+                    group_1_member.admin && group_2_member.admin;
 
                 let profile = match (group_1_member.profile, group_2_member.profile) {
                     (Some(p1), Some(p2)) => Some(if p1 < p2 { p2 } else { p1 }),
@@ -285,8 +275,8 @@ pub struct GroupSettings {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct GroupMember {
     pub agents: BTreeSet<AgentPubKey>,
-    pub add_member_count: i32,
-    pub admin_promotions_count: i32,
+    pub admin: bool,
+    pub removed: bool,
     pub profile: Option<Profile>,
 }
 
@@ -318,7 +308,7 @@ pub enum GroupEvent {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GroupChatEvent {
     pub group_chat_hash: EntryHash,
-    pub previous_group_chat_event_hashes: Vec<EntryHash>,
+    pub previous_group_chat_events_hashes: Vec<EntryHash>,
 
     pub event: GroupEvent,
 }

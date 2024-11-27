@@ -97,7 +97,7 @@ pub enum PeerEvent {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PeerChatEvent {
     pub peer_chat_hash: EntryHash,
-    pub previous_peer_chat_events: Vec<EntryHash>,
+    pub previous_peer_chat_events_hashes: Vec<EntryHash>,
 
     pub event: PeerEvent,
 }
@@ -111,7 +111,7 @@ pub struct NewPeerAgent {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PeerMessage {
     pub peer_chat_hash: EntryHash,
-    pub current_peer_chat_events: Vec<EntryHash>,
+    pub current_peer_chat_events_hashes: Vec<EntryHash>,
 
     pub message: Message,
 }
@@ -119,7 +119,7 @@ pub struct PeerMessage {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReadPeerMessages {
     pub peer_chat_hash: EntryHash,
-    pub current_peer_chat_events: Vec<EntryHash>,
+    pub current_peer_chat_events_hashes: Vec<EntryHash>,
 
     pub read_messages_hashes: Vec<EntryHash>,
 }

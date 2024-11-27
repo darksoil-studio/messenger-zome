@@ -3,9 +3,13 @@ use std::collections::BTreeMap;
 use hdk::prelude::*;
 use messenger_integrity::*;
 
-use crate::private_messenger_entries::{
-    create_private_messenger_entry, create_relaxed_private_messenger_entry,
-    query_private_messanger_entry, query_private_messenger_entries,
+use crate::{
+    agent_encrypted_message::{create_encrypted_message, MessengerEncryptedMessage},
+    private_messenger_entries::{
+        create_private_messenger_entry, create_relaxed_private_messenger_entry,
+        query_private_messanger_entry, query_private_messenger_entries,
+    },
+    MessengerRemoteSignal,
 };
 
 #[hdk_extern]
@@ -94,7 +98,10 @@ pub fn query_current_group_chat(
             ));
         };
 
-        let previous_chat = if group_chat_event.previous_group_chat_event_hashes.is_empty() {
+        let previous_chat = if group_chat_event
+            .previous_group_chat_events_hashes
+            .is_empty()
+        {
             let Some(group_chat) = query_original_group_chat(&group_chat_event.group_chat_hash)?
             else {
                 return Err(wasm_error!("Could not find GroupChat for GroupChatEvent"));
@@ -102,7 +109,7 @@ pub fn query_current_group_chat(
             group_chat
         } else {
             let previous_chats = group_chat_event
-                .previous_group_chat_event_hashes
+                .previous_group_chat_events_hashes
                 .into_iter()
                 .map(|event_hash| group_chat_at_event(&event_hash, group_chats_at_events))
                 .collect::<ExternResult<Vec<GroupChat>>>()?;
@@ -140,7 +147,7 @@ pub fn validate_group_chat_event(
 ) -> ExternResult<ValidateCallbackResult> {
     let Some(current_group) = query_current_group_chat(
         &group_chat_event.group_chat_hash,
-        &group_chat_event.previous_group_chat_event_hashes,
+        &group_chat_event.previous_group_chat_events_hashes,
     )?
     else {
         return Ok(ValidateCallbackResult::UnresolvedDependencies(
@@ -391,3 +398,90 @@ pub fn query_entries_for_group(
 
 //     Ok(latest_version_of_group.map(|(_, group)| group))
 // }
+
+pub fn post_receive_group_chat_entry(
+    existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
+    private_messenger_entry: PrivateMessengerEntry,
+    group_chat_hash: &EntryHash,
+    current_group_chat_events_hashes: &Vec<EntryHash>,
+) -> ExternResult<()> {
+    // If we have linked a device at the same time that a peer sent us a message
+    // we need to re-propagate this message to our newly linked device
+    let missed_events = query_missed_group_chat_events(
+        &existing_entries,
+        &group_chat_hash,
+        &current_group_chat_events_hashes,
+    )?;
+
+    for (_event_hash, group_chat_event) in missed_events {
+        let new_agents = match group_chat_event.event {
+            GroupEvent::AddMember { member_agents } => member_agents,
+            GroupEvent::NewAgentForMember { new_agent, .. } => vec![new_agent],
+            _ => {
+                continue;
+            }
+        };
+
+        send_remote_signal(
+            MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry.clone()),
+            new_agents.clone(),
+        )?;
+
+        for agent in new_agents {
+            create_encrypted_message(
+                agent.clone(),
+                MessengerEncryptedMessage(private_messenger_entry.clone()),
+            )?;
+        }
+    }
+    Ok(())
+}
+pub fn query_missed_group_chat_events(
+    existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
+    group_chat_hash: &EntryHash,
+    current_group_chat_events_hashes: &Vec<EntryHash>,
+) -> ExternResult<BTreeMap<EntryHash, GroupChatEvent>> {
+    // Filter events for this group_chat_hash
+    let mut group_chat_events: BTreeMap<EntryHash, GroupChatEvent> = BTreeMap::new();
+
+    for (entry_hash, entry) in existing_entries {
+        let PrivateMessengerEntryContent::GroupChatEvent(event) = &entry.0.signed_content.content
+        else {
+            continue;
+        };
+
+        if event.group_chat_hash.ne(&group_chat_hash) {
+            continue;
+        }
+        group_chat_events.insert(entry_hash.clone().into(), event.clone());
+    }
+
+    // Get all ascendents for current events hashes
+    let mut all_ascendents: BTreeSet<EntryHash> = current_group_chat_events_hashes
+        .clone()
+        .into_iter()
+        .collect();
+    let mut current_event_hashes: Vec<EntryHash> = current_group_chat_events_hashes.clone();
+
+    while let Some(current_event_hash) = current_event_hashes.pop() {
+        let Some(current_event) = group_chat_events.get(&current_event_hash) else {
+            return Err(wasm_error!(
+                "Previous event was not found: {current_event_hash:?}"
+            ));
+        };
+
+        for previous_event_hash in &current_event.previous_group_chat_events_hashes {
+            if !all_ascendents.contains(previous_event_hash) {
+                all_ascendents.insert(previous_event_hash.clone());
+                current_event_hashes.push(previous_event_hash.clone());
+            }
+        }
+    }
+
+    // Filter all existing with ascendents
+    let missing_group_events: BTreeMap<EntryHash, GroupChatEvent> = group_chat_events
+        .into_iter()
+        .filter(|(hash, _event)| !all_ascendents.contains(hash))
+        .collect();
+    Ok(missing_group_events)
+}

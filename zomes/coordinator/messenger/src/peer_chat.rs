@@ -3,9 +3,13 @@ use std::collections::BTreeMap;
 use hdk::prelude::*;
 use messenger_integrity::*;
 
-use crate::private_messenger_entries::{
-    create_private_messenger_entry, create_relaxed_private_messenger_entry,
-    query_private_messanger_entry,
+use crate::{
+    agent_encrypted_message::{create_encrypted_message, MessengerEncryptedMessage},
+    private_messenger_entries::{
+        create_private_messenger_entry, create_relaxed_private_messenger_entry,
+        query_private_messanger_entry,
+    },
+    MessengerRemoteSignal,
 };
 
 #[hdk_extern]
@@ -38,7 +42,7 @@ pub fn validate_peer_chat_event(
 ) -> ExternResult<ValidateCallbackResult> {
     let Some(peer_chat) = query_current_peer_chat(
         &peer_chat_event.peer_chat_hash,
-        &peer_chat_event.previous_peer_chat_events,
+        &peer_chat_event.previous_peer_chat_events_hashes,
     )?
     else {
         return Ok(ValidateCallbackResult::UnresolvedDependencies(
@@ -69,7 +73,7 @@ pub fn validate_peer_message(
 ) -> ExternResult<ValidateCallbackResult> {
     let Some(peer_chat) = query_current_peer_chat(
         &peer_message.peer_chat_hash,
-        &peer_message.current_peer_chat_events,
+        &peer_message.current_peer_chat_events_hashes,
     )?
     else {
         return Ok(ValidateCallbackResult::UnresolvedDependencies(
@@ -148,14 +152,14 @@ pub fn query_current_peer_chat(
             ));
         };
 
-        let previous_chat = if peer_chat_event.previous_peer_chat_events.is_empty() {
+        let previous_chat = if peer_chat_event.previous_peer_chat_events_hashes.is_empty() {
             let Some(peer_chat) = query_original_peer_chat(&peer_chat_event.peer_chat_hash)? else {
                 return Err(wasm_error!("Could not find PeerChat for PeerChatEvent"));
             };
             peer_chat
         } else {
             let previous_chats = peer_chat_event
-                .previous_peer_chat_events
+                .previous_peer_chat_events_hashes
                 .into_iter()
                 .map(|event_hash| peer_chat_at_event(&event_hash, peer_chats_at_events))
                 .collect::<ExternResult<Vec<PeerChat>>>()?;
@@ -234,7 +238,7 @@ pub fn validate_read_peer_messages(
 ) -> ExternResult<ValidateCallbackResult> {
     let Some(peer_chat) = query_current_peer_chat(
         &read_peer_messages.peer_chat_hash,
-        &read_peer_messages.current_peer_chat_events,
+        &read_peer_messages.current_peer_chat_events_hashes,
     )?
     else {
         return Ok(ValidateCallbackResult::UnresolvedDependencies(
@@ -251,4 +255,86 @@ pub fn validate_read_peer_messages(
     }
 
     Ok(ValidateCallbackResult::Valid)
+}
+
+pub fn post_receive_peer_chat_entry(
+    existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
+    private_messenger_entry: PrivateMessengerEntry,
+    peer_chat_hash: &EntryHash,
+    current_peer_chat_events_hashes: &Vec<EntryHash>,
+) -> ExternResult<()> {
+    // If we have linked a device at the same time that a peer sent us a message
+    // we need to re-propagate this message to our newly linked device
+    let missed_events = query_missed_peer_chat_events(
+        &existing_entries,
+        &peer_chat_hash,
+        &current_peer_chat_events_hashes,
+    )?;
+
+    for (_event_hash, peer_chat_event) in missed_events {
+        let PeerEvent::NewPeerAgent(new_peer_agent) = peer_chat_event.event else {
+            continue;
+        };
+
+        send_remote_signal(
+            MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry.clone()),
+            vec![new_peer_agent.new_agent.clone()],
+        )?;
+
+        create_encrypted_message(
+            new_peer_agent.new_agent.clone(),
+            MessengerEncryptedMessage(private_messenger_entry.clone()),
+        )?;
+    }
+    Ok(())
+}
+
+pub fn query_missed_peer_chat_events(
+    existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
+    peer_chat_hash: &EntryHash,
+    current_peer_chat_events_hashes: &Vec<EntryHash>,
+) -> ExternResult<BTreeMap<EntryHash, PeerChatEvent>> {
+    // Filter events for this peer_chat_hash
+    let mut peer_chat_events: BTreeMap<EntryHash, PeerChatEvent> = BTreeMap::new();
+
+    for (entry_hash, entry) in existing_entries {
+        let PrivateMessengerEntryContent::PeerChatEvent(event) = &entry.0.signed_content.content
+        else {
+            continue;
+        };
+
+        if event.peer_chat_hash.ne(&peer_chat_hash) {
+            continue;
+        }
+        peer_chat_events.insert(entry_hash.clone().into(), event.clone());
+    }
+
+    // Get all ascendents for current events hashes
+    let mut all_ascendents: BTreeSet<EntryHash> = current_peer_chat_events_hashes
+        .clone()
+        .into_iter()
+        .collect();
+    let mut current_event_hashes: Vec<EntryHash> = current_peer_chat_events_hashes.clone();
+
+    while let Some(current_event_hash) = current_event_hashes.pop() {
+        let Some(current_event) = peer_chat_events.get(&current_event_hash) else {
+            return Err(wasm_error!(
+                "Previous event was not found: {current_event_hash:?}"
+            ));
+        };
+
+        for previous_event_hash in &current_event.previous_peer_chat_events_hashes {
+            if !all_ascendents.contains(previous_event_hash) {
+                all_ascendents.insert(previous_event_hash.clone());
+                current_event_hashes.push(previous_event_hash.clone());
+            }
+        }
+    }
+
+    // Filter all existing with ascendents
+    let missing_peer_events: BTreeMap<EntryHash, PeerChatEvent> = peer_chat_events
+        .into_iter()
+        .filter(|(hash, _event)| !all_ascendents.contains(hash))
+        .collect();
+    Ok(missing_peer_events)
 }

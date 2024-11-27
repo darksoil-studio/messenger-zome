@@ -8,6 +8,7 @@ use private_messenger_entries::{
 };
 
 mod agent_encrypted_message;
+mod awaiting_deps;
 mod linked_devices;
 mod private_messenger_entries;
 mod signed;
@@ -172,13 +173,20 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
                     let agent_info = agent_info()?;
                     if entry.0.provenance.eq(&agent_info.agent_latest_pubkey) {
                         call_remote(
-                            agent_info.agent_latest_pubkey,
+                            agent_info.agent_latest_pubkey.clone(),
                             zome_info()?.name,
                             "notify_private_messenger_entry_recipients".into(),
                             None,
                             entry,
                         )?;
                     }
+                    call_remote(
+                        agent_info.agent_latest_pubkey,
+                        zome_info()?.name,
+                        "attempt_commit_awaiting_deps_entries".into(),
+                        None,
+                        (),
+                    )?;
                 }
             }
             Ok(())

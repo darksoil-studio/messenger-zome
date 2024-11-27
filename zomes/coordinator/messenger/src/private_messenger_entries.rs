@@ -5,13 +5,14 @@ use std::collections::BTreeMap;
 use crate::{
     agent_encrypted_message::{create_encrypted_message, MessengerEncryptedMessage},
     group_chat::{
-        query_current_group_chat, query_entries_for_group, validate_create_group_chat,
-        validate_group_chat_event, validate_group_message, validate_read_group_messages,
+        post_receive_group_chat_entry, query_current_group_chat, query_entries_for_group,
+        validate_create_group_chat, validate_group_chat_event, validate_group_message,
+        validate_read_group_messages,
     },
     linked_devices::query_my_linked_devices,
     peer_chat::{
-        self, query_current_peer_chat, validate_create_peer_chat, validate_peer_chat_event,
-        validate_peer_message, validate_read_peer_messages,
+        post_receive_peer_chat_entry, query_current_peer_chat, validate_create_peer_chat,
+        validate_peer_chat_event, validate_peer_message, validate_read_peer_messages,
     },
     signed::{build_signed, verify_signed},
     utils::create_relaxed,
@@ -118,68 +119,54 @@ pub fn create_relaxed_private_messenger_entry(
     internal_create_private_messenger_entry(content, true)
 }
 
-pub fn query_missed_peer_events(
-    peer_chat_hash: &EntryHash,
-    current_peer_chat_events_hashes: &Vec<EntryHash>,
-) -> ExternResult<BTreeMap<EntryHash, PeerChatEvent>> {
-}
-
 pub fn post_receive_entry(
     existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
     private_messenger_entry: PrivateMessengerEntry,
 ) -> ExternResult<()> {
     match &private_messenger_entry.0.signed_content.content {
-        PrivateMessengerEntryContent::PeerMessage(peer_message) => {
-            // If we have linked a device at the same time that a peer sent us a message
-            // we need to re-propagate this message to our newly linked device
-            let missed_events = query_missed_peer_events(
-                &peer_message.peer_chat_hash,
-                &peer_message.current_peer_chat_events,
-            )?;
-
-            for (_event_hash, peer_chat_event) in missed_events {
-                let PeerEvent::NewPeerAgent(new_peer_agent) = peer_chat_event.event else {
-                    continue;
-                };
-
-                send_remote_signal(
-                    MessengerRemoteSignal::NewPrivateMessengerEntry(
-                        private_messenger_entry.clone(),
-                    ),
-                    vec![new_peer_agent.new_agent.clone()],
-                )?;
-
-                create_encrypted_message(
-                    new_peer_agent.new_agent.clone(),
-                    MessengerEncryptedMessage(private_messenger_entry.clone()),
-                )?;
-            }
-        }
+        PrivateMessengerEntryContent::PeerMessage(peer_message) => post_receive_peer_chat_entry(
+            existing_entries,
+            private_messenger_entry.clone(),
+            &peer_message.peer_chat_hash,
+            &peer_message.current_peer_chat_events_hashes,
+        )?,
         PrivateMessengerEntryContent::ReadPeerMessages(read_peer_messages) => {
-            // If we have linked a device at the same time that a peer sent us a message
-            // we need to re-propagate this message to our newly linked device
-            let missed_events = query_missed_peer_events(
+            post_receive_peer_chat_entry(
+                existing_entries,
+                private_messenger_entry.clone(),
                 &read_peer_messages.peer_chat_hash,
-                &read_peer_messages.current_peer_chat_events,
-            )?;
-
-            for (_event_hash, peer_chat_event) in missed_events {
-                let PeerEvent::NewPeerAgent(new_peer_agent) = peer_chat_event.event else {
-                    continue;
-                };
-
-                send_remote_signal(
-                    MessengerRemoteSignal::NewPrivateMessengerEntry(
-                        private_messenger_entry.clone(),
-                    ),
-                    vec![new_peer_agent.new_agent.clone()],
-                )?;
-
-                create_encrypted_message(
-                    new_peer_agent.new_agent.clone(),
-                    MessengerEncryptedMessage(private_messenger_entry.clone()),
-                )?;
-            }
+                &read_peer_messages.current_peer_chat_events_hashes,
+            )?
+        }
+        PrivateMessengerEntryContent::PeerChatEvent(peer_chat_event) => {
+            post_receive_peer_chat_entry(
+                existing_entries,
+                private_messenger_entry.clone(),
+                &peer_chat_event.peer_chat_hash,
+                &peer_chat_event.previous_peer_chat_events_hashes,
+            )?
+        }
+        PrivateMessengerEntryContent::GroupMessage(group_message) => post_receive_group_chat_entry(
+            existing_entries,
+            private_messenger_entry.clone(),
+            &group_message.group_chat_hash,
+            &group_message.current_group_chat_events_hashes,
+        )?,
+        PrivateMessengerEntryContent::ReadGroupMessages(read_group_messages) => {
+            post_receive_group_chat_entry(
+                existing_entries,
+                private_messenger_entry.clone(),
+                &read_group_messages.group_chat_hash,
+                &read_group_messages.current_group_chat_events_hashes,
+            )?
+        }
+        PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) => {
+            post_receive_group_chat_entry(
+                existing_entries,
+                private_messenger_entry.clone(),
+                &group_chat_event.group_chat_hash,
+                &group_chat_event.previous_group_chat_events_hashes,
+            )?
         }
         _ => {}
     }
@@ -261,7 +248,17 @@ pub fn receive_private_messenger_entries(
 ) -> ExternResult<()> {
     let my_private_messenger_entries = query_private_messenger_entries(())?;
 
-    for (entry_hash, private_messenger_entry) in their_private_messenger_entries {
+    let mut ordered_their_private_messenger_entries: Vec<(EntryHashB64, PrivateMessengerEntry)> =
+        their_private_messenger_entries.into_iter().collect();
+
+    ordered_their_private_messenger_entries.sort_by(|e1, e2| {
+        e1.1 .0
+            .signed_content
+            .timestamp
+            .cmp(&e2.1 .0.signed_content.timestamp)
+    });
+
+    for (entry_hash, private_messenger_entry) in ordered_their_private_messenger_entries {
         if my_private_messenger_entries.contains_key(&entry_hash) {
             // We already have this message committed
             continue;
@@ -315,6 +312,7 @@ fn group_chat_recipients(provenance: &AgentPubKey, group_chat: &GroupChat) -> Ve
     let members: Vec<AgentPubKey> = group_chat
         .members
         .iter()
+        .filter(|m| !m.removed)
         .map(|m| m.agents.clone())
         .filter(|agents| !agents.contains(provenance))
         .flatten()
@@ -344,20 +342,20 @@ fn recipients(private_messenger_entry: &PrivateMessengerEntry) -> ExternResult<V
         PrivateMessengerEntryContent::PeerMessage(peer_message) => peer_chat_recipients_for_hash(
             &provenance,
             &peer_message.peer_chat_hash,
-            &peer_message.current_peer_chat_events,
+            &peer_message.current_peer_chat_events_hashes,
         ),
         PrivateMessengerEntryContent::PeerChatEvent(peer_chat_events) => {
             peer_chat_recipients_for_hash(
                 &provenance,
                 &peer_chat_events.peer_chat_hash,
-                &peer_chat_events.previous_peer_chat_events,
+                &peer_chat_events.previous_peer_chat_events_hashes,
             )
         }
         PrivateMessengerEntryContent::ReadPeerMessages(read_peer_messages) => {
             peer_chat_recipients_for_hash(
                 &provenance,
                 &read_peer_messages.peer_chat_hash,
-                &read_peer_messages.current_peer_chat_events,
+                &read_peer_messages.current_peer_chat_events_hashes,
             )
         }
         PrivateMessengerEntryContent::CreateGroupChat(group) => Ok(group_chat_recipients(
@@ -438,7 +436,7 @@ pub fn notify_private_messenger_entry_recipients(
         if let GroupEvent::AddMember { member_agents } = &group_chat_event.event {
             send_group_entries_to_new_member(
                 &group_chat_event.group_chat_hash,
-                &group_chat_event.previous_group_chat_event_hashes,
+                &group_chat_event.previous_group_chat_events_hashes,
                 member_agents,
             )?;
         }
