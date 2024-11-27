@@ -118,12 +118,12 @@
 									<all-chats
 										style="flex: 1; margin-left: 8px"
 										@group-chat-selected=${e => {
-											this.peerChat = undefined;
+											this.peerChatHash = undefined;
 											this.groupChatHash = e.detail.groupChatHash;
 											this.requestUpdate();
 										}}
 										@peer-chat-selected=${e => {
-											this.peerChat = e.detail.peerChat.theirAgentSet[0];
+											this.peerChatHash = e.detail.peerChatHash;
 											this.groupChatHash = undefined;
 											this.requestUpdate();
 										}}
@@ -138,9 +138,9 @@
 												style="flex:1"
 											></group-chat>`
 										: html``}
-									${this.peerChat
+									${this.peerChatHash
 										? html`<peer-chat
-												.peer=${this.peerChat}
+												.peerChatHash=${this.peerChatHash}
 												style="flex:1"
 											></peer-chat>`
 										: html``}

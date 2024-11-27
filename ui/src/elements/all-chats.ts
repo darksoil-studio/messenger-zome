@@ -48,7 +48,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 						composed: true,
 						bubbles: true,
 						detail: {
-							peerChat: chat,
+							peerChatHash: chat.peerChatHash,
 						},
 					}),
 				);
