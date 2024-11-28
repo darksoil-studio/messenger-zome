@@ -6,7 +6,7 @@ export const messengerStyles = [
 	css`
 		.message {
 			border-radius: 4px;
-			border: 1px solid lightgrey;
+			border: 1px solid var(--sl-color-gray-300, lightgrey);
 			padding: 4px;
 			box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px;
 			background-color: var(--sl-color-neutral-100, white);
@@ -15,18 +15,18 @@ export const messengerStyles = [
 			right: 0;
 		}
 		.from-me .message {
-			background-color: var(--sl-color-primary-600, blue);
+			background-color: var(--sl-color-primary-500, blue);
 			align-self: end;
-			color: var(--sl-color-neutral-0, white);
+			color: white;
 		}
 		.from-me .message sl-relative-time {
-			color: var(--sl-color-neutral-100, white);
+			color: white;
 		}
 		.from-me .message sl-format-date {
-			color: var(--sl-color-neutral-100, white);
+			color: white;
 		}
 		.from-me .message span {
-			color: var(--sl-color-neutral-100, white);
+			color: white;
 		}
 
 		.typing-indicator {

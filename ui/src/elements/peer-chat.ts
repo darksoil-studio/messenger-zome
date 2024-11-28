@@ -223,7 +223,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 								? html`
 										<div
 											class="placeholder column"
-											style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
+											style="font-size: 12px; width: 4em; overflow: hidden; text-align: right"
 										>
 											${lessThanAMinuteAgo
 												? html`<span>${msg('now')}</span>`
@@ -258,13 +258,6 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 	async sendMessage(message: Message) {
 		try {
 			await this.store.peerChats.get(this.peerChatHash).sendMessage(message);
-
-			// setTimeout(() => {
-			// 	virtualizer.scrollTo({
-			// 		top: virtualizer.scrollHeight,
-			// 		behavior: 'smooth',
-			// 	});
-			// });
 		} catch (e) {
 			console.error(e);
 			notifyError(msg(`Error sending the message`));

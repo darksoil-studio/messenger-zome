@@ -177,7 +177,11 @@ export class MessengerStore {
 					};
 					break;
 				case 'GroupChatEvent':
-					const groupChatEvent = messengerEntry as Signed<GroupChatEvent>;
+					const groupChatEvent = messengerEntry as Signed<
+						{
+							type: 'GroupChatEvent';
+						} & GroupChatEvent
+					>;
 					const groupChatHash1 = encodeHashToBase64(
 						groupChatEvent.signed_content.content.group_chat_hash,
 					);
@@ -193,7 +197,11 @@ export class MessengerStore {
 						readGroupMessages;
 					break;
 				case 'GroupMessage':
-					const groupMessage = messengerEntry as Signed<GroupMessage>;
+					const groupMessage = messengerEntry as Signed<
+						{
+							type: 'GroupMessage';
+						} & GroupMessage
+					>;
 					const groupChatHash3 = encodeHashToBase64(
 						groupMessage.signed_content.content.group_chat_hash,
 					);

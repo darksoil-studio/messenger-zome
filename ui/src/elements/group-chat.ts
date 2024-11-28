@@ -336,8 +336,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 								? html`
 										<div
 											class="placeholder column"
-											style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
+											style="font-size: 12px; width: 4em; overflow: hidden; text-align: right"
 										>
+											<div style="flex: 1"></div>
 											${lessThanAMinuteAgo
 												? html`<span>${msg('now')}</span>`
 												: moreThanAnHourAgo
@@ -434,8 +435,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 										? html`
 												<div
 													class="placeholder column"
-													style="font-size: 12px; width: 4em; height: 14px; overflow: hidden; text-align: right"
+													style="font-size: 12px; width: 4em; overflow: hidden; text-align: right"
 												>
+													<div style="flex: 1"></div>
 													${lessThanAMinuteAgo
 														? html`<span>${msg('now')}</span>`
 														: moreThanAnHourAgo
