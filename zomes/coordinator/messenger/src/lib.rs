@@ -15,6 +15,7 @@ mod signed;
 mod synchronize;
 mod utils;
 
+mod create_peer;
 mod group_chat;
 mod peer_chat;
 mod typing_indicator;
@@ -91,7 +92,7 @@ pub fn recv_remote_signal(signal: MessengerRemoteSignal) -> ExternResult<()> {
             let call_info = call_info()?;
             let my_devices = query_my_linked_devices()?;
 
-            if !my_devices.contains(&call_info.provenance) {
+            if !my_devices.contains_key(&call_info.provenance) {
                 return Err(wasm_error!("Agent {} tried to synchronize its entries with us but we have not linked devices", call_info.provenance));
             }
 

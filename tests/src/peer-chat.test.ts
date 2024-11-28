@@ -8,16 +8,9 @@ test('send message and read it', async () => {
 	await runScenario(async scenario => {
 		const [alice, bob] = await setup(scenario);
 
-		const peerChatHash = await alice.store.client.createPeerChat({
-			peer_1: {
-				agents: [alice.store.client.client.myPubKey],
-				profile: undefined,
-			},
-			peer_2: {
-				agents: [bob.store.client.client.myPubKey],
-				profile: undefined,
-			},
-		});
+		const peerChatHash = await alice.store.client.createPeerChat(
+			bob.store.client.client.myPubKey,
+		);
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 

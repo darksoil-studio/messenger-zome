@@ -15,16 +15,9 @@ test('messages get to all devices', async () => {
 			alice.player.cells[0].cell_id[0],
 		);
 
-		const peerChatHash = await alice.store.client.createPeerChat({
-			peer_1: {
-				agents: [alice.player.agentPubKey],
-				profile: undefined,
-			},
-			peer_2: {
-				agents: [bob.player.agentPubKey, bob2.player.agentPubKey],
-				profile: undefined,
-			},
-		});
+		const peerChatHash = await alice.store.client.createPeerChat(
+			bob.player.agentPubKey,
+		);
 
 		await dhtSync(
 			[alice.player, bob.player, bob2.player],
@@ -95,16 +88,9 @@ test('add new device while receiving message is reconciled', async () => {
 			alice.player.cells[0].cell_id[0],
 		);
 
-		const peerChatHash = await alice.store.client.createPeerChat({
-			peer_1: {
-				agents: [alice.player.agentPubKey],
-				profile: undefined,
-			},
-			peer_2: {
-				agents: [bob.player.agentPubKey],
-				profile: undefined,
-			},
-		});
+		const peerChatHash = await alice.store.client.createPeerChat(
+			bob.player.agentPubKey,
+		);
 
 		await dhtSync(
 			[alice.player, bob.player, bob2.player],
@@ -155,16 +141,9 @@ test('messages get synchronized even when offline', async () => {
 
 		await bob2.player.conductor.shutDown();
 
-		const peerChatHash = await alice.store.client.createPeerChat({
-			peer_1: {
-				agents: [alice.player.agentPubKey],
-				profile: undefined,
-			},
-			peer_2: {
-				agents: [bob.player.agentPubKey],
-				profile: undefined,
-			},
-		});
+		const peerChatHash = await alice.store.client.createPeerChat(
+			bob.player.agentPubKey,
+		);
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 

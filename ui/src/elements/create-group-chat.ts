@@ -29,10 +29,6 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 
 	private async createGroupChat(fields: any) {
 		try {
-			const myAgents = this.store.linkedDevicesStore
-				? await toPromise(this.store.linkedDevicesStore.myLinkedDevices)
-				: [];
-			myAgents.push(this.store.client.client.myPubKey);
 			const profileHashes: ActionHash[] = Array.isArray(fields.members)
 				? fields.members
 				: [fields.members];
@@ -41,20 +37,19 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 					toPromise(this.profilesStore.agentsForProfile.get(h)),
 				),
 			);
-			await this.store.client.createGroupChat({
-				info: {
+			await this.store.client.createGroupChat(
+				otherAgents.map(a => a[0]),
+				{
 					avatar_hash: fields.avatar,
 					description: '',
 					name: fields.name,
 				},
-				my_agents: myAgents,
-				other_members: otherAgents,
-				settings: {
+				{
 					only_admins_can_add_members: false,
 					only_admins_can_edit_group_info: false,
 					sync_message_history_with_new_members: false,
 				},
-			});
+			);
 		} catch (e) {
 			console.error(e);
 			notifyError(msg('Error creating group chat.'));
@@ -62,6 +57,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 	}
 
 	render() {
+		const myProfile = this.profilesStore.myProfile.get();
 		return html`
 			<form
 				class="column"
@@ -73,7 +69,13 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 					<sl-input required .placeholder=${msg('Name')} name="name"></sl-input>
 				</div>
 
-				<search-profiles .fieldLabel=${msg('Add Members')} name="members">
+				<search-profiles
+					.fieldLabel=${msg('Add Members')}
+					name="members"
+					.excludedProfiles=${myProfile.status === 'completed'
+						? [myProfile.value?.profileHash]
+						: []}
+				>
 				</search-profiles>
 
 				<sl-button variant="primary" type="submit"

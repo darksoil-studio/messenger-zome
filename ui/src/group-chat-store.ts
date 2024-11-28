@@ -629,10 +629,10 @@ function mergeSettings(
 ): GroupSettings {
 	return {
 		only_admins_can_edit_group_info:
-			settings1.only_admins_can_edit_group_info &&
+			settings1.only_admins_can_edit_group_info ||
 			settings2.only_admins_can_edit_group_info,
 		only_admins_can_add_members:
-			settings1.only_admins_can_add_members &&
+			settings1.only_admins_can_add_members ||
 			settings2.only_admins_can_add_members,
 		sync_message_history_with_new_members:
 			settings1.sync_message_history_with_new_members &&
@@ -696,14 +696,14 @@ function initialGroupChat(createGroupChat: CreateGroupChat): GroupChat {
 		members: [
 			{
 				admin: true,
-				agents: createGroupChat.my_agents,
-				profile: undefined,
+				agents: createGroupChat.me.agents,
+				profile: createGroupChat.me.profile,
 				removed: false,
 			},
-			...createGroupChat.other_members.map(m => ({
+			...createGroupChat.others.map(m => ({
 				admin: false,
-				agents: m,
-				profile: undefined,
+				agents: m.agents,
+				profile: m.profile,
 				removed: false,
 			})),
 		],

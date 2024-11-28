@@ -11,8 +11,9 @@ use crate::{
     },
     linked_devices::query_my_linked_devices,
     peer_chat::{
-        post_receive_peer_chat_entry, query_current_peer_chat, validate_create_peer_chat,
-        validate_peer_chat_event, validate_peer_message, validate_read_peer_messages,
+        post_receive_create_peer_chat, post_receive_peer_chat_entry, query_current_peer_chat,
+        validate_create_peer_chat, validate_peer_chat_event, validate_peer_message,
+        validate_read_peer_messages,
     },
     signed::{build_signed, verify_signed},
     utils::create_relaxed,
@@ -131,6 +132,10 @@ pub fn create_relaxed_private_messenger_entry(
 
 pub fn post_receive_entry(private_messenger_entry: PrivateMessengerEntry) -> ExternResult<()> {
     match &private_messenger_entry.0.signed_content.content {
+        PrivateMessengerEntryContent::CreatePeerChat(create_peer_chat) => {
+            let entry_hash = hash_entry(&private_messenger_entry)?;
+            post_receive_create_peer_chat(&entry_hash, create_peer_chat)?
+        }
         PrivateMessengerEntryContent::PeerMessage(peer_message) => post_receive_peer_chat_entry(
             private_messenger_entry.clone(),
             &peer_message.peer_chat_hash,
@@ -339,8 +344,8 @@ fn group_chat_recipients_for_hash(
 fn recipients(private_messenger_entry: &PrivateMessengerEntry) -> ExternResult<Vec<AgentPubKey>> {
     let provenance = private_messenger_entry.0.provenance.clone();
     match &private_messenger_entry.0.signed_content.content {
-        PrivateMessengerEntryContent::CreatePeerChat(peer_chat) => {
-            peer_chat_recipients(&provenance, &peer_chat)
+        PrivateMessengerEntryContent::CreatePeerChat(create_peer_chat) => {
+            peer_chat_recipients(&provenance, &PeerChat::new(create_peer_chat.clone()))
         }
         PrivateMessengerEntryContent::PeerMessage(peer_message) => peer_chat_recipients_for_hash(
             &provenance,
@@ -462,7 +467,7 @@ pub fn notify_private_messenger_entry_recipients(
         .filter(|a| !agents_to_exclude.contains(a))
         .collect();
 
-    let my_agents = query_my_linked_devices()?;
+    let my_agents: Vec<AgentPubKey> = query_my_linked_devices()?.into_keys().collect();
 
     send_remote_signal(
         MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry.clone()),

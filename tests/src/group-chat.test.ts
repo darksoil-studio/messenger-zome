@@ -9,20 +9,19 @@ test('create a group chat, send message and read it', async () => {
 	await runScenario(async scenario => {
 		const [alice, bob] = await setup(scenario);
 
-		const groupHash = await alice.store.client.createGroupChat({
-			my_agents: [alice.player.agentPubKey],
-			other_members: [[bob.player.agentPubKey]],
-			info: {
+		const groupHash = await alice.store.client.createGroupChat(
+			[bob.player.agentPubKey],
+			{
 				name: 'mygroup',
 				avatar_hash: undefined,
 				description: 'mydescription',
 			},
-			settings: {
+			{
 				only_admins_can_add_members: false,
 				only_admins_can_edit_group_info: false,
 				sync_message_history_with_new_members: false,
 			},
-		});
+		);
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
@@ -87,16 +86,15 @@ test('concurrent updates of groups get reconciled', async () => {
 			description: 'mydescription',
 		};
 
-		const groupHash = await alice.store.client.createGroupChat({
-			my_agents: [alice.player.agentPubKey],
-			other_members: [[bob.player.agentPubKey]],
-			settings: {
+		const groupHash = await alice.store.client.createGroupChat(
+			[bob.player.agentPubKey],
+			info,
+			{
 				only_admins_can_add_members: false,
 				only_admins_can_edit_group_info: false,
 				sync_message_history_with_new_members: false,
 			},
-			info,
-		});
+		);
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
@@ -136,16 +134,15 @@ test('members removed from the group cannot send messages anymore', async () => 
 			description: 'mydescription',
 		};
 
-		const groupHash = await alice.store.client.createGroupChat({
-			my_agents: [alice.player.agentPubKey],
-			other_members: [[bob.player.agentPubKey]],
-			settings: {
+		const groupHash = await alice.store.client.createGroupChat(
+			[bob.player.agentPubKey],
+			info,
+			{
 				only_admins_can_add_members: false,
 				only_admins_can_edit_group_info: false,
 				sync_message_history_with_new_members: false,
 			},
-			info,
-		});
+		);
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 

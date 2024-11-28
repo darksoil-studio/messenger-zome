@@ -1,10 +1,12 @@
 use std::collections::BTreeMap;
 
 use hdk::prelude::*;
+use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 use messenger_integrity::*;
 
 use crate::{
     agent_encrypted_message::{create_encrypted_message, MessengerEncryptedMessage},
+    create_peer::{build_create_peer_for_agent, build_my_create_peer},
     private_messenger_entries::{
         create_private_messenger_entry, create_relaxed_private_messenger_entry,
         query_private_messenger_entries, query_private_messenger_entry,
@@ -12,16 +14,76 @@ use crate::{
     MessengerRemoteSignal,
 };
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreateGroupChatInput {
+    pub others: Vec<AgentPubKey>,
+    pub info: GroupInfo,
+    pub settings: GroupSettings,
+}
+
 #[hdk_extern]
-pub fn create_group_chat(group: CreateGroupChat) -> ExternResult<EntryHash> {
+pub fn create_group_chat(input: CreateGroupChatInput) -> ExternResult<EntryHash> {
+    let me = build_my_create_peer()?;
+    let others = input
+        .others
+        .into_iter()
+        .map(|other| build_create_peer_for_agent(other))
+        .collect::<ExternResult<Vec<CreatePeer>>>()?;
+
+    let group = CreateGroupChat {
+        me,
+        others,
+        info: input.info,
+        settings: input.settings,
+    };
+
     let content = PrivateMessengerEntryContent::CreateGroupChat(group.clone());
     create_private_messenger_entry(content)
 }
 
+pub fn are_all_agents_linked(agents: &Vec<AgentPubKey>, proofs: &Vec<LinkedDevicesProof>) -> bool {
+    for agent_1 in agents {
+        for agent_2 in agents {
+            if agent_1.eq(&agent_2) {
+                continue;
+            }
+            let valid = are_agents_linked(agent_1, agent_2, &proofs);
+            if !valid {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 pub fn validate_create_group_chat(
-    _provenance: &AgentPubKey,
-    _create_group_chat: &CreateGroupChat,
+    provenance: &AgentPubKey,
+    create_group_chat: &CreateGroupChat,
 ) -> ExternResult<ValidateCallbackResult> {
+    if !create_group_chat.me.agents.contains(&provenance) {
+        return Ok(ValidateCallbackResult::Invalid(format!(
+            "CreateGroupChat must contain the author's public key in the me agent list"
+        )));
+    }
+
+    let me_valid =
+        are_all_agents_linked(&create_group_chat.me.agents, &create_group_chat.me.proofs);
+    if !me_valid {
+        return Ok(ValidateCallbackResult::Invalid(format!(
+            "Agents are not proven to be linked together"
+        )));
+    }
+
+    for peer in &create_group_chat.others {
+        let peer_valid = are_all_agents_linked(&peer.agents, &peer.proofs);
+        if !peer_valid {
+            return Ok(ValidateCallbackResult::Invalid(format!(
+                "Agents are not proven to be linked together"
+            )));
+        }
+    }
+
     return Ok(ValidateCallbackResult::Valid);
 }
 

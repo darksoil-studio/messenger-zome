@@ -1,10 +1,14 @@
 use std::collections::BTreeMap;
 
 use hdk::prelude::*;
+use linked_devices_types::LinkedDevicesProof;
 use messenger_integrity::*;
 
 use crate::{
     agent_encrypted_message::{create_encrypted_message, MessengerEncryptedMessage},
+    create_peer::{build_create_peer_for_agent, build_my_create_peer},
+    group_chat::are_all_agents_linked,
+    linked_devices::query_my_linked_devices,
     private_messenger_entries::{
         create_private_messenger_entry, create_relaxed_private_messenger_entry,
         query_private_messenger_entries, query_private_messenger_entry,
@@ -13,17 +17,47 @@ use crate::{
 };
 
 #[hdk_extern]
-pub fn create_peer_chat(peer_chat: PeerChat) -> ExternResult<EntryHash> {
-    create_private_messenger_entry(PrivateMessengerEntryContent::CreatePeerChat(peer_chat))
+pub fn create_peer_chat(peer: AgentPubKey) -> ExternResult<EntryHash> {
+    let me = build_my_create_peer()?;
+    let peer = build_create_peer_for_agent(peer)?;
+
+    let create_peer_chat = CreatePeerChat {
+        peer_1: me,
+        peer_2: peer,
+    };
+
+    create_private_messenger_entry(PrivateMessengerEntryContent::CreatePeerChat(
+        create_peer_chat,
+    ))
 }
 
 pub fn validate_create_peer_chat(
     provenance: &AgentPubKey,
-    peer_chat: &PeerChat,
+    create_peer_chat: &CreatePeerChat,
 ) -> ExternResult<ValidateCallbackResult> {
-    if !peer_chat.peer_1.agents.contains(&provenance) {
+    if !create_peer_chat.peer_1.agents.contains(&provenance) {
         return Ok(ValidateCallbackResult::Invalid(format!(
             "PeerChats must contain the author's public key in the peer_1 agent list"
+        )));
+    }
+
+    let peer_1_valid = are_all_agents_linked(
+        &create_peer_chat.peer_1.agents,
+        &create_peer_chat.peer_1.proofs,
+    );
+    if !peer_1_valid {
+        return Ok(ValidateCallbackResult::Invalid(format!(
+            "Peer1 agents are not proven to be linked together"
+        )));
+    }
+
+    let peer_2_valid = are_all_agents_linked(
+        &create_peer_chat.peer_2.agents,
+        &create_peer_chat.peer_2.proofs,
+    );
+    if !peer_2_valid {
+        return Ok(ValidateCallbackResult::Invalid(format!(
+            "Peer2 agents are not proven to be linked together"
         )));
     }
     Ok(ValidateCallbackResult::Valid)
@@ -97,14 +131,15 @@ pub fn query_original_peer_chat(peer_chat_hash: &EntryHash) -> ExternResult<Opti
         return Ok(None);
     };
 
-    let PrivateMessengerEntryContent::CreatePeerChat(peer_chat) = entry.0.signed_content.content
+    let PrivateMessengerEntryContent::CreatePeerChat(create_peer_chat) =
+        entry.0.signed_content.content
     else {
         return Err(wasm_error!(
             "Given peer_chat_hash is not for a CreatePeerChat entry"
         ));
     };
 
-    Ok(Some(peer_chat))
+    Ok(Some(PeerChat::new(create_peer_chat)))
 }
 
 pub fn query_peer_chat_event(
@@ -253,6 +288,42 @@ pub fn validate_read_peer_messages(
     }
 
     Ok(ValidateCallbackResult::Valid)
+}
+
+pub fn post_receive_create_peer_chat(
+    peer_chat_hash: &EntryHash,
+    create_peer_chat: &CreatePeerChat,
+) -> ExternResult<()> {
+    let my_devices = query_my_linked_devices()?;
+
+    let im_peer_1 = create_peer_chat
+        .peer_1
+        .agents
+        .contains(&agent_info()?.agent_latest_pubkey);
+    let me = if im_peer_1 {
+        &create_peer_chat.peer_1
+    } else {
+        &create_peer_chat.peer_2
+    };
+    let my_included_devices = &me.agents;
+
+    let missing_devices: BTreeMap<AgentPubKey, Vec<LinkedDevicesProof>> = my_devices
+        .into_iter()
+        .filter(|(a, _)| !my_included_devices.contains(a))
+        .collect();
+
+    for (missing_device, proofs) in missing_devices {
+        create_peer_chat_event(PeerChatEvent {
+            peer_chat_hash: peer_chat_hash.clone(),
+            previous_peer_chat_events_hashes: vec![],
+            event: PeerEvent::NewPeerAgent(NewPeerAgent {
+                new_agent: missing_device,
+                proofs,
+            }),
+        })?;
+    }
+
+    Ok(())
 }
 
 pub fn post_receive_peer_chat_entry(

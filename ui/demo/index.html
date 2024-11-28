@@ -148,7 +148,7 @@
 									${this.peerChatHash
 										? html`<peer-chat
 												.peerChatHash=${this.peerChatHash}
-												style="flex:1"
+												style="flex-basis: 400px"
 											></peer-chat>`
 										: html``}
 								</div>
@@ -163,14 +163,7 @@
 							<sl-button
 								.disabled=${!this.peer}
 								@click=${async () => {
-									if (this.peer) {
-										await this.messengerStore.client.sendPeerMessage(
-											this.peer,
-											{
-												message: 'Yo!',
-											},
-										);
-									}
+									await this.messengerStore.client.createPeerChat(this.peer);
 								}}
 								>Send Peer Message</sl-button
 							>

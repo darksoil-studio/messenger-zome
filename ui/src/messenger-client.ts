@@ -9,7 +9,10 @@ import { ZomeClient } from '@tnesh-stack/utils';
 
 import {
 	CreateGroupChat,
+	CreatePeerChat,
 	GroupChatEvent,
+	GroupInfo,
+	GroupSettings,
 	Message,
 	MessengerSignal,
 	PeerChat,
@@ -34,8 +37,8 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 
 	/** Peer Chat */
 
-	async createPeerChat(peerChat: PeerChat): Promise<EntryHash> {
-		return this.callZome('create_peer_chat', peerChat);
+	async createPeerChat(peer: AgentPubKey): Promise<EntryHash> {
+		return this.callZome('create_peer_chat', peer);
 	}
 
 	async sendPeerMessage(
@@ -84,8 +87,16 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 
 	/** Group Chat */
 
-	async createGroupChat(createGroupChat: CreateGroupChat): Promise<EntryHash> {
-		return this.callZome('create_group_chat', createGroupChat);
+	async createGroupChat(
+		otherMembers: Array<AgentPubKey>,
+		info: GroupInfo,
+		settings: GroupSettings,
+	): Promise<EntryHash> {
+		return this.callZome('create_group_chat', {
+			others: otherMembers,
+			info,
+			settings,
+		});
 	}
 
 	async createGroupChatEvent(groupChatEvent: GroupChatEvent) {

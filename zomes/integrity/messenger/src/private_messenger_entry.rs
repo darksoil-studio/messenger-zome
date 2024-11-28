@@ -11,7 +11,7 @@ pub struct Message {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum PrivateMessengerEntryContent {
-    CreatePeerChat(PeerChat),
+    CreatePeerChat(CreatePeerChat),
     PeerMessage(PeerMessage),
     PeerChatEvent(PeerChatEvent),
     ReadPeerMessages(ReadPeerMessages),

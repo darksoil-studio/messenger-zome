@@ -1,12 +1,12 @@
 use hdi::prelude::*;
 use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 
-use crate::{merge_profiles, Message, MessengerProfile};
+use crate::{merge_profiles, CreatePeer, Message, MessengerProfile};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateGroupChat {
-    pub my_agents: Vec<AgentPubKey>,
-    pub other_members: Vec<Vec<AgentPubKey>>,
+    pub me: CreatePeer,
+    pub others: Vec<CreatePeer>,
     pub info: GroupInfo,
     pub settings: GroupSettings,
 }
@@ -22,20 +22,20 @@ pub struct GroupChat {
 impl GroupChat {
     pub fn new(create_group_chat: CreateGroupChat) -> Self {
         let mut members: Vec<GroupMember> = create_group_chat
-            .other_members
+            .others
             .into_iter()
-            .map(|agents| GroupMember {
-                agents: agents.into_iter().collect(),
+            .map(|peer| GroupMember {
+                agents: peer.agents.into_iter().collect(),
                 admin: false,
                 removed: false,
-                profile: None,
+                profile: peer.profile,
             })
             .collect();
         members.push(GroupMember {
-            agents: create_group_chat.my_agents.into_iter().collect(),
+            agents: create_group_chat.me.agents.into_iter().collect(),
             admin: true,
             removed: false,
-            profile: None,
+            profile: create_group_chat.me.profile,
         });
         Self {
             settings: create_group_chat.settings,

@@ -3,6 +3,19 @@ use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 
 use crate::{merge_profiles, Message, MessengerProfile};
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreatePeer {
+    pub agents: Vec<AgentPubKey>,
+    pub proofs: Vec<LinkedDevicesProof>,
+    pub profile: Option<MessengerProfile>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreatePeerChat {
+    pub peer_1: CreatePeer,
+    pub peer_2: CreatePeer,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, SerializedBytes)]
 pub struct Peer {
     pub agents: BTreeSet<AgentPubKey>,
@@ -16,6 +29,19 @@ pub struct PeerChat {
 }
 
 impl PeerChat {
+    pub fn new(create_peer_chat: CreatePeerChat) -> PeerChat {
+        PeerChat {
+            peer_1: Peer {
+                agents: create_peer_chat.peer_1.agents.into_iter().collect(),
+                profile: create_peer_chat.peer_1.profile,
+            },
+            peer_2: Peer {
+                agents: create_peer_chat.peer_2.agents.into_iter().collect(),
+                profile: create_peer_chat.peer_2.profile,
+            },
+        }
+    }
+
     pub fn apply(mut self, provenance: &AgentPubKey, event: &PeerEvent) -> ExternResult<Self> {
         match event {
             PeerEvent::NewPeerAgent(new_peer_agent) => {

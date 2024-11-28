@@ -52,6 +52,12 @@ export interface Message {
 	message: string;
 }
 
+export interface CreatePeer {
+	agents: AgentPubKey[];
+	proofs: LinkedDevicesProof[];
+	profile: MessengerProfile | undefined;
+}
+
 export interface PeerMessage {
 	peer_chat_hash: EntryHash;
 	current_peer_chat_events_hashes: EntryHash[];
@@ -72,6 +78,11 @@ export interface Peer {
 export interface NewPeerAgent {
 	new_agent: AgentPubKey;
 	proofs: Array<LinkedDevicesProof>;
+}
+
+export interface CreatePeerChat {
+	peer_1: CreatePeer;
+	peer_2: CreatePeer;
 }
 
 export interface PeerChat {
@@ -161,8 +172,8 @@ export interface ReadGroupMessages {
 }
 
 export interface CreateGroupChat {
-	my_agents: Array<AgentPubKey>;
-	other_members: Array<Array<AgentPubKey>>;
+	me: CreatePeer;
+	others: Array<CreatePeer>;
 	info: GroupInfo;
 	settings: GroupSettings;
 }
@@ -170,7 +181,7 @@ export interface CreateGroupChat {
 export type PrivateMessengerEntry = PeerChatEntry | GroupChatEntry;
 
 export type PeerChatEntry = Signed<
-	| ({ type: 'CreatePeerChat' } & PeerChat)
+	| ({ type: 'CreatePeerChat' } & CreatePeerChat)
 	| ({ type: 'PeerChatEvent' } & PeerChatEvent)
 	| ({ type: 'PeerMessage' } & PeerMessage)
 	| ({ type: 'ReadPeerMessages' } & ReadPeerMessages)

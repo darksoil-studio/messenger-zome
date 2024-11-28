@@ -62,26 +62,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 			);
 
 			if (peerChatsForThisPeer.length === 0) {
-				const peerDevices = this.linkedDevicesStore
-					? await toPromise(
-							this.linkedDevicesStore.linkedDevicesForAgent.get(this.peer),
-						)
-					: [];
-				peerDevices.push(this.peer);
-				const myDevices = this.linkedDevicesStore
-					? await toPromise(this.linkedDevicesStore.myLinkedDevices)
-					: [];
-				myDevices.push(this.store.client.client.myPubKey);
-				this.peerChatHash = await this.store.client.createPeerChat({
-					peer_1: {
-						agents: myDevices,
-						profile: undefined,
-					},
-					peer_2: {
-						agents: peerDevices,
-						profile: undefined,
-					},
-				});
+				this.peerChatHash = await this.store.client.createPeerChat(this.peer);
 			} else {
 				this.peerChatHash = peerChatsForThisPeer[0];
 			}

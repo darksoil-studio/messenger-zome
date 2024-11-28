@@ -20,12 +20,11 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 			sync_message_history_with_new_members: false,
 		};
 
-		const groupHash = await alice.store.client.createGroupChat({
-			my_agents: [alice.player.agentPubKey],
-			other_members: [[bob.player.agentPubKey]],
-			settings,
+		const groupHash = await alice.store.client.createGroupChat(
+			[bob.player.agentPubKey],
 			info,
-		});
+			settings,
+		);
 
 		await dhtSync(
 			[alice.player, bob.player, carol.player],

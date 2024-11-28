@@ -15,16 +15,15 @@ test('all events get to all the members of the group', async () => {
 			description: 'mydescription',
 		};
 
-		const groupHash = await alice.store.client.createGroupChat({
-			my_agents: [alice.player.agentPubKey],
-			other_members: [[bob.player.agentPubKey]],
+		const groupHash = await alice.store.client.createGroupChat(
+			[bob.player.agentPubKey],
 			info,
-			settings: {
+			{
 				only_admins_can_add_members: false,
 				only_admins_can_edit_group_info: false,
 				sync_message_history_with_new_members: false,
 			},
-		});
+		);
 
 		await dhtSync(
 			[alice.player, bob.player, bob2.player, carol.player],
@@ -57,6 +56,7 @@ test('all events get to all the members of the group', async () => {
 		);
 
 		events = await toPromise(carol.store.groupChats.get(groupHash).events);
+
 		assert.equal(Object.keys(events).length, 3);
 		assert.ok(events[encodeHashToBase64(eventHash1)]);
 

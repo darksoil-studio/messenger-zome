@@ -67,7 +67,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 			<div style="align-self: center">
 				${this.renderAvatar(chat.peer.agents[0], chat.peer.profile)}
 			</div>
-			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
+			<div class="column" style="gap: 4px; flex: 1; overflow: hidden">
 				<span
 					>${this.renderAgentNickname(
 						chat.peer.agents[0],
@@ -77,7 +77,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 				<span class="placeholder last-activity"
 					>${lastActivityContent.type === 'PeerMessage'
 						? lastActivityContent.message.message
-						: ''}</span
+						: msg('No messages yet.')}</span
 				>
 			</div>
 
@@ -231,7 +231,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 						>
 						</show-avatar-image>
 					`}
-			<div class="column" style="gap: 8px; flex: 1; overflow: hidden">
+			<div class="column" style="gap: 4px; flex: 1; overflow: hidden">
 				<span class="chat-name">${info.name}</span>
 				<span class="placeholder last-activity"
 					>${this.renderGroupLastActivity(

@@ -20,6 +20,7 @@ import { MemoHoloHashMap } from '@tnesh-stack/utils';
 
 import { MessengerStore } from './messenger-store.js';
 import {
+	CreatePeerChat,
 	Message,
 	Peer,
 	PeerChat,
@@ -134,7 +135,9 @@ export class PeerChatStore {
 
 				if (previousEventsHashes.length === 0) {
 					const peerChat = apply(
-						entries.value.createPeerChat.signed_content.content,
+						initialPeerChat(
+							entries.value.createPeerChat.signed_content.content,
+						),
 						event.provenance,
 						event.signed_content.content.event,
 					);
@@ -313,16 +316,16 @@ export class PeerChatStore {
 					timestamp: entries.value.createPeerChat.signed_content.timestamp,
 				},
 			},
-			...Object.values(entries.value.events).map(e => ({
-				...e,
-				signed_content: {
-					content: {
-						type: 'PeerChatEvent' as const,
-						...e.signed_content.content,
-					},
-					timestamp: e.signed_content.timestamp,
-				},
-			})),
+			// ...Object.values(entries.value.events).map(e => ({
+			// 	...e,
+			// 	signed_content: {
+			// 		content: {
+			// 			type: 'PeerChatEvent' as const,
+			// 			...e.signed_content.content,
+			// 		},
+			// 		timestamp: e.signed_content.timestamp,
+			// 	},
+			// })),
 		];
 
 		const lastActivity = allActivity.sort(
@@ -435,6 +438,19 @@ function merge(peerChat1: PeerChat, peerChat2: PeerChat): PeerChat {
 		peer_2: {
 			agents: agents2,
 			profile: profile2,
+		},
+	};
+}
+
+function initialPeerChat(createPeerChat: CreatePeerChat): PeerChat {
+	return {
+		peer_1: {
+			agents: createPeerChat.peer_1.agents,
+			profile: createPeerChat.peer_1.profile,
+		},
+		peer_2: {
+			agents: createPeerChat.peer_2.agents,
+			profile: createPeerChat.peer_2.profile,
 		},
 	};
 }
