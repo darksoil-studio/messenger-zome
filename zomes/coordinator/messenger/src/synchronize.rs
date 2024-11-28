@@ -1,13 +1,8 @@
 use hdk::prelude::*;
-use messenger_integrity::*;
 
 use crate::{
-    agent_encrypted_message::{
-        commit_my_pending_encrypted_messages, create_encrypted_message, MessengerEncryptedMessage,
-    },
-    linked_devices::query_my_linked_devices,
-    private_messenger_entries::query_private_messenger_entries,
-    MessengerRemoteSignal,
+    agent_encrypted_message::commit_my_pending_encrypted_messages,
+    private_messenger_entries::query_private_messenger_entries, MessengerRemoteSignal,
 };
 
 #[hdk_extern(infallible)]

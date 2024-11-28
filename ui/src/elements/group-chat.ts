@@ -375,7 +375,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		const groupStore = this.store.groupChats.get(this.groupChatHash);
 
 		return joinAsync([
-			groupStore.createGroupChat.get(),
+			groupStore.originalGroupChat.get(),
 			groupStore.currentGroupChat.get(),
 			groupStore.messages.get(),
 			groupStore.events.get(),

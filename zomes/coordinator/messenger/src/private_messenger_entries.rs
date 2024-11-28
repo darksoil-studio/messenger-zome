@@ -53,12 +53,22 @@ pub fn query_private_messenger_entries(
     Ok(entries)
 }
 
-pub fn query_private_messanger_entry(
+pub fn query_private_messenger_entry(
     entry_hash: &EntryHash,
 ) -> ExternResult<Option<PrivateMessengerEntry>> {
     let Some(record) = get(entry_hash.clone(), GetOptions::local())? else {
         return Ok(None);
     };
+
+    let Some(record_entry_type) = record.action().entry_type() else {
+        return Err(wasm_error!("Record has no entry type"));
+    };
+    let private_messenger_entry_type: EntryType =
+        UnitEntryTypes::PrivateMessengerEntry.try_into()?;
+    if private_messenger_entry_type.ne(record_entry_type) {
+        return Err(wasm_error!("EntryType is not PrivateMessengerEntry"));
+    }
+
     let Ok(Some(private_messenger_entry)) = record
         .entry()
         .to_app_option::<PrivateMessengerEntry>()
@@ -119,53 +129,46 @@ pub fn create_relaxed_private_messenger_entry(
     internal_create_private_messenger_entry(content, true)
 }
 
-pub fn post_receive_entry(
-    existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
-    private_messenger_entry: PrivateMessengerEntry,
-) -> ExternResult<()> {
+pub fn post_receive_entry(private_messenger_entry: PrivateMessengerEntry) -> ExternResult<()> {
     match &private_messenger_entry.0.signed_content.content {
         PrivateMessengerEntryContent::PeerMessage(peer_message) => post_receive_peer_chat_entry(
-            existing_entries,
             private_messenger_entry.clone(),
             &peer_message.peer_chat_hash,
             &peer_message.current_peer_chat_events_hashes,
         )?,
         PrivateMessengerEntryContent::ReadPeerMessages(read_peer_messages) => {
             post_receive_peer_chat_entry(
-                existing_entries,
                 private_messenger_entry.clone(),
                 &read_peer_messages.peer_chat_hash,
                 &read_peer_messages.current_peer_chat_events_hashes,
             )?
         }
         PrivateMessengerEntryContent::PeerChatEvent(peer_chat_event) => {
+            let event_hash = hash_entry(&private_messenger_entry)?;
             post_receive_peer_chat_entry(
-                existing_entries,
                 private_messenger_entry.clone(),
                 &peer_chat_event.peer_chat_hash,
-                &peer_chat_event.previous_peer_chat_events_hashes,
+                &vec![event_hash],
             )?
         }
         PrivateMessengerEntryContent::GroupMessage(group_message) => post_receive_group_chat_entry(
-            existing_entries,
             private_messenger_entry.clone(),
             &group_message.group_chat_hash,
             &group_message.current_group_chat_events_hashes,
         )?,
         PrivateMessengerEntryContent::ReadGroupMessages(read_group_messages) => {
             post_receive_group_chat_entry(
-                existing_entries,
                 private_messenger_entry.clone(),
                 &read_group_messages.group_chat_hash,
                 &read_group_messages.current_group_chat_events_hashes,
             )?
         }
         PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) => {
+            let event_hash = hash_entry(&private_messenger_entry)?;
             post_receive_group_chat_entry(
-                existing_entries,
                 private_messenger_entry.clone(),
                 &group_chat_event.group_chat_hash,
-                &group_chat_event.previous_group_chat_events_hashes,
+                &vec![event_hash],
             )?
         }
         _ => {}
@@ -231,7 +234,7 @@ pub fn receive_private_messenger_entry(
             create_relaxed(EntryTypes::PrivateMessengerEntry(
                 private_messenger_entry.clone(),
             ))?;
-            post_receive_entry(&private_messenger_entries, private_messenger_entry)?;
+            post_receive_entry(private_messenger_entry)?;
         }
         ValidateCallbackResult::UnresolvedDependencies(_) => {
             create_relaxed(EntryTypes::AwaitingDepsEntry(
@@ -270,9 +273,10 @@ pub fn receive_private_messenger_entries(
                 create_relaxed(EntryTypes::PrivateMessengerEntry(
                     private_messenger_entry.clone(),
                 ))?;
-                post_receive_entry(&my_private_messenger_entries, private_messenger_entry)?;
+                post_receive_entry(private_messenger_entry)?;
             }
             ValidateCallbackResult::UnresolvedDependencies(_) => {
+                warn!("Unresolved dependencies when receiving an entry: adding it to the awaiting dependencies list");
                 create_relaxed(EntryTypes::AwaitingDepsEntry(
                     private_messenger_entry.clone(),
                 ))?;
@@ -312,9 +316,8 @@ fn group_chat_recipients(provenance: &AgentPubKey, group_chat: &GroupChat) -> Ve
     let members: Vec<AgentPubKey> = group_chat
         .members
         .iter()
-        .filter(|m| !m.removed)
+        .filter(|m| !m.removed && !m.agents.contains(&provenance))
         .map(|m| m.agents.clone())
-        .filter(|agents| !agents.contains(provenance))
         .flatten()
         .collect();
     members
@@ -364,11 +367,17 @@ fn recipients(private_messenger_entry: &PrivateMessengerEntry) -> ExternResult<V
         )),
         PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) => {
             let entry_hash = hash_entry(private_messenger_entry)?;
-            group_chat_recipients_for_hash(
+            let mut recipients = group_chat_recipients_for_hash(
                 &provenance,
                 &group_chat_event.group_chat_hash,
                 &vec![entry_hash],
-            )
+            )?;
+
+            if let GroupEvent::RemoveMember { mut member_agents } = group_chat_event.event.clone() {
+                recipients.append(&mut member_agents);
+            }
+
+            Ok(recipients)
         }
         PrivateMessengerEntryContent::GroupMessage(group_message) => {
             group_chat_recipients_for_hash(
@@ -430,19 +439,29 @@ pub fn send_group_entries_to_new_member(
 pub fn notify_private_messenger_entry_recipients(
     private_messenger_entry: PrivateMessengerEntry,
 ) -> ExternResult<()> {
-    if let PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) =
+    let agents_to_exclude = if let PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) =
         &private_messenger_entry.0.signed_content.content
     {
         if let GroupEvent::AddMember { member_agents } = &group_chat_event.event {
+            let entry_hash = hash_entry(&private_messenger_entry)?;
             send_group_entries_to_new_member(
                 &group_chat_event.group_chat_hash,
-                &group_chat_event.previous_group_chat_events_hashes,
+                &vec![entry_hash],
                 member_agents,
             )?;
+            member_agents.clone()
+        } else {
+            vec![]
         }
-    }
+    } else {
+        vec![]
+    };
 
-    let recipients = recipients(&private_messenger_entry)?;
+    let recipients: Vec<AgentPubKey> = recipients(&private_messenger_entry)?
+        .into_iter()
+        .filter(|a| !agents_to_exclude.contains(a))
+        .collect();
+
     let my_agents = query_my_linked_devices()?;
 
     send_remote_signal(

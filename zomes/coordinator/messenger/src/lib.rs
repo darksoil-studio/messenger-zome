@@ -82,7 +82,7 @@ pub enum MessengerRemoteSignal {
 
 #[hdk_extern]
 pub fn recv_remote_signal(signal: MessengerRemoteSignal) -> ExternResult<()> {
-    // TODO: take into account wether the recipient is blocked
+    // TODO: take into account whether the recipient is blocked
     match signal {
         MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry) => {
             receive_private_messenger_entry(private_messenger_entry)

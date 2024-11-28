@@ -292,7 +292,10 @@ export class GroupChatStore {
 		};
 	});
 
-	createGroupChat = mapCompleted(this.groupChatEntries, e => e.createGroupChat);
+	originalGroupChat = mapCompleted(
+		this.groupChatEntries,
+		e => e.createGroupChat,
+	);
 
 	messages = mapCompleted(this.groupChatEntries, e => e.messages);
 

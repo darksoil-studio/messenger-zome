@@ -34,7 +34,7 @@ pub fn attempt_commit_awaiting_deps_entries() -> ExternResult<()> {
                     create_relaxed(EntryTypes::PrivateMessengerEntry(
                         private_messenger_entry.clone(),
                     ))?;
-                    post_receive_entry(&private_messenger_entries, private_messenger_entry)?;
+                    post_receive_entry(private_messenger_entry)?;
                 }
                 ValidateCallbackResult::UnresolvedDependencies(_) => {
                     continue;

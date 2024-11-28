@@ -7,7 +7,7 @@ use crate::{
     agent_encrypted_message::{create_encrypted_message, MessengerEncryptedMessage},
     private_messenger_entries::{
         create_private_messenger_entry, create_relaxed_private_messenger_entry,
-        query_private_messanger_entry,
+        query_private_messenger_entries, query_private_messenger_entry,
     },
     MessengerRemoteSignal,
 };
@@ -93,7 +93,7 @@ pub fn validate_peer_message(
 }
 
 pub fn query_original_peer_chat(peer_chat_hash: &EntryHash) -> ExternResult<Option<PeerChat>> {
-    let Some(entry) = query_private_messanger_entry(peer_chat_hash)? else {
+    let Some(entry) = query_private_messenger_entry(peer_chat_hash)? else {
         return Ok(None);
     };
 
@@ -110,7 +110,7 @@ pub fn query_original_peer_chat(peer_chat_hash: &EntryHash) -> ExternResult<Opti
 pub fn query_peer_chat_event(
     peer_chat_hash: &EntryHash,
 ) -> ExternResult<Option<(AgentPubKey, PeerChatEvent)>> {
-    let Some(entry) = query_private_messanger_entry(peer_chat_hash)? else {
+    let Some(entry) = query_private_messenger_entry(peer_chat_hash)? else {
         return Ok(None);
     };
 
@@ -147,9 +147,7 @@ pub fn query_current_peer_chat(
         }
 
         let Some((provenance, peer_chat_event)) = query_peer_chat_event(&event_hash)? else {
-            return Err(wasm_error!(
-                "Failed to find PeerChatEvent {peer_chat_event:?}"
-            ));
+            return Err(wasm_error!("Failed to find PeerChatEvent {:?}", event_hash));
         };
 
         let previous_chat = if peer_chat_event.previous_peer_chat_events_hashes.is_empty() {
@@ -258,18 +256,14 @@ pub fn validate_read_peer_messages(
 }
 
 pub fn post_receive_peer_chat_entry(
-    existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
     private_messenger_entry: PrivateMessengerEntry,
     peer_chat_hash: &EntryHash,
     current_peer_chat_events_hashes: &Vec<EntryHash>,
 ) -> ExternResult<()> {
     // If we have linked a device at the same time that a peer sent us a message
     // we need to re-propagate this message to our newly linked device
-    let missed_events = query_missed_peer_chat_events(
-        &existing_entries,
-        &peer_chat_hash,
-        &current_peer_chat_events_hashes,
-    )?;
+    let missed_events =
+        query_missed_peer_chat_events(&peer_chat_hash, &current_peer_chat_events_hashes)?;
 
     for (_event_hash, peer_chat_event) in missed_events {
         let PeerEvent::NewPeerAgent(new_peer_agent) = peer_chat_event.event else {
@@ -290,10 +284,11 @@ pub fn post_receive_peer_chat_entry(
 }
 
 pub fn query_missed_peer_chat_events(
-    existing_entries: &BTreeMap<EntryHashB64, PrivateMessengerEntry>,
     peer_chat_hash: &EntryHash,
     current_peer_chat_events_hashes: &Vec<EntryHash>,
 ) -> ExternResult<BTreeMap<EntryHash, PeerChatEvent>> {
+    let existing_entries = query_private_messenger_entries(())?;
+
     // Filter events for this peer_chat_hash
     let mut peer_chat_events: BTreeMap<EntryHash, PeerChatEvent> = BTreeMap::new();
 
@@ -319,7 +314,8 @@ pub fn query_missed_peer_chat_events(
     while let Some(current_event_hash) = current_event_hashes.pop() {
         let Some(current_event) = peer_chat_events.get(&current_event_hash) else {
             return Err(wasm_error!(
-                "Previous event was not found: {current_event_hash:?}"
+                "Previous peer event was not found: {:?}",
+                current_event_hash
             ));
         };
 

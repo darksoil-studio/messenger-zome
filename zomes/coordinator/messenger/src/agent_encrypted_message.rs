@@ -125,7 +125,7 @@ pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
                 create_relaxed(EntryTypes::PrivateMessengerEntry(
                     private_messenger_entry.clone(),
                 ))?;
-                post_receive_entry(&private_messenger_entries, private_messenger_entry)?;
+                post_receive_entry(private_messenger_entry)?;
                 delete_link_relaxed(link.create_link_hash)?;
             }
             ValidateCallbackResult::Invalid(invalid_reason) => {
