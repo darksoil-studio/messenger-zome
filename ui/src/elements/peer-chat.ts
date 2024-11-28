@@ -15,6 +15,7 @@ import { localized, msg } from '@lit/localize';
 import { SlTextarea } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
+import '@shoelace-style/shoelace/dist/components/tag/tag.js';
 import { hashProperty, notifyError, sharedStyles } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
 import { SignalWatcher, joinAsync, toPromise } from '@tnesh-stack/signals';
@@ -141,6 +142,11 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 						${messageSets.map(messageSet =>
 							this.renderMessageSet(messageSet, myAgentsB64),
 						)}
+						<div class="row" style="justify-content: center">
+							<sl-tag style="margin-top: 12px"
+								>${msg('Beginning of chat history')}
+							</sl-tag>
+						</div>
 					</div>
 				</div>
 			</div>

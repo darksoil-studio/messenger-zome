@@ -5,7 +5,7 @@ import { msg } from '@lit/localize';
 import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
 import '@shoelace-style/shoelace/dist/components/switch/switch.js';
 import SlSwitch from '@shoelace-style/shoelace/dist/components/switch/switch.js';
-import { hashProperty } from '@tnesh-stack/elements';
+import { hashProperty, notifyError } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
 import { SignalWatcher } from '@tnesh-stack/signals';
 import { LitElement, css, html } from 'lit';
@@ -24,46 +24,51 @@ export class GroupSettingsEl extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
+	private async updateGroupSettings(settings: GroupSettings) {
+		try {
+			await this.store.groupChats
+				.get(this.groupChatHash)
+				.updateGroupChatSettings(settings);
+		} catch (e) {
+			console.log(e);
+			notifyError(msg("Error updating the group's settings."));
+		}
+	}
+
 	private renderSettings(iAmAdmin: boolean, settings: GroupSettings) {
 		return html`
 			<div class="column" style="gap: 8px">
 				<sl-switch
 					.disabled=${!iAmAdmin}
-					.value=${settings.only_admins_can_edit_group_info}
+					.checked=${settings.only_admins_can_edit_group_info}
 					@sl-change=${(e: CustomEvent) => {
-						this.store.groupChats
-							.get(this.groupChatHash)
-							.updateGroupChatSettings({
-								...settings,
-								only_admins_can_edit_group_info: (e.target as SlSwitch).checked,
-							});
+						this.updateGroupSettings({
+							...settings,
+							only_admins_can_edit_group_info: (e.target as SlSwitch).checked,
+						});
 					}}
 					>${msg('Only admins can edit group info')}
 				</sl-switch>
 				<sl-switch
 					.disabled=${!iAmAdmin}
-					.value=${settings.only_admins_can_add_members}
+					.checked=${settings.only_admins_can_add_members}
 					@sl-change=${(e: CustomEvent) => {
-						this.store.groupChats
-							.get(this.groupChatHash)
-							.updateGroupChatSettings({
-								...settings,
-								only_admins_can_add_members: (e.target as SlSwitch).checked,
-							});
+						this.updateGroupSettings({
+							...settings,
+							only_admins_can_add_members: (e.target as SlSwitch).checked,
+						});
 					}}
 					>${msg('Only admins can add members')}
 				</sl-switch>
 				<sl-switch
 					.disabled=${!iAmAdmin}
-					.value=${settings.sync_message_history_with_new_members}
+					.checked=${settings.sync_message_history_with_new_members}
 					@sl-change=${(e: CustomEvent) => {
-						this.store.groupChats
-							.get(this.groupChatHash)
-							.updateGroupChatSettings({
-								...settings,
-								sync_message_history_with_new_members: (e.target as SlSwitch)
-									.checked,
-							});
+						this.updateGroupSettings({
+							...settings,
+							sync_message_history_with_new_members: (e.target as SlSwitch)
+								.checked,
+						});
 					}}
 					>${msg('Sync message history with new members')}
 				</sl-switch>

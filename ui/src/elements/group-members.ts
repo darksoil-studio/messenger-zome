@@ -1,21 +1,36 @@
 import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item-skeleton.js';
 import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item.js';
-import { EntryHash } from '@holochain/client';
+import { EntryHash, encodeHashToBase64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
+import {
+	mdiAccountPlus,
+	mdiAccountRemove,
+	mdiAccountStar,
+	mdiMessage,
+} from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
-import { hashProperty } from '@tnesh-stack/elements';
+import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@shoelace-style/shoelace/dist/components/dialog/dialog.js';
+import SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.js';
+import '@shoelace-style/shoelace/dist/components/icon/icon.js';
+import '@shoelace-style/shoelace/dist/components/tag/tag.js';
+import {
+	hashProperty,
+	notifyError,
+	wrapPathInSvg,
+} from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
-import { SignalWatcher } from '@tnesh-stack/signals';
+import { SignalWatcher, toPromise } from '@tnesh-stack/signals';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 import { messengerStoreContext } from '../context';
 import { MessengerStore } from '../messenger-store';
 import { messengerStyles } from '../styles';
-import { GroupMember } from '../types';
+import { GroupChat, GroupMember } from '../types';
 
-@customElement('group-member')
+@customElement('group-members')
 export class GroupMembers extends SignalWatcher(LitElement) {
 	@property(hashProperty('group-chat-hash'))
 	groupChatHash!: EntryHash;
@@ -23,29 +38,168 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
-	private renderMember(member: GroupMember) {
-		if (member.profile) {
-			return html`
-				<div class="row" style="gap: 8px">
-					<sl-avatar
-						.image=${member.profile.avatar_src}
-						.initials=${member.profile.nickname.slice(0, 2)}
-					>
-					</sl-avatar>
-					<span>${member.profile.nickname} </span>
-				</div>
-			`;
-		}
+	private renderMember(imAdmin: boolean, member: GroupMember) {
+		const dialogId = encodeHashToBase64(member.agents[0]);
+		return html`
+			<sl-dialog id="${dialogId}" no-header style="--width: 20rem">
+				<div class="column" style="gap: 12px">
+					<div
+						class="row"
+						style="cursor: pointer; align-items:center; gap: 8px"
+						@click=${async () => {
+							try {
+								const peerChatsForThisPeer = await toPromise(
+									this.store.peerChatsForPeer.get(member.agents[0]),
+								);
 
-		return html`<profile-list-item
-			.agentPubKey=${member.agents[0]}
-		></profile-list-item>`;
+								let peerChatHash: EntryHash;
+								if (peerChatsForThisPeer.length === 0) {
+									peerChatHash = await this.store.client.createPeerChat(
+										member.agents[0],
+									);
+								} else {
+									peerChatHash = peerChatsForThisPeer[0];
+								}
+								this.dispatchEvent(
+									new CustomEvent('peer-chat-selected', {
+										bubbles: true,
+										composed: true,
+										detail: {
+											peerChatHash,
+										},
+									}),
+								);
+								const dialog = this.shadowRoot!.getElementById(
+									dialogId,
+								) as SlDialog;
+								dialog.hide();
+							} catch (e) {
+								console.error(e);
+								notifyError(msg('Error sending direct message.'));
+							}
+						}}
+					>
+						<sl-icon .src=${wrapPathInSvg(mdiMessage)}></sl-icon>
+
+						<span>${msg('Send direct message')}</span>
+					</div>
+					${imAdmin && !member.admin
+						? html`
+								<div
+									class="row"
+									style="cursor: pointer; gap: 8px; align-items:center"
+									@click=${async () => {
+										try {
+											await this.store.groupChats
+												.get(this.groupChatHash)
+												.promoteMemberToAdmin(member.agents);
+										} catch (e) {
+											console.error(e);
+											notifyError(msg('Error making peer an admin.'));
+										}
+									}}
+								>
+									<sl-icon .src=${wrapPathInSvg(mdiAccountStar)}></sl-icon>
+									<span>${msg('Make admin')}</span>
+								</div>
+							`
+						: html``}
+					${imAdmin && member.admin
+						? html`
+								<div
+									class="row"
+									style="cursor: pointer; gap: 8px; align-items:center"
+									@click=${async () => {
+										try {
+											await this.store.groupChats
+												.get(this.groupChatHash)
+												.demoteMemberFromAdmin(member.agents);
+											const dialog = this.shadowRoot!.getElementById(
+												dialogId,
+											) as SlDialog;
+											dialog.hide();
+										} catch (e) {
+											console.error(e);
+											notifyError(msg('Error demoting peer from admin.'));
+										}
+									}}
+								>
+									<sl-icon .src=${wrapPathInSvg(mdiAccountRemove)}></sl-icon>
+									<span>${msg('Remove admin role')}</span>
+								</div>
+							`
+						: html``}
+				</div>
+			</sl-dialog>
+			<div
+				@click=${() => {
+					if (
+						member.agents.find(
+							a =>
+								encodeHashToBase64(a) ===
+								encodeHashToBase64(this.store.client.client.myPubKey),
+						)
+					)
+						return;
+					const dialog = this.shadowRoot!.getElementById(dialogId) as SlDialog;
+					dialog.show();
+				}}
+				class="row"
+				style="cursor: pointer"
+			>
+				${member.profile
+					? html`
+							<div class="row" style="gap: 8px; flex: 1">
+								<sl-avatar
+									.image=${member.profile.avatar_src}
+									.initials=${member.profile.nickname.slice(0, 2)}
+								>
+								</sl-avatar>
+								<span>${member.profile.nickname} </span>
+							</div>
+						`
+					: html`
+							<profile-list-item
+								style="flex: 1"
+								.agentPubKey=${member.agents[0]}
+							></profile-list-item>
+						`}
+				${member.admin ? html`<sl-tag>${msg('Admin')}</sl-tag>` : html``}
+			</div>
+		`;
 	}
 
-	private renderMembers(members: GroupMember[]) {
+	private renderMembers(groupChat: GroupChat) {
+		const imAdmin = groupChat.members.find(m =>
+			m.agents.find(
+				a =>
+					encodeHashToBase64(a) ===
+					encodeHashToBase64(this.store.client.client.myPubKey),
+			),
+		)!.admin;
 		return html`
-			<div class="column" style="gap: 8px">
-				${members.map(member => this.renderMember(member))}
+			<div class="column" style="gap: 12px; flex: 1">
+				${groupChat.members.map(member => this.renderMember(imAdmin, member))}
+				${imAdmin || !groupChat.settings.only_admins_can_add_members
+					? html`
+							<div
+								class="row"
+								style="align-items: center; gap: 8px; margin-top: 8px; cursor: pointer"
+								@click=${() => {
+									this.dispatchEvent(
+										new CustomEvent('add-members-clicked', {
+											bubbles: true,
+											composed: true,
+										}),
+									);
+								}}
+							>
+								<sl-icon slot="prefix" .src=${wrapPathInSvg(mdiAccountPlus)}>
+								</sl-icon>
+								${msg('Add members')}
+							</div>
+						`
+					: html``}
 			</div>
 		`;
 	}
@@ -69,7 +223,7 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 					.error=${groupChat.error}
 				></display-error>`;
 			case 'completed':
-				return this.renderMembers(groupChat.value.members);
+				return this.renderMembers(groupChat.value);
 		}
 	}
 

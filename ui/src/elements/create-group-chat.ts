@@ -11,7 +11,7 @@ import '@shoelace-style/shoelace/dist/components/input/input.js';
 import { notifyError, onSubmit } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/select-avatar.js';
 import { SignalWatcher, toPromise } from '@tnesh-stack/signals';
-import { LitElement, html } from 'lit';
+import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 import { messengerStoreContext } from '../context';
@@ -31,7 +31,9 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 		try {
 			const profileHashes: ActionHash[] = Array.isArray(fields.members)
 				? fields.members
-				: [fields.members];
+				: fields.members
+					? [fields.members]
+					: [];
 			const otherAgents = await Promise.all(
 				profileHashes.map(h =>
 					toPromise(this.profilesStore.agentsForProfile.get(h)),
@@ -62,7 +64,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 			<form
 				class="column"
 				${onSubmit(fields => this.createGroupChat(fields))}
-				style="gap: 24px"
+				style="gap: 24px; flex: 1"
 			>
 				<div class="row" style="gap: 8px; align-items: center">
 					<upload-avatar label="" name="avatar"> </upload-avatar>
@@ -78,6 +80,8 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 				>
 				</search-profiles>
 
+				<div style="flex: 1"></div>
+
 				<sl-button variant="primary" type="submit"
 					>${msg('Create Group Chat')}</sl-button
 				>
@@ -85,5 +89,12 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 		`;
 	}
 
-	static styles = messengerStyles;
+	static styles = [
+		messengerStyles,
+		css`
+			:host {
+				display: flex;
+			}
+		`,
+	];
 }
