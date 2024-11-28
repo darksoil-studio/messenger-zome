@@ -26,12 +26,17 @@ test('messages get to all devices', async () => {
 			},
 		});
 
+		await dhtSync(
+			[alice.player, bob.player, bob2.player],
+			alice.player.cells[0].cell_id[0],
+		);
+
 		let messages = await toPromise(
 			bob.store.peerChats.get(peerChatHash).messages,
 		);
 		assert.equal(Object.keys(messages).length, 0);
 
-		await alice.store.groupChats.get(peerChatHash).sendMessage({
+		await alice.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey!',
 			reply_to: undefined,
 		});
@@ -101,15 +106,25 @@ test('add new device while receiving message is reconciled', async () => {
 			},
 		});
 
+		await dhtSync(
+			[alice.player, bob.player, bob2.player],
+			alice.player.cells[0].cell_id[0],
+		);
+
 		await alice.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey!',
 			reply_to: undefined,
 		});
 
+		await dhtSync(
+			[alice.player, bob.player, bob2.player],
+			alice.player.cells[0].cell_id[0],
+		);
+
 		let messages = await toPromise(
 			bob.store.peerChats.get(peerChatHash).messages,
 		);
-		assert.equal(Object.keys(messages).length, 0);
+		assert.equal(Object.keys(messages).length, 1);
 
 		await alice.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey!',
@@ -150,6 +165,8 @@ test('messages get synchronized even when offline', async () => {
 				profile: undefined,
 			},
 		});
+
+		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
 		let messages = await toPromise(
 			bob.store.peerChats.get(peerChatHash).messages,

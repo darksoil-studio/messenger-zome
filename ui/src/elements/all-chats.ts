@@ -47,7 +47,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 	@consume({ context: profilesStoreContext, subscribe: true })
 	profilesStore!: ProfilesStore;
 
-	renderPeerChat(chat: PeerChatSummary) {
+	private renderPeerChat(chat: PeerChatSummary) {
 		const lastActivityContent = chat.lastActivity.signed_content.content;
 		return html`<div
 			class="row"
@@ -293,10 +293,40 @@ export class AllChats extends SignalWatcher(LitElement) {
 		switch (chats.status) {
 			case 'pending':
 				return html`
-					<sl-skeleton
-						style="height: 32px; width: 32px; --border-radius: 8px"
-						effect="pulse"
-					></sl-skeleton>
+					<div class="column" style="flex: 1">
+						<div class="row" style="gap: 8px">
+							<sl-skeleton
+								style="height: 32px; width: 32px; --border-radius: 8px; align-self: center"
+								effect="pulse"
+							></sl-skeleton>
+							<sl-skeleton
+								style="height: 16px; flex: 1; --border-radius: 8px"
+								effect="pulse"
+							></sl-skeleton>
+						</div>
+						<sl-divider> </sl-divider>
+						<div class="row" style="gap: 8px">
+							<sl-skeleton
+								style="height: 32px; width: 32px; --border-radius: 8px; align-self: center"
+								effect="pulse"
+							></sl-skeleton>
+							<sl-skeleton
+								style="height: 16px; flex: 1; --border-radius: 8px"
+								effect="pulse"
+							></sl-skeleton>
+						</div>
+						<sl-divider> </sl-divider>
+						<div class="row" style="gap: 8px">
+							<sl-skeleton
+								style="height: 32px; width: 32px; --border-radius: 8px; align-self: center"
+								effect="pulse"
+							></sl-skeleton>
+							<sl-skeleton
+								style="height: 16px; flex: 1; --border-radius: 8px"
+								effect="pulse"
+							></sl-skeleton>
+						</div>
+					</div>
 				`;
 			case 'error':
 				return html`<display-error

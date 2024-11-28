@@ -51,7 +51,7 @@ const colorHash = new ColorHash({ lightness: [0.1, 0.2, 0.3, 0.4] });
 @localized()
 @customElement('group-chat')
 export class GroupChatEl extends SignalWatcher(LitElement) {
-	@property(hashProperty('group-hash'))
+	@property(hashProperty('group-chat-hash'))
 	groupChatHash!: EntryHash;
 
 	@consume({ context: messengerStoreContext, subscribe: true })

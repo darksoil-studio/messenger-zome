@@ -1,5 +1,6 @@
 import { encodeHashToBase64 } from '@holochain/client';
 import { dhtSync, pause, runScenario } from '@holochain/tryorama';
+import { toPromise } from '@tnesh-stack/signals';
 import { assert, expect, test } from 'vitest';
 
 import { setup, waitUntil } from '../../setup.js';
@@ -46,14 +47,9 @@ test('only_admins_can_add_members works appropriately', async () => {
 			[alice.player, bob.player, carol.player, dave.player, eric.player],
 			alice.player.cells[0].cell_id[0],
 		);
-		// await waitUntil(
-		// 	async () =>
-		// 		encodeHashToBase64(updateSettingsEventHash) in
-		// 		(await toPromise(bob.store.groupChats.get(groupHash).events)),
-		// 	10_000,
-		// );
 
-		// But not anymore; they shouldn't be able to update group info
+		let events = await toPromise(bob.store.groupChats.get(groupHash).events);
+		assert.ok(events[encodeHashToBase64(updateSettingsEventHash)]);
 
 		await expect(() =>
 			bob.store.groupChats.get(groupHash).addMember([dave.player.agentPubKey]),

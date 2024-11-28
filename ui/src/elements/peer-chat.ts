@@ -263,7 +263,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 	chatInfo() {
 		if (!this.peerChatHash) {
 			return {
-				status: 'pending',
+				status: 'pending' as const,
 			};
 		}
 		const chatInfo = joinAsync([

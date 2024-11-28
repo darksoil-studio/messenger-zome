@@ -25,7 +25,7 @@ pub fn send_peer_chat_typing_indicator(
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SendGroupChatTypingIndicatorInput {
     group_hash: EntryHash,
-    all_members_agents_sets: Vec<Vec<AgentPubKey>>,
+    all_agents: Vec<Vec<AgentPubKey>>,
 }
 #[hdk_extern]
 pub fn send_group_chat_typing_indicator(
@@ -35,11 +35,7 @@ pub fn send_group_chat_typing_indicator(
         MessengerRemoteSignal::GroupChatTypingIndicator {
             group_chat_hash: input.group_hash,
         },
-        input
-            .all_members_agents_sets
-            .into_iter()
-            .flatten()
-            .collect(),
+        input.all_agents.into_iter().flatten().collect(),
     )?;
 
     Ok(())

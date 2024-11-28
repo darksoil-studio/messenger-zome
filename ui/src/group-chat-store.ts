@@ -41,20 +41,30 @@ import {
 
 export class GroupChatStore {
 	typingPeers = new Signal.State<AgentPubKey[]>([]);
+
+	private timeouts: Record<AgentPubKeyB64, any> = {};
+
 	constructor(
 		public messengerStore: MessengerStore,
 		public groupChatHash: EntryHash,
 	) {
 		this.messengerStore.client.onSignal(signal => {
-			let timeout: any;
 			if (signal.type === 'GroupChatTypingIndicator') {
 				if (
 					encodeHashToBase64(signal.group_chat_hash) ===
 					encodeHashToBase64(this.groupChatHash)
 				) {
-					this.typingPeers.set([signal.peer, ...this.typingPeers.get()]);
-					if (timeout) clearTimeout(timeout);
-					timeout = setTimeout(() => {
+					this.typingPeers.set([
+						signal.peer,
+						...this.typingPeers
+							.get()
+							.filter(
+								a => encodeHashToBase64(a) !== encodeHashToBase64(signal.peer),
+							),
+					]);
+					if (this.timeouts[encodeHashToBase64(signal.peer)])
+						clearTimeout(this.timeouts[encodeHashToBase64(signal.peer)]);
+					this.timeouts[encodeHashToBase64(signal.peer)] = setTimeout(() => {
 						this.typingPeers.set(
 							this.typingPeers
 								.get()

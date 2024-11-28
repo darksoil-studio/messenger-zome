@@ -183,9 +183,9 @@ impl GroupChat {
     pub fn merge(group_1: GroupChat, group_2: GroupChat) -> GroupChat {
         let settings = GroupSettings {
             only_admins_can_edit_group_info: group_1.settings.only_admins_can_edit_group_info
-                && group_2.settings.only_admins_can_edit_group_info,
+                || group_2.settings.only_admins_can_edit_group_info,
             only_admins_can_add_members: group_1.settings.only_admins_can_add_members
-                && group_2.settings.only_admins_can_add_members,
+                || group_2.settings.only_admins_can_add_members,
             sync_message_history_with_new_members: group_1
                 .settings
                 .sync_message_history_with_new_members

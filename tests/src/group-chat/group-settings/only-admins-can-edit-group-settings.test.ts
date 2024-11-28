@@ -36,22 +36,25 @@ test('only admins can edit group settings', async () => {
 			bob.store.groupChats.get(groupHash).updateGroupChatSettings(settings),
 		).rejects.toThrow();
 
-		// Non-admins can update the group info here because of the only_admins_can_edit_group_info setting
-
-		const updateSettingsEventHash = await alice.store.groupChats
-			.get(groupHash)
-			.updateGroupChatSettings({
-				only_admins_can_add_members: false,
-				only_admins_can_edit_group_info: true,
-				sync_message_history_with_new_members: false,
-			});
+		await alice.store.groupChats.get(groupHash).updateGroupChatSettings({
+			only_admins_can_add_members: true,
+			only_admins_can_edit_group_info: true,
+			sync_message_history_with_new_members: true,
+		});
 
 		await dhtSync(
 			[alice.player, bob.player, carol.player],
 			alice.player.cells[0].cell_id[0],
 		);
 
-		await bob.store.groupChats
+		let groupChat = await toPromise(
+			bob.store.groupChats.get(groupHash).currentGroupChat,
+		);
+		assert.ok(groupChat.settings.only_admins_can_add_members);
+		assert.ok(groupChat.settings.only_admins_can_edit_group_info);
+		assert.ok(groupChat.settings.sync_message_history_with_new_members);
+
+		await alice.store.groupChats
 			.get(groupHash)
 			.addMember([carol.player.agentPubKey]);
 

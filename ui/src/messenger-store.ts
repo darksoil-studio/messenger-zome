@@ -275,21 +275,25 @@ export class MessengerStore {
 	allChats = new AsyncComputed<Array<ChatSummary>>(() => {
 		const entries = this.privateMessengerEntries.get();
 		if (entries.status !== 'completed') return entries;
+		console.log('hey1');
 
-		const peerChatsHashes = Object.keys(entries);
+		const peerChatsHashes = Object.keys(entries.value.peerChats);
 		const peerChatsSummaries = joinAsync(
 			peerChatsHashes.map(peerChatHash =>
 				this.peerChats.get(decodeHashFromBase64(peerChatHash)).summary.get(),
 			),
 		);
-		const groupChatsHashes = Object.keys(entries);
+		console.log('hey2');
+		const groupChatsHashes = Object.keys(entries.value.groupChats);
 		const groupChatsSummaries = joinAsync(
 			groupChatsHashes.map(groupChatHash =>
 				this.groupChats.get(decodeHashFromBase64(groupChatHash)).summary.get(),
 			),
 		);
+		console.log('hey3');
 		if (peerChatsSummaries.status !== 'completed') return peerChatsSummaries;
 		if (groupChatsSummaries.status !== 'completed') return groupChatsSummaries;
+		console.log('hey4');
 
 		const chats: ChatSummary[] = [
 			...peerChatsSummaries.value.map(s => ({
@@ -301,6 +305,7 @@ export class MessengerStore {
 				...s,
 			})),
 		];
+		console.log('hey5');
 		const sortedChats = chats.sort(
 			(c1, c2) =>
 				c2.lastActivity.signed_content.timestamp -

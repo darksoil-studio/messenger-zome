@@ -51,7 +51,9 @@
 			import { LitElement, css, html } from 'lit';
 
 			import '../src/elements/all-chats.ts';
+			import '../src/elements/create-group-chat.ts';
 			import '../src/elements/group-chat.ts';
+			import '../src/elements/group-details.ts';
 			import '../src/elements/messenger-context.ts';
 			import '../src/elements/peer-chat.ts';
 			import { MessengerClient, MessengerStore } from '../src/index.ts';
@@ -112,7 +114,8 @@
 					}
 					return html`
 						<div class="column">
-							<div class="row">
+							<div class="row" style="gap: 24px">
+								<create-group-chat></create-group-chat>
 								<div class="column" style="width: 300px; height: 400px">
 									<h2>All Chats</h2>
 									<all-chats
@@ -130,13 +133,17 @@
 									>
 									</all-chats>
 								</div>
-								<div class="column" style="width: 300px; height: 400px">
+								<div class="column" style="width: 300px; height: 800px">
 									<h2>Chat</h2>
 									${this.groupChatHash
 										? html`<group-chat
-												.groupChatHash=${this.groupChatHash}
-												style="flex:1"
-											></group-chat>`
+													.groupChatHash=${this.groupChatHash}
+													style="flex:1"
+												></group-chat
+												><group-details
+													.groupChatHash=${this.groupChatHash}
+													style="flex:1"
+												></group-details>`
 										: html``}
 									${this.peerChatHash
 										? html`<peer-chat
@@ -145,37 +152,6 @@
 											></peer-chat>`
 										: html``}
 								</div>
-							</div>
-							<div
-								style="display: flex;flex-direction:column; margin-top: 40px"
-							>
-								<div style="display: flex">
-									<upload-files id="group-avatar"> </upload-files>
-									<sl-input
-										id="group-name-input"
-										label="Name"
-										value="MyGroup"
-									></sl-input>
-								</div>
-								<sl-button
-									@click=${async () => {
-										const input =
-											this.shadowRoot.getElementById('group-name-input');
-										const uploadFiles =
-											this.shadowRoot.getElementById('group-avatar');
-										console.log(uploadFiles.value[0]);
-										if (!this.peer) return;
-										await this.messengerStore.client.createGroupChat({
-											admins: [this.messengerStore.client.client.myPubKey],
-											members: [this.peer],
-											info: {
-												name: input.value,
-												avatar_hash: uploadFiles.value[0],
-											},
-										});
-									}}
-									>Create Group</sl-button
-								>
 							</div>
 							<sl-button
 								@click=${() => {
