@@ -31,8 +31,8 @@ import { ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { messengerStoreContext } from '../context.js';
+import { EventSet, orderInEventSets } from '../event-set.js';
 import { GroupChatStore } from '../group-chat-store.js';
-import { MessageSet, orderInMessageSets } from '../message-set.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
 import {
@@ -108,8 +108,14 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	private renderChat(
 		createGroupChat: Signed<CreateGroupChat>,
 		currentGroup: GroupChat,
-		messages: Record<EntryHashB64, Signed<GroupMessage>>,
-		events: Record<EntryHashB64, Signed<GroupChatEvent>>,
+		messages: Record<
+			EntryHashB64,
+			Signed<{ type: 'GroupMessage' } & GroupMessage>
+		>,
+		events: Record<
+			EntryHashB64,
+			Signed<{ type: 'GroupChatEvent' } & GroupChatEvent>
+		>,
 		myReadMessages: EntryHashB64[],
 	) {
 		const me = currentGroup.members.find(
@@ -144,10 +150,10 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			})
 			.reduce((acc, next) => ({ ...acc, [next[0]]: next[1] }), {});
 
-		const messageSets = orderInMessageSets<GroupMessage | GroupChatEvent>(
-			{ ...messages, ...events },
-			[myAgents, ...theirAgentSets],
-		);
+		const eventsSetsInDay = orderInEventSets<
+			| ({ type: 'GroupChatEvent' } & GroupChatEvent)
+			| ({ type: 'GroupMessage' } & GroupMessage)
+		>({ ...messages, ...relevantEvents }, [myAgents, ...theirAgentSets]);
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
 
 		const typingPeers = this.store.groupChats
@@ -163,17 +169,28 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
 						${ref(el => {
 							if (!el) return;
-							const theirMessageSets = messageSets.filter(
-								set =>
-									!myAgentsB64.includes(
-										encodeHashToBase64(set.messages[0][1].provenance),
+							const theirEventsSets = (
+								[] as EventSet<
+									| ({ type: 'GroupMessage' } & GroupMessage)
+									| ({ type: 'GroupChatEvent' } & GroupChatEvent)
+								>[]
+							)
+								.concat(
+									...eventsSetsInDay.map(
+										eventSetsInDay => eventSetsInDay.eventsSets,
 									),
-							);
+								)
+								.filter(
+									eventSet =>
+										!myAgentsB64.includes(
+											encodeHashToBase64(eventSet[0][1].provenance),
+										),
+								);
 
 							const unreadMessages: EntryHash[] = [];
 
-							for (const messageSet of theirMessageSets) {
-								for (const [messageHash, _] of messageSet.messages) {
+							for (const eventSet of theirEventsSets) {
+								for (const [messageHash, _] of eventSet) {
 									if (!myReadMessages.includes(messageHash)) {
 										unreadMessages.push(decodeHashFromBase64(messageHash));
 									}
@@ -189,21 +206,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					>
 						<div style="margin-bottom: 4px"></div>
 						${this.renderTypingIndicators(typingPeers)}
-						${messageSets.map(messageSet =>
-							(messageSet.messages[0][1].signed_content.content as any).type ===
-							'GroupMessage'
-								? myAgentsB64.includes(
-										encodeHashToBase64(messageSet.messages[0][1].provenance),
-									)
-									? this.renderMessageSetFromMe(
-											messageSet as MessageSet<GroupMessage>,
-										)
-									: this.renderMessageSetToMe(
-											messageSet as MessageSet<GroupMessage>,
-										)
-								: this.renderEvent(
-										messageSet.messages[0][1] as Signed<GroupChatEvent>,
-									),
+						${eventsSetsInDay.map(eventSetsInDay =>
+							this.renderEventsSetsInDay(
+								myAgentsB64,
+								eventSetsInDay.day,
+								eventSetsInDay.eventsSets,
+							),
 						)}
 						<sl-tag style="align-self: center; margin: 8px">
 							${msg(str`Group was created by`)}&nbsp;
@@ -227,6 +235,40 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						</message-input>
 					`}
 		</div> `;
+	}
+
+	private renderEventsSetsInDay(
+		myAgentsB64: Array<AgentPubKeyB64>,
+		day: Date,
+		eventsSets: Array<
+			EventSet<
+				| ({ type: 'GroupChatEvent' } & GroupChatEvent)
+				| ({ type: 'GroupMessage' } & GroupMessage)
+			>
+		>,
+	) {
+		return html`
+			<div class="column" style="gap: 8px; flex-direction: column-reverse">
+				${eventsSets.map(eventSet =>
+					eventSet[0][1].signed_content.content.type === 'GroupMessage'
+						? myAgentsB64.includes(
+								encodeHashToBase64(eventSet[0][1].provenance),
+							)
+							? this.renderMessageSetFromMe(eventSet as EventSet<GroupMessage>)
+							: this.renderMessageSetToMe(eventSet as EventSet<GroupMessage>)
+						: this.renderEvent(eventSet[0][1] as Signed<GroupChatEvent>),
+				)}
+				<div style="align-self: center">
+					<sl-tag>
+						<sl-format-date
+							month="long"
+							day="numeric"
+							.date=${day}
+						></sl-format-date>
+					</sl-tag>
+				</div>
+			</div>
+		`;
 	}
 
 	private renderTypingIndicators(typingPeers: Array<AgentPubKey>) {
@@ -273,15 +315,15 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		`;
 	}
 
-	private renderMessageSetFromMe(messageSet: MessageSet<GroupMessage>) {
-		const lastMessage = messageSet.messages[0][1];
+	private renderMessageSetFromMe(messageSet: EventSet<GroupMessage>) {
+		const lastMessage = messageSet[0][1];
 		const timestamp = lastMessage.signed_content.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
 		return html`
 			<div class="column from-me" style="flex-direction: column-reverse">
-				${messageSet.messages.map(
+				${messageSet.map(
 					([messageHash, message], i) => html`
 						<div
 							class="message row"
@@ -358,8 +400,8 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		`;
 	}
 
-	private renderMessageSetToMe(messageSet: MessageSet<GroupMessage>) {
-		const lastMessage = messageSet.messages[0][1];
+	private renderMessageSetToMe(messageSet: EventSet<GroupMessage>) {
+		const lastMessage = messageSet[0][1];
 		const timestamp = lastMessage.signed_content.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
@@ -371,12 +413,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				class="column"
 				style="flex-direction: column-reverse; align-items: start"
 			>
-				${messageSet.messages.map(
+				${messageSet.map(
 					([messageHash, message], i) => html`
 
 						<div class="colum message" style="gap:8px">
 							${
-								i === messageSet.messages.length - 1
+								i === messageSet.length - 1
 									? this.renderAgentNickname(message.provenance)
 									: html``
 							}

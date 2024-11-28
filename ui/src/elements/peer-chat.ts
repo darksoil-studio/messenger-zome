@@ -25,7 +25,7 @@ import { classMap } from 'lit/directives/class-map.js';
 import { ref } from 'lit/directives/ref.js';
 
 import { messengerStoreContext } from '../context.js';
-import { MessageSet, orderInMessageSets } from '../message-set.js';
+import { EventSet, orderInEventSets } from '../event-set.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
 import {
@@ -99,7 +99,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 			? peerChat.peer_2.agents
 			: peerChat.peer_1.agents;
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
-		const messageSets = orderInMessageSets(messages, [
+		const messageSetsInDays = orderInEventSets(messages, [
 			peerChat.peer_1.agents,
 			peerChat.peer_2.agents,
 		]);
@@ -110,17 +110,19 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 					<div
 						${ref(el => {
 							if (!el) return;
-							const theirMessageSets = messageSets.filter(
-								set =>
-									!myAgentsB64.includes(
-										encodeHashToBase64(set.messages[0][1].provenance),
-									),
-							);
+							const theirMessageSets = ([] as EventSet<PeerMessage>[])
+								.concat(...messageSetsInDays.map(esid => esid.eventsSets))
+								.filter(
+									set =>
+										!myAgentsB64.includes(
+											encodeHashToBase64(set[0][1].provenance),
+										),
+								);
 
 							const unreadMessages: EntryHash[] = [];
 
 							for (const messageSet of theirMessageSets) {
-								for (const [messageHash, _] of messageSet.messages) {
+								for (const [messageHash, _] of messageSet) {
 									if (!myReadMessages.includes(messageHash)) {
 										unreadMessages.push(decodeHashFromBase64(messageHash));
 									}
@@ -139,8 +141,12 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 					>
 						<div style="margin-bottom: 4px"></div>
 						${peerIsTyping ? this.renderTypingIndicator() : html``}
-						${messageSets.map(messageSet =>
-							this.renderMessageSet(messageSet, myAgentsB64),
+						${messageSetsInDays.map(messageSetInDay =>
+							this.renderEventsSetsInDay(
+								myAgentsB64,
+								messageSetInDay.day,
+								messageSetInDay.eventsSets,
+							),
 						)}
 						<div class="row" style="justify-content: center">
 							<sl-tag style="margin-top: 12px"
@@ -162,11 +168,33 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 		</div> `;
 	}
 
+	private renderEventsSetsInDay(
+		myAgentsB64: Array<AgentPubKeyB64>,
+		day: Date,
+		eventsSets: Array<EventSet<PeerMessage>>,
+	) {
+		return html`
+			<div class="column" style="gap: 8px; flex-direction: column-reverse">
+				${eventsSets.map(eventSet =>
+					this.renderMessageSet(eventSet, myAgentsB64),
+				)}
+				<div style="align-self: center">
+					<sl-tag>
+						<sl-format-date
+							month="long"
+							day="numeric"
+							.date=${day}
+						></sl-format-date>
+					</sl-tag>
+				</div>
+			</div>
+		`;
+	}
 	private renderMessageSet(
-		messageSet: MessageSet<PeerMessage>,
+		messageSet: EventSet<PeerMessage>,
 		myAgentsB64: AgentPubKeyB64[],
 	) {
-		const lastMessage = messageSet.messages[0];
+		const lastMessage = messageSet[0];
 		const timestamp = lastMessage[1].signed_content.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
@@ -182,7 +210,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 				})}
 				style="align-items: start; flex-direction: column-reverse"
 			>
-				${messageSet.messages.map(
+				${messageSet.map(
 					([messageHash, message], i) => html`
 						<div
 							class="message row"

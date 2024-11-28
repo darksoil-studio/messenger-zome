@@ -60,8 +60,14 @@ export interface MessengerEntries {
 		EntryHashB64,
 		{
 			createGroupChat: Signed<CreateGroupChat>;
-			events: Record<EntryHashB64, Signed<GroupChatEvent>>;
-			messages: Record<EntryHashB64, Signed<GroupMessage>>;
+			events: Record<
+				EntryHashB64,
+				Signed<{ type: 'GroupChatEvent' } & GroupChatEvent>
+			>;
+			messages: Record<
+				EntryHashB64,
+				Signed<{ type: 'GroupMessage' } & GroupMessage>
+			>;
 			readMessages: Record<EntryHashB64, Signed<ReadGroupMessages>>;
 		}
 	>;
