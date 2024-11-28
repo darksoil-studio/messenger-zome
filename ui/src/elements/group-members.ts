@@ -180,7 +180,8 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 		return html`
 			<div class="column" style="gap: 12px; flex: 1">
 				${groupChat.members.map(member => this.renderMember(imAdmin, member))}
-				${imAdmin || !groupChat.settings.only_admins_can_add_members
+				${!groupChat.deleted &&
+				(imAdmin || !groupChat.settings.only_admins_can_add_members)
 					? html`
 							<div
 								class="row"

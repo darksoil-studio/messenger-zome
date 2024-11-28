@@ -38,6 +38,7 @@ import { messengerStyles } from '../styles.js';
 import {
 	CreateGroupChat,
 	GroupChat,
+	GroupChatEntry,
 	GroupChatEvent,
 	GroupMessage,
 	Message,
@@ -59,6 +60,50 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 	@consume({ context: profilesStoreContext, subscribe: true })
 	profilesStore!: ProfilesStore;
+
+	private renderEvent(event: Signed<GroupChatEvent>) {
+		switch (event.signed_content.content.event.type) {
+			case 'UpdateGroupInfo':
+				return html`
+					<sl-tag style="align-self: center; margin: 8px">
+						${this.renderAgentNickname(event.provenance)}&nbsp;
+						${msg(str`updated the group's info.`)}
+					</sl-tag>
+				`;
+			case 'AddMember':
+				return html`
+					<sl-tag style="align-self: center; margin: 8px">
+						${this.renderAgentNickname(
+							event.signed_content.content.event.member_agents[0],
+						)}&nbsp;
+						${msg(str`was added to the group.`)}
+					</sl-tag>
+				`;
+			case 'RemoveMember':
+				return html`
+					<sl-tag style="align-self: center; margin: 8px">
+						${this.renderAgentNickname(event.provenance)}&nbsp;
+						${msg('removed')}&nbsp;${this.renderAgentNickname(
+							event.signed_content.content.event.member_agents[0],
+						)}&nbsp;${msg('from the group.')}
+					</sl-tag>
+				`;
+			case 'LeaveGroup':
+				return html`
+					<sl-tag style="align-self: center; margin: 8px">
+						${this.renderAgentNickname(event.provenance)}&nbsp;
+						${msg(str`left the group.`)}
+					</sl-tag>
+				`;
+			case 'DeleteGroup':
+				return html`
+					<sl-tag style="align-self: center; margin: 8px">
+						${this.renderAgentNickname(event.provenance)}&nbsp;
+						${msg(str`deleted the group.`)}
+					</sl-tag>
+				`;
+		}
+	}
 
 	private renderChat(
 		createGroupChat: Signed<CreateGroupChat>,
@@ -86,10 +131,23 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		const myAgents = me.agents;
 		const theirAgentSets = otherMembers.map(m => m.agents);
 
-		const messageSets = orderInMessageSets(messages, [
-			myAgents,
-			...theirAgentSets,
-		]);
+		const relevantEvents = Object.entries(events)
+			.filter(e => {
+				const type = e[1].signed_content.content.event.type;
+				return (
+					type === 'UpdateGroupInfo' ||
+					type === 'AddMember' ||
+					type === 'RemoveMember' ||
+					type === 'LeaveGroup' ||
+					type === 'DeleteGroup'
+				);
+			})
+			.reduce((acc, next) => ({ ...acc, [next[0]]: next[1] }), {});
+
+		const messageSets = orderInMessageSets<GroupMessage | GroupChatEvent>(
+			{ ...messages, ...events },
+			[myAgents, ...theirAgentSets],
+		);
 		const myAgentsB64 = myAgents.map(encodeHashToBase64);
 
 		const typingPeers = this.store.groupChats
@@ -132,11 +190,20 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						<div style="margin-bottom: 4px"></div>
 						${this.renderTypingIndicators(typingPeers)}
 						${messageSets.map(messageSet =>
-							myAgentsB64.includes(
-								encodeHashToBase64(messageSet.messages[0][1].provenance),
-							)
-								? this.renderMessageSetFromMe(messageSet)
-								: this.renderMessageSetToMe(messageSet),
+							(messageSet.messages[0][1].signed_content.content as any).type ===
+							'GroupMessage'
+								? myAgentsB64.includes(
+										encodeHashToBase64(messageSet.messages[0][1].provenance),
+									)
+									? this.renderMessageSetFromMe(
+											messageSet as MessageSet<GroupMessage>,
+										)
+									: this.renderMessageSetToMe(
+											messageSet as MessageSet<GroupMessage>,
+										)
+								: this.renderEvent(
+										messageSet.messages[0][1] as Signed<GroupChatEvent>,
+									),
 						)}
 						<sl-tag style="align-self: center; margin: 8px">
 							${msg(str`Group was created by`)}&nbsp;
@@ -145,16 +212,20 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					</div>
 				</div>
 			</div>
-			<message-input
-				@input=${() =>
-					this.store.client.sendGroupChatTypingIndicator(
-						this.groupChatHash,
-						theirAgentSets,
-					)}
-				@send-message=${(e: CustomEvent) =>
-					this.sendMessage(e.detail.message as Message)}
-			>
-			</message-input>
+			${currentGroup.deleted
+				? html``
+				: html`
+						<message-input
+							@input=${() =>
+								this.store.client.sendGroupChatTypingIndicator(
+									this.groupChatHash,
+									theirAgentSets,
+								)}
+							@send-message=${(e: CustomEvent) =>
+								this.sendMessage(e.detail.message as Message)}
+						>
+						</message-input>
+					`}
 		</div> `;
 	}
 
@@ -428,6 +499,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			:host {
 				display: flex;
 				font-size: 14px;
+			}
+			sl-tag {
+				max-width: 250px;
 			}
 		`,
 	];

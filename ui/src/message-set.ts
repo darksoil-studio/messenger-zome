@@ -51,8 +51,11 @@ export function orderInMessageSets<T>(
 				lastMessage.signed_content.timestamp -
 					message.signed_content.timestamp <
 				MESSAGE_SET_TIMEFRAME_INTERVAL;
+			const sameType =
+				(message.signed_content.content as any).type &&
+				(lastMessage.signed_content.content as any).type;
 
-			if (sameProvenance && sameTimeframe) {
+			if (sameProvenance && sameTimeframe && sameType) {
 				lastMessageSet.messages.push([messageHash, message]);
 			} else {
 				messageSets.push({

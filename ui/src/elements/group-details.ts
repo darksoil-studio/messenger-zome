@@ -8,7 +8,13 @@ import { SearchProfiles } from '@darksoil-studio/profiles-zome/dist/elements/sea
 import { ActionHash, EntryHash, encodeHashToBase64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
-import { mdiArrowLeft, mdiInformationOutline, mdiPencil } from '@mdi/js';
+import {
+	mdiArrowLeft,
+	mdiDelete,
+	mdiInformationOutline,
+	mdiPencil,
+} from '@mdi/js';
+import { SlDialog } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/details/details.js';
@@ -51,8 +57,9 @@ export class GroupDetails extends SignalWatcher(LitElement) {
 
 	async updateGroupInfo(fields: any) {
 		try {
+			console.log(fields);
 			await this.store.groupChats.get(this.groupChatHash).updateGroupChatInfo({
-				avatar_hash: fields.avatar,
+				avatar_hash: fields.avatar === 'null' ? undefined : fields.avatar,
 				name: fields.name,
 				description: fields.description,
 			});
@@ -201,11 +208,15 @@ export class GroupDetails extends SignalWatcher(LitElement) {
 					></group-members>
 				</sl-card>
 
-				<sl-details .summary=${msg('Settings')}>
-					<group-settings .groupChatHash=${this.groupChatHash}></group-settings>
-				</sl-details>
-
-				${imAdmin || !details.settings.only_admins_can_edit_group_info
+				${!details.deleted
+					? html` <sl-details .summary=${msg('Settings')}>
+							<group-settings
+								.groupChatHash=${this.groupChatHash}
+							></group-settings>
+						</sl-details>`
+					: html``}
+				${!details.deleted &&
+				(imAdmin || !details.settings.only_admins_can_edit_group_info)
 					? html`
 							<sl-button
 								@click=${() => {
@@ -217,6 +228,49 @@ export class GroupDetails extends SignalWatcher(LitElement) {
 								<sl-icon .src=${wrapPathInSvg(mdiPencil)}> </sl-icon>
 							</sl-button>
 						`
+					: html``}
+				${imAdmin && !details.deleted
+					? html`<sl-dialog
+								id="delete-group-dialog"
+								.label=${msg('Delete Group')}
+							>
+								<span
+									>${msg('Are you sure you want to delete this group?')}
+								</span>
+								<sl-button
+									slot="footer"
+									@click=${async () => {
+										try {
+											await this.store.groupChats
+												.get(this.groupChatHash)
+												.deleteGroupChat();
+											const dialog = this.shadowRoot!.getElementById(
+												'delete-group-dialog',
+											) as SlDialog;
+											dialog.hide();
+										} catch (e) {
+											console.log(e);
+											notifyError(msg('Error deleting the group.'));
+										}
+									}}
+									variant="danger"
+									>${msg('Delete Group')}
+								</sl-button>
+							</sl-dialog>
+							<sl-button
+								variant="danger"
+								outline
+								@click=${async () => {
+									const dialog = this.shadowRoot!.getElementById(
+										'delete-group-dialog',
+									) as SlDialog;
+									dialog.show();
+								}}
+							>
+								<sl-icon slot="prefix" .src=${wrapPathInSvg(mdiDelete)}>
+								</sl-icon>
+								${msg('Delete group')}
+							</sl-button> `
 					: html``}
 			</div>
 		`;
