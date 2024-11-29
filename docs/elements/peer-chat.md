@@ -70,10 +70,12 @@ onMounted(async () => {
   if (!customElements.get('messenger-context')) await import('../../ui/src/elements/messenger-context.ts');
   if (!customElements.get('peer-chat')) await import('../../ui/src/elements/peer-chat.ts');
 
-  const mock = new MessengerZomeMock();
+  const profiles = await demoProfiles();
+  const keys = Array.from(profiles.keys())
+  const mock = new MessengerZomeMock(keys[0]);
   const client = new MessengerClient(mock, "messenger_test");
 
-  const groupHash = await client.createPeerChat(await fakeAgentPubKey());
+  const peerChatHash = await client.createPeerChat(keys[1]);
   const profiles = await demoProfiles();
 
   const store = new MessengerStore(client);
@@ -83,7 +85,7 @@ onMounted(async () => {
     <messenger-context .store=${store}>
       <api-demo src="custom-elements.json" only="peer-chat" exclude-knobs="store">
         <template data-element="peer-chat" data-target="host">
-          <peer-chat style="height: 400px; width: 350px" peer-chat-hash="${unsafeStatic(encodeHashToBase64(groupHash))}"></peer-chat>
+          <peer-chat style="height: 400px; width: 350px" peer-chat-hash="${unsafeStatic(encodeHashToBase64(peerChatHash))}"></peer-chat>
         </template>
       </api-demo>
     </messenger-context>

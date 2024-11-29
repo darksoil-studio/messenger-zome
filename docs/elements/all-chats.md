@@ -1,46 +1,24 @@
-# `<group-chat>`
+# `<all-chats>`
 
 ## Usage
 
 0. If you haven't already, [go through the setup for the module](/documentation/setup).
 
-1. Import the `<group-chat>` element somewhere in the javascript side of your web-app like this:
+1. Import the `<all-chats>` element somewhere in the javascript side of your web-app like this:
 
 ```js
-import '@darksoil-studio/messenger-zome/dist/elements/group-chat.js'
+import '@darksoil-studio/messenger-zome/dist/elements/all-chats.js'
 ```
 
 2. Use it in the html side of your web-app like this:
 
-::: code-group
-```html [Lit]
-<group-chat .groupChatHash=${groupChatHash}>
-</group-chat>
+```html
+<all-chats>
+</all-chats>
 ```
-
-```html [React]
-<group-chat groupChatHash={groupChatHash}>
-</group-chat>
-```
-
-```html [Angular]
-<group-chat [groupChatHash]="groupChatHash">
-</group-chat>
-```
-
-```html [Vue]
-<group-chat :groupChatHash="groupChatHash">
-</group-chat>
-```
-
-```html [Svelte]
-<group-chat groupChatHash={groupChatHash}>
-</group-chat>
-```
-:::
 
 > [!WARNING]
-> Like all the elements in this module, `<group-chat>` needs to be placed inside an initialized `<messenger-context>`.
+> Like all the elements in this module, `<all-chats>` needs to be placed inside an initialized `<messenger-context>`.
 
 ## Demo
 
@@ -68,13 +46,14 @@ onMounted(async () => {
   await import('@api-viewer/docs/lib/api-docs.js');
   await import('@api-viewer/demo/lib/api-demo.js');
   if (!customElements.get('messenger-context')) await import('../../ui/src/elements/messenger-context.ts');
-  if (!customElements.get('group-chat')) await import('../../ui/src/elements/group-chat.ts');
+  if (!customElements.get('all-chats')) await import('../../ui/src/elements/all-chats.ts');
 
   const profiles = await demoProfiles();
   const keys = Array.from(profiles.keys())
   const mock = new MessengerZomeMock(keys[0]);
   const client = new MessengerClient(mock, "messenger_test");
 
+  const peerChatHash = await client.createPeerChat(keys[1]);
   const groupHash = await client.createGroupChat([keys[1]],
     {
       name: 'Demo group',
@@ -87,15 +66,16 @@ onMounted(async () => {
       sync_message_history_with_new_members: false,
     }
   );
+  const groupHash = await client.createPeerChat(await fakeAgentPubKey());
 
   const store = new MessengerStore(client);
 
   render(html`
   <profiles-context .store=${new ProfilesStore(new ProfilesClient(new ProfilesZomeMock(profiles), 'messenger_test'))}>
     <messenger-context .store=${store}>
-      <api-demo src="custom-elements.json" only="group-chat" exclude-knobs="store">
-        <template data-element="group-chat" data-target="host">
-          <group-chat style="height: 400px; width: 350px" group-chat-hash="${unsafeStatic(encodeHashToBase64(groupHash))}"></group-chat>
+      <api-demo src="custom-elements.json" only="all-chats" exclude-knobs="store">
+        <template data-element="all-chats" data-target="host">
+          <all-chats style="height: 400px; width: 350px"></all-chats>
         </template>
       </api-demo>
     </messenger-context>
@@ -106,7 +86,7 @@ onMounted(async () => {
 
 ## API Reference
 
-`<group-chat>` is a [custom element](https://web.dev/articles/custom-elements-v1), which means that it can be used in any web app or website. Here is the reference for its API:
+`<all-chats>` is a [custom element](https://web.dev/articles/custom-elements-v1), which means that it can be used in any web app or website. Here is the reference for its API:
 
-<api-docs src="custom-elements.json" only="group-chat">
+<api-docs src="custom-elements.json" only="all-chats">
 </api-docs>
