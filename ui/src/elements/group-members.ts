@@ -7,6 +7,7 @@ import {
 	mdiAccountPlus,
 	mdiAccountRemove,
 	mdiAccountStar,
+	mdiDelete,
 	mdiMessage,
 } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
@@ -38,7 +39,11 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
-	private renderMember(imAdmin: boolean, member: GroupMember) {
+	private renderMember(
+		isGroupDeleted: boolean,
+		me: GroupMember,
+		member: GroupMember,
+	) {
 		const dialogId = encodeHashToBase64(member.agents[0]);
 		return html`
 			<sl-dialog id="${dialogId}" no-header style="--width: 20rem">
@@ -83,7 +88,7 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 
 						<span>${msg('Send direct message')}</span>
 					</div>
-					${imAdmin && !member.admin
+					${!isGroupDeleted && !me.removed && me.admin && !member.admin
 						? html`
 								<div
 									class="row"
@@ -93,6 +98,10 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 											await this.store.groupChats
 												.get(this.groupChatHash)
 												.promoteMemberToAdmin(member.agents);
+											const dialog = this.shadowRoot!.getElementById(
+												dialogId,
+											) as SlDialog;
+											dialog.hide();
 										} catch (e) {
 											console.error(e);
 											notifyError(msg('Error making peer an admin.'));
@@ -104,7 +113,7 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 								</div>
 							`
 						: html``}
-					${imAdmin && member.admin
+					${!isGroupDeleted && !me.removed && me.admin && member.admin
 						? html`
 								<div
 									class="row"
@@ -120,12 +129,37 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 											dialog.hide();
 										} catch (e) {
 											console.error(e);
-											notifyError(msg('Error demoting peer from admin.'));
+											notifyError(msg('Error demoting member from admin.'));
 										}
 									}}
 								>
 									<sl-icon .src=${wrapPathInSvg(mdiAccountRemove)}></sl-icon>
 									<span>${msg('Remove admin role')}</span>
+								</div>
+							`
+						: html``}
+					${!isGroupDeleted && me.admin && !me.removed
+						? html`
+								<div
+									class="row"
+									style="cursor: pointer; gap: 8px; align-items:center"
+									@click=${async () => {
+										try {
+											await this.store.groupChats
+												.get(this.groupChatHash)
+												.removeMember(member.agents);
+											const dialog = this.shadowRoot!.getElementById(
+												dialogId,
+											) as SlDialog;
+											dialog.hide();
+										} catch (e) {
+											console.error(e);
+											notifyError(msg('Error removing member.'));
+										}
+									}}
+								>
+									<sl-icon .src=${wrapPathInSvg(mdiDelete)}></sl-icon>
+									<span>${msg('Remove member')}</span>
 								</div>
 							`
 						: html``}
@@ -170,18 +204,21 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 	}
 
 	private renderMembers(groupChat: GroupChat) {
-		const imAdmin = groupChat.members.find(m =>
+		const me = groupChat.members.find(m =>
 			m.agents.find(
 				a =>
 					encodeHashToBase64(a) ===
 					encodeHashToBase64(this.store.client.client.myPubKey),
 			),
-		)!.admin;
+		)!;
 		return html`
 			<div class="column" style="gap: 12px; flex: 1">
-				${groupChat.members.map(member => this.renderMember(imAdmin, member))}
+				${groupChat.members
+					.filter(m => !m.removed)
+					.map(member => this.renderMember(groupChat.deleted, me, member))}
 				${!groupChat.deleted &&
-				(imAdmin || !groupChat.settings.only_admins_can_add_members)
+				!me.removed &&
+				(me.admin || !groupChat.settings.only_admins_can_add_members)
 					? html`
 							<div
 								class="row"

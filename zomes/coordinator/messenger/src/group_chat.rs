@@ -286,7 +286,7 @@ pub fn validate_read_group_messages(
         .is_none()
     {
         return Ok(ValidateCallbackResult::Invalid(format!(
-            "Only members or admins for a group can send messages"
+            "Only members or admins for a group can mark messages as read"
         )));
     }
     return Ok(ValidateCallbackResult::Valid);

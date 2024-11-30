@@ -10,6 +10,7 @@ import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
 import {
 	mdiArrowLeft,
+	mdiClose,
 	mdiDelete,
 	mdiInformationOutline,
 	mdiPencil,
@@ -57,7 +58,6 @@ export class GroupDetails extends SignalWatcher(LitElement) {
 
 	async updateGroupInfo(fields: any) {
 		try {
-			console.log(fields);
 			await this.store.groupChats.get(this.groupChatHash).updateGroupChatInfo({
 				avatar_hash: fields.avatar === 'null' ? undefined : fields.avatar,
 				name: fields.name,
@@ -186,13 +186,13 @@ export class GroupDetails extends SignalWatcher(LitElement) {
 		if (this.view === 'edit-info') return this.renderEditInfo(details.info);
 		if (this.view === 'add-members') return this.renderAddMembers();
 
-		const imAdmin = details.members.find(m =>
+		const me = details.members.find(m =>
 			m.agents.find(
 				a =>
 					encodeHashToBase64(a) ===
 					encodeHashToBase64(this.store.client.client.myPubKey),
 			),
-		)!.admin;
+		)!;
 
 		return html`
 			<div class="column" style="gap: 8px; position: relative; flex: 1">
@@ -216,7 +216,8 @@ export class GroupDetails extends SignalWatcher(LitElement) {
 						</sl-details>`
 					: html``}
 				${!details.deleted &&
-				(imAdmin || !details.settings.only_admins_can_edit_group_info)
+				!me.removed &&
+				(me.admin || !details.settings.only_admins_can_edit_group_info)
 					? html`
 							<sl-button
 								@click=${() => {
@@ -229,7 +230,49 @@ export class GroupDetails extends SignalWatcher(LitElement) {
 							</sl-button>
 						`
 					: html``}
-				${imAdmin && !details.deleted
+				${!details.deleted && !me.removed
+					? html`
+							<sl-dialog id="leave-group-dialog" .label=${msg('leave Group')}>
+								<span
+									>${msg('Are you sure you want to leave this group?')}
+								</span>
+								<sl-button
+									slot="footer"
+									@click=${async () => {
+										try {
+											await this.store.groupChats
+												.get(this.groupChatHash)
+												.leaveGroup();
+											const dialog = this.shadowRoot!.getElementById(
+												'leave-group-dialog',
+											) as SlDialog;
+											dialog.hide();
+										} catch (e) {
+											console.log(e);
+											notifyError(msg('Error leaving the group.'));
+										}
+									}}
+									variant="danger"
+									>${msg('Leave Group')}
+								</sl-button>
+							</sl-dialog>
+							<sl-button
+								variant="danger"
+								outline
+								@click=${async () => {
+									const dialog = this.shadowRoot!.getElementById(
+										'leave-group-dialog',
+									) as SlDialog;
+									dialog.show();
+								}}
+							>
+								<sl-icon slot="prefix" .src=${wrapPathInSvg(mdiClose)}>
+								</sl-icon>
+								${msg('Leave group')}
+							</sl-button>
+						`
+					: html``}
+				${me.admin && !me.removed && !details.deleted
 					? html`<sl-dialog
 								id="delete-group-dialog"
 								.label=${msg('Delete Group')}

@@ -65,14 +65,14 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		switch (event.signed_content.content.event.type) {
 			case 'UpdateGroupInfo':
 				return html`
-					<sl-tag style="align-self: center; margin: 8px">
-						${this.renderAgentNickname(event.provenance)}&nbsp;
-						${msg(str`updated the group's info.`)}
+					<sl-tag style="align-self: center; margin: 4px 0">
+						${this.renderAgentNickname(event.provenance)}
+						&nbsp;${msg(str`updated the group's info.`)}
 					</sl-tag>
 				`;
 			case 'AddMember':
 				return html`
-					<sl-tag style="align-self: center; margin: 8px">
+					<sl-tag style="align-self: center; margin: 4px 0">
 						${this.renderAgentNickname(
 							event.signed_content.content.event.member_agents[0],
 						)}&nbsp;
@@ -81,25 +81,25 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				`;
 			case 'RemoveMember':
 				return html`
-					<sl-tag style="align-self: center; margin: 8px">
-						${this.renderAgentNickname(event.provenance)}&nbsp;
-						${msg('removed')}&nbsp;${this.renderAgentNickname(
+					<sl-tag style="align-self: center; margin: 4px 0">
+						${this.renderAgentNickname(event.provenance)}
+						&nbsp;${msg('removed')}&nbsp;${this.renderAgentNickname(
 							event.signed_content.content.event.member_agents[0],
 						)}&nbsp;${msg('from the group.')}
 					</sl-tag>
 				`;
 			case 'LeaveGroup':
 				return html`
-					<sl-tag style="align-self: center; margin: 8px">
-						${this.renderAgentNickname(event.provenance)}&nbsp;
-						${msg(str`left the group.`)}
+					<sl-tag style="align-self: center; margin: 4px 0">
+						${this.renderAgentNickname(event.provenance)}
+						&nbsp;${msg(str`left the group.`)}
 					</sl-tag>
 				`;
 			case 'DeleteGroup':
 				return html`
-					<sl-tag style="align-self: center; margin: 8px">
-						${this.renderAgentNickname(event.provenance)}&nbsp;
-						${msg(str`deleted the group.`)}
+					<sl-tag style="align-self: center; margin: 4px 0">
+						${this.renderAgentNickname(event.provenance)}
+						&nbsp;${msg(str`deleted the group.`)}
 					</sl-tag>
 				`;
 		}
@@ -169,6 +169,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
 						${ref(el => {
 							if (!el) return;
+							if (me.removed) return;
 							const theirEventsSets = (
 								[] as EventSet<
 									| ({ type: 'GroupMessage' } & GroupMessage)
@@ -213,21 +214,21 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 								eventSetsInDay.eventsSets,
 							),
 						)}
-						<sl-tag style="align-self: center; margin: 8px">
+						<sl-tag style="align-self: center; margin: 4px">
 							${msg(str`Group was created by`)}&nbsp;
 							${this.renderAgentNickname(createGroupChat.provenance)}
 						</sl-tag>
 					</div>
 				</div>
 			</div>
-			${currentGroup.deleted
+			${currentGroup.deleted || me.removed
 				? html``
 				: html`
 						<message-input
 							@input=${() =>
 								this.store.client.sendGroupChatTypingIndicator(
 									this.groupChatHash,
-									theirAgentSets,
+									otherMembers.filter(m => !m.removed).map(m => m.agents),
 								)}
 							@send-message=${(e: CustomEvent) =>
 								this.sendMessage(e.detail.message as Message)}
@@ -336,7 +337,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 								? html`
 										<div
 											class="placeholder column"
-											style="font-size: 12px; width: 4em; overflow: hidden; text-align: right"
+											style="font-size: 12px; width: 4.5em; overflow: hidden; text-align: right"
 										>
 											<div style="flex: 1"></div>
 											${lessThanAMinuteAgo
@@ -354,7 +355,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 															<sl-relative-time
 																style=""
 																sync
-																format="short"
+																format="narrow"
 																.date=${date}
 															>
 															</sl-relative-time>
@@ -435,7 +436,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 										? html`
 												<div
 													class="placeholder column"
-													style="font-size: 12px; width: 4em; overflow: hidden; text-align: right"
+													style="font-size: 12px; width: 4.5em; overflow: hidden; text-align: right"
 												>
 													<div style="flex: 1"></div>
 													${lessThanAMinuteAgo
@@ -453,7 +454,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 																	<sl-relative-time
 																		style=""
 																		sync
-																		format="short"
+																		format="narrow"
 																		.date=${date}
 																	>
 																	</sl-relative-time>

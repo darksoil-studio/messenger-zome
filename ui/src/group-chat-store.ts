@@ -343,7 +343,6 @@ export class GroupChatStore {
 				...m,
 				signed_content: {
 					content: {
-						type: 'GroupMessage' as const,
 						...m.signed_content.content,
 					},
 					timestamp: m.signed_content.timestamp,
@@ -359,16 +358,26 @@ export class GroupChatStore {
 					timestamp: entries.value.createGroupChat.signed_content.timestamp,
 				},
 			},
-			...Object.values(entries.value.events).map(e => ({
-				...e,
-				signed_content: {
-					content: {
-						type: 'GroupChatEvent' as const,
-						...e.signed_content.content,
+			...Object.values(entries.value.events)
+				.filter(e => {
+					const type = e.signed_content.content.event.type;
+					return (
+						type === 'AddMember' ||
+						type === 'RemoveMember' ||
+						type === 'UpdateGroupInfo' ||
+						type === 'LeaveGroup' ||
+						type === 'DeleteGroup'
+					);
+				})
+				.map(e => ({
+					...e,
+					signed_content: {
+						content: {
+							...e.signed_content.content,
+						},
+						timestamp: e.signed_content.timestamp,
 					},
-					timestamp: e.signed_content.timestamp,
-				},
-			})),
+				})),
 		];
 
 		const lastActivity = allActivity.sort(
@@ -558,12 +567,27 @@ function apply(
 			};
 			break;
 		case 'AddMember':
-			groupChat.members.push({
-				admin: false,
-				agents: groupEvent.member_agents,
-				profile: undefined,
-				removed: false,
-			});
+			let member0 = groupChat.members.find(m =>
+				m.agents.find(a =>
+					groupEvent.member_agents.find(
+						a2 => encodeHashToBase64(a) === encodeHashToBase64(a2),
+					),
+				),
+			);
+			if (member0) {
+				member0.agents = uniquify([
+					...member0.agents,
+					...groupEvent.member_agents,
+				]);
+				member0.removed = false;
+			} else {
+				groupChat.members.push({
+					admin: false,
+					agents: groupEvent.member_agents,
+					profile: undefined,
+					removed: false,
+				});
+			}
 			break;
 		case 'RemoveMember':
 			let member = groupChat.members.find(m =>
@@ -614,7 +638,7 @@ function apply(
 				),
 			);
 			if (!member5) throw new Error('Member not found');
-			member5!.removed = false;
+			member5!.removed = true;
 			break;
 		case 'DeleteGroup':
 			groupChat.deleted = true;

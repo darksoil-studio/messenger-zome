@@ -70,6 +70,9 @@ impl GroupChat {
                 if self.settings.only_admins_can_add_members && !author_is_admin {
                     return Err(wasm_error!("Only admins can add members"));
                 }
+                if author_member.removed {
+                    return Err(wasm_error!("Author is no longer part of the group"));
+                }
 
                 let existing_member_index = self.members.iter().position(|m| {
                     member_agents
@@ -108,6 +111,9 @@ impl GroupChat {
                 let Some(p) = pos else {
                     return Err(wasm_error!("Member not found"));
                 };
+                if self.members[p].removed {
+                    return Err(wasm_error!("Member was already removed"));
+                }
                 self.members[p].removed = true;
                 self.members[p].admin = false;
             }
@@ -115,6 +121,9 @@ impl GroupChat {
                 new_agent,
                 linked_devices_proofs,
             } => {
+                if author_member.removed {
+                    return Err(wasm_error!("Author is no longer part of the group"));
+                }
                 let pos = self
                     .members
                     .iter()
@@ -165,6 +174,9 @@ impl GroupChat {
                 self.deleted = true;
             }
             GroupEvent::LeaveGroup => {
+                if author_member.removed {
+                    return Err(wasm_error!("Author is no longer part of the group"));
+                }
                 let author_member_index = self
                     .members
                     .iter()

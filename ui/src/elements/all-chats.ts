@@ -12,7 +12,7 @@ import {
 	encodeHashToBase64,
 } from '@holochain/client';
 import { consume } from '@lit/context';
-import { localized, msg } from '@lit/localize';
+import { localized, msg, str } from '@lit/localize';
 import { mdiInformationOutline } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
 import '@shoelace-style/shoelace/dist/components/badge/badge.js';
@@ -34,8 +34,11 @@ import { messengerStyles } from '../styles.js';
 import {
 	GroupChat,
 	GroupChatEntry,
+	GroupChatEvent,
+	GroupEvent,
 	MessengerProfile,
 	PeerMessage,
+	Signed,
 } from '../types.js';
 
 @localized()
@@ -176,19 +179,83 @@ export class AllChats extends SignalWatcher(LitElement) {
 		return html`<span>${latestValue.value?.entry.nickname}</span>`;
 	}
 
+	renderGroupEventLastActivity(
+		groupChat: GroupChat,
+		provenance: AgentPubKey,
+		event: GroupEvent,
+	) {
+		const memberProfile = groupChat.members.find(m =>
+			m.agents.find(
+				a => encodeHashToBase64(a) === encodeHashToBase64(provenance),
+			),
+		)!.profile;
+		switch (event.type) {
+			case 'UpdateGroupInfo':
+				return html`
+					<span>
+						${this.renderAgentNickname(provenance, memberProfile)}
+						${msg(str`updated the group's info.`)}
+					</span>
+				`;
+			case 'AddMember':
+				return html`
+					<span>
+						${this.renderAgentNickname(
+							event.member_agents[0],
+							memberProfile,
+						)}&nbsp;
+						${msg(str`was added to the group.`)}
+					</span>
+				`;
+			case 'RemoveMember':
+				return html`
+					<span>
+						${this.renderAgentNickname(provenance, memberProfile)}
+						${msg('removed')}&nbsp;${this.renderAgentNickname(
+							event.member_agents[0],
+							memberProfile,
+						)}&nbsp;${msg('from the group.')}
+					</span>
+				`;
+			case 'LeaveGroup':
+				return html`
+					<span>
+						${this.renderAgentNickname(provenance, memberProfile)}
+						${msg(str`left the group.`)}
+					</span>
+				`;
+			case 'DeleteGroup':
+				return html`
+					<span>
+						${this.renderAgentNickname(provenance, memberProfile)}
+						${msg(str`deleted the group.`)}
+					</span>
+				`;
+		}
+	}
+
 	renderGroupLastActivity(
 		groupChat: GroupChat,
 		groupMessengerEntry: GroupChatEntry,
 	) {
-		if (groupMessengerEntry.signed_content.content.type === 'GroupMessage') {
-			const author = groupChat.members.find(
-				m =>
-					!!m.agents.find(
-						a =>
-							encodeHashToBase64(a) ===
-							encodeHashToBase64(groupMessengerEntry.provenance),
-					),
-			)!;
+		const author = groupChat.members.find(
+			m =>
+				!!m.agents.find(
+					a =>
+						encodeHashToBase64(a) ===
+						encodeHashToBase64(groupMessengerEntry.provenance),
+				),
+		)!;
+		if (groupMessengerEntry.signed_content.content.type === 'CreateGroupChat') {
+			return html`<span
+				>${this.renderAgentNickname(
+					groupMessengerEntry.provenance,
+					author.profile,
+				)}&nbsp;${msg('created the group.')}
+			</span>`;
+		} else if (
+			groupMessengerEntry.signed_content.content.type === 'GroupMessage'
+		) {
 			return html`<span
 				>${this.renderAgentNickname(
 					groupMessengerEntry.provenance,
@@ -196,6 +263,14 @@ export class AllChats extends SignalWatcher(LitElement) {
 				)}:
 				${groupMessengerEntry.signed_content.content.message.message}</span
 			>`;
+		} else if (
+			groupMessengerEntry.signed_content.content.type === 'GroupChatEvent'
+		) {
+			return this.renderGroupEventLastActivity(
+				groupChat,
+				groupMessengerEntry.provenance,
+				groupMessengerEntry.signed_content.content.event,
+			);
 		}
 	}
 
