@@ -3,7 +3,12 @@ import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@tnesh-stack/signals';
 import { assert, expect, test } from 'vitest';
 
-import { linkDevices, setup, waitUntil } from '../../setup.js';
+import {
+	groupConsistency,
+	linkDevices,
+	setup,
+	waitUntil,
+} from '../../setup.js';
 
 test('all events get to all the members of the group', async () => {
 	await runScenario(async scenario => {
@@ -25,18 +30,16 @@ test('all events get to all the members of the group', async () => {
 			},
 		);
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		const eventHash1 = await bob.store.groupChats
 			.get(groupHash)
 			.updateGroupChatInfo(info);
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		let events = await toPromise(alice.store.groupChats.get(groupHash).events);
@@ -50,9 +53,9 @@ test('all events get to all the members of the group', async () => {
 
 		await linkDevices(bob.linkedDevicesStore, bob2.linkedDevicesStore);
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, bob2, carol].map(p => p.store.groupChats.get(groupHash)),
+			80_000,
 		);
 
 		events = await toPromise(carol.store.groupChats.get(groupHash).events);
@@ -60,16 +63,20 @@ test('all events get to all the members of the group', async () => {
 		assert.equal(Object.keys(events).length, 3);
 		assert.ok(events[encodeHashToBase64(eventHash1)]);
 
-		events = await toPromise(bob2.store.groupChats.get(groupHash).events);
-		assert.equal(Object.keys(events).length, 3);
+		await waitUntil(
+			async () =>
+				Object.keys(
+					await toPromise(bob2.store.groupChats.get(groupHash).events),
+				).length === 3,
+			20_000,
+		);
 
 		await alice.store.groupChats
 			.get(groupHash)
 			.removeMember([carol.player.agentPubKey]);
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, bob2, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		events = await toPromise(carol.store.groupChats.get(groupHash).events);
@@ -77,9 +84,8 @@ test('all events get to all the members of the group', async () => {
 
 		await bob.store.groupChats.get(groupHash).updateGroupChatInfo(info);
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, bob2].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		events = await toPromise(bob.store.groupChats.get(groupHash).events);
@@ -92,9 +98,8 @@ test('all events get to all the members of the group', async () => {
 			.get(groupHash)
 			.addMember([carol.player.agentPubKey]);
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, bob2, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		events = await toPromise(bob.store.groupChats.get(groupHash).events);
@@ -108,9 +113,8 @@ test('all events get to all the members of the group', async () => {
 		await bob2.store.groupChats.get(groupHash).updateGroupChatInfo(info);
 		await carol.store.groupChats.get(groupHash).updateGroupChatInfo(info);
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, bob2, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		events = await toPromise(bob.store.groupChats.get(groupHash).events);

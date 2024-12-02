@@ -34,7 +34,7 @@ import {
 	PrivateMessengerEntry,
 	ReadGroupMessages,
 	ReadPeerMessages,
-	Signed,
+	SignedEntry,
 } from './types.js';
 import { TYPING_INDICATOR_TTL_MS, asyncReadable } from './utils.js';
 
@@ -50,25 +50,25 @@ export interface MessengerEntries {
 	peerChats: Record<
 		EntryHashB64,
 		{
-			createPeerChat: Signed<CreatePeerChat>;
-			events: Record<EntryHashB64, Signed<PeerChatEvent>>;
-			messages: Record<EntryHashB64, Signed<PeerMessage>>;
-			readMessages: Record<EntryHashB64, Signed<ReadPeerMessages>>;
+			createPeerChat: SignedEntry<CreatePeerChat>;
+			events: Record<EntryHashB64, SignedEntry<PeerChatEvent>>;
+			messages: Record<EntryHashB64, SignedEntry<PeerMessage>>;
+			readMessages: Record<EntryHashB64, SignedEntry<ReadPeerMessages>>;
 		}
 	>;
 	groupChats: Record<
 		EntryHashB64,
 		{
-			createGroupChat: Signed<CreateGroupChat>;
+			createGroupChat: SignedEntry<CreateGroupChat>;
 			events: Record<
 				EntryHashB64,
-				Signed<{ type: 'GroupChatEvent' } & GroupChatEvent>
+				SignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>
 			>;
 			messages: Record<
 				EntryHashB64,
-				Signed<{ type: 'GroupMessage' } & GroupMessage>
+				SignedEntry<{ type: 'GroupMessage' } & GroupMessage>
 			>;
-			readMessages: Record<EntryHashB64, Signed<ReadGroupMessages>>;
+			readMessages: Record<EntryHashB64, SignedEntry<ReadGroupMessages>>;
 		}
 	>;
 }
@@ -138,14 +138,14 @@ export class MessengerStore {
 			switch (messengerEntry.signed_content.content.type) {
 				case 'CreatePeerChat':
 					messengerEntries.peerChats[entryHash] = {
-						createPeerChat: messengerEntry as Signed<CreatePeerChat>,
+						createPeerChat: messengerEntry as SignedEntry<CreatePeerChat>,
 						events: {},
 						messages: {},
 						readMessages: {},
 					};
 					break;
 				case 'PeerChatEvent':
-					const peerChatEvent = messengerEntry as Signed<PeerChatEvent>;
+					const peerChatEvent = messengerEntry as SignedEntry<PeerChatEvent>;
 					const peerChatHash1 = encodeHashToBase64(
 						peerChatEvent.signed_content.content.peer_chat_hash,
 					);
@@ -153,7 +153,8 @@ export class MessengerStore {
 						peerChatEvent;
 					break;
 				case 'ReadPeerMessages':
-					const readPeerMessages = messengerEntry as Signed<ReadPeerMessages>;
+					const readPeerMessages =
+						messengerEntry as SignedEntry<ReadPeerMessages>;
 					const peerChatHash2 = encodeHashToBase64(
 						readPeerMessages.signed_content.content.peer_chat_hash,
 					);
@@ -161,7 +162,7 @@ export class MessengerStore {
 						readPeerMessages;
 					break;
 				case 'PeerMessage':
-					const peerMessage = messengerEntry as Signed<PeerMessage>;
+					const peerMessage = messengerEntry as SignedEntry<PeerMessage>;
 					const peerChatHash3 = encodeHashToBase64(
 						peerMessage.signed_content.content.peer_chat_hash,
 					);
@@ -170,14 +171,14 @@ export class MessengerStore {
 					break;
 				case 'CreateGroupChat':
 					messengerEntries.groupChats[entryHash] = {
-						createGroupChat: messengerEntry as Signed<CreateGroupChat>,
+						createGroupChat: messengerEntry as SignedEntry<CreateGroupChat>,
 						events: {},
 						messages: {},
 						readMessages: {},
 					};
 					break;
 				case 'GroupChatEvent':
-					const groupChatEvent = messengerEntry as Signed<
+					const groupChatEvent = messengerEntry as SignedEntry<
 						{
 							type: 'GroupChatEvent';
 						} & GroupChatEvent
@@ -189,7 +190,8 @@ export class MessengerStore {
 						groupChatEvent;
 					break;
 				case 'ReadGroupMessages':
-					const readGroupMessages = messengerEntry as Signed<ReadGroupMessages>;
+					const readGroupMessages =
+						messengerEntry as SignedEntry<ReadGroupMessages>;
 					const groupChatHash2 = encodeHashToBase64(
 						readGroupMessages.signed_content.content.group_chat_hash,
 					);
@@ -197,7 +199,7 @@ export class MessengerStore {
 						readGroupMessages;
 					break;
 				case 'GroupMessage':
-					const groupMessage = messengerEntry as Signed<
+					const groupMessage = messengerEntry as SignedEntry<
 						{
 							type: 'GroupMessage';
 						} & GroupMessage

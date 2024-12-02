@@ -100,7 +100,25 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 	}
 
 	async createGroupChatEvent(groupChatEvent: GroupChatEvent) {
-		return this.callZome('create_group_chat_event', groupChatEvent);
+		const entryHash: EntryHash = await this.callZome(
+			'create_group_chat_event',
+			groupChatEvent,
+		);
+		return new Promise<EntryHash>(resolve => {
+			this.onSignal(signal => {
+				if (
+					signal.type !== 'EntryCreated' ||
+					signal.app_entry.type !== 'PrivateMessengerEntry' ||
+					signal.app_entry.signed_content.content.type !== 'GroupChatEvent'
+				)
+					return;
+				if (
+					encodeHashToBase64(signal.action.hashed.content.entry_hash) ===
+					encodeHashToBase64(entryHash)
+				)
+					resolve(entryHash);
+			});
+		});
 	}
 
 	async sendGroupMessage(

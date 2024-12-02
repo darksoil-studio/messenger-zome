@@ -31,7 +31,7 @@ import {
 	GroupMessage,
 	GroupSettings,
 	Message,
-	Signed,
+	SignedEntry,
 } from './types.js';
 import {
 	TYPING_INDICATOR_TTL_MS,
@@ -110,6 +110,13 @@ export class GroupChatStore {
 
 		const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {};
 		const initialEventsHashes: Array<EntryHashB64> = [];
+
+		if (!groupChatEntries) {
+			return {
+				status: 'error' as const,
+				error: msg('Group not found'),
+			};
+		}
 
 		for (const [entryHash, groupChatEvent] of Object.entries(
 			groupChatEntries.events,

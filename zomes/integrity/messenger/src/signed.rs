@@ -7,7 +7,7 @@ pub struct SignedContent<T> {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Signed<T> {
+pub struct SignedEntry<T> {
     pub signed_content: SignedContent<T>,
     pub signature: Signature,
     pub provenance: AgentPubKey,

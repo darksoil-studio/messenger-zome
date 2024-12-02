@@ -4,7 +4,7 @@ import {
 	encodeHashToBase64,
 } from '@holochain/client';
 
-import { Signed } from './types';
+import { SignedEntry } from './types';
 
 export const MESSAGE_SET_TIMEFRAME_INTERVAL = 60 * 1000 * 1000; // 1 minute
 
@@ -13,10 +13,10 @@ export interface EventSetsInDay<T> {
 	eventsSets: Array<EventSet<T>>;
 }
 
-export type EventSet<T> = Array<[EntryHashB64, Signed<T>]>;
+export type EventSet<T> = Array<[EntryHashB64, SignedEntry<T>]>;
 
 export function orderInEventSets<T>(
-	events: Record<EntryHashB64, Signed<T>>,
+	events: Record<EntryHashB64, SignedEntry<T>>,
 	agentSets: Array<Array<AgentPubKey>>,
 ): Array<EventSetsInDay<T>> {
 	const eventsSetsInDay: EventSetsInDay<T>[] = [];

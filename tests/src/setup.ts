@@ -9,6 +9,8 @@ import {
 	AppCallZomeRequest,
 	AppWebsocket,
 	EntryHash,
+	HoloHash,
+	HoloHashB64,
 	NewEntryAction,
 	Record,
 	encodeHashToBase64,
@@ -19,10 +21,12 @@ import {
 } from '@holochain/client';
 import { Player, Scenario, pause } from '@holochain/tryorama';
 import { encode } from '@msgpack/msgpack';
+import { Signal, joinAsync } from '@tnesh-stack/signals';
 import { EntryRecord } from '@tnesh-stack/utils';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+import { GroupChatStore } from '../../ui/src/group-chat-store.js';
 import { MessengerClient } from '../../ui/src/messenger-client.js';
 import { MessengerStore } from '../../ui/src/messenger-store.js';
 
@@ -61,6 +65,8 @@ async function setupStore(player: Player) {
 }
 
 export async function setup(scenario: Scenario, playerNum = 2) {
+	scenario.dpkiNetworkSeed = undefined;
+
 	const testHappUrl =
 		dirname(fileURLToPath(import.meta.url)) +
 		'/../../workdir/messenger_test.happ';
@@ -125,4 +131,84 @@ export async function waitUntil(
 	if (timeout <= 0) throw new Error('timeout');
 	await pause(1000);
 	return waitUntil(condition, timeout - (Date.now() - start));
+}
+
+export async function groupConsistency(
+	groups: Array<GroupChatStore>,
+	timeoutMs: number = 10_000,
+): Promise<void> {
+	return new Promise((resolve, reject) => {
+		effect(() => {
+			let currentEventsHashes = joinAsync(
+				groups.map(group => group.events.get()),
+			);
+			if (currentEventsHashes.status !== 'completed') return;
+
+			let eh = Object.keys(currentEventsHashes.value[0]);
+
+			for (let i = 1; i < currentEventsHashes.value.length; i++) {
+				if (
+					!areArrayHashesEqual(eh, Object.keys(currentEventsHashes.value[i]))
+				) {
+					return;
+				}
+			}
+			resolve();
+		});
+
+		setTimeout(() => reject('Timeout'), timeoutMs);
+	});
+}
+function areArrayHashesEqual(
+	array1: Array<HoloHashB64>,
+	array2: Array<HoloHashB64>,
+): boolean {
+	if (array1.length !== array2.length) return false;
+	let sorted1 = array1.sort();
+	let sorted2 = array2.sort();
+
+	for (let i = 0; i < sorted1.length; i += 1) {
+		if (sorted1[i] !== sorted2[i]) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+let needsEnqueue = true;
+
+const w = new Signal.subtle.Watcher(() => {
+	if (needsEnqueue) {
+		needsEnqueue = false;
+		queueMicrotask(processPending);
+	}
+});
+
+function processPending() {
+	needsEnqueue = true;
+
+	for (const s of w.getPending()) {
+		s.get();
+	}
+
+	w.watch();
+}
+
+export function effect(callback) {
+	let cleanup;
+
+	const computed = new Signal.Computed(() => {
+		typeof cleanup === 'function' && cleanup();
+		cleanup = callback();
+	});
+
+	w.watch(computed);
+	computed.get();
+
+	return () => {
+		w.unwatch(computed);
+		typeof cleanup === 'function' && cleanup();
+		cleanup = undefined;
+	};
 }

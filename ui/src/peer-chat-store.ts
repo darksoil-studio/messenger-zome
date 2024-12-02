@@ -28,7 +28,7 @@ import {
 	PeerChatEvent,
 	PeerEvent,
 	PeerMessage,
-	Signed,
+	SignedEntry,
 } from './types.js';
 import { TYPING_INDICATOR_TTL_MS, mergeProfiles } from './utils.js';
 

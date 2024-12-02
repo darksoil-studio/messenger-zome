@@ -43,7 +43,7 @@ import {
 	GroupMessage,
 	Message,
 	PeerMessage,
-	Signed,
+	SignedEntry,
 } from '../types.js';
 import './message-input.js';
 
@@ -61,7 +61,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	@consume({ context: profilesStoreContext, subscribe: true })
 	profilesStore!: ProfilesStore;
 
-	private renderEvent(event: Signed<GroupChatEvent>) {
+	private renderEvent(event: SignedEntry<GroupChatEvent>) {
 		switch (event.signed_content.content.event.type) {
 			case 'UpdateGroupInfo':
 				return html`
@@ -106,15 +106,15 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	}
 
 	private renderChat(
-		createGroupChat: Signed<CreateGroupChat>,
+		createGroupChat: SignedEntry<CreateGroupChat>,
 		currentGroup: GroupChat,
 		messages: Record<
 			EntryHashB64,
-			Signed<{ type: 'GroupMessage' } & GroupMessage>
+			SignedEntry<{ type: 'GroupMessage' } & GroupMessage>
 		>,
 		events: Record<
 			EntryHashB64,
-			Signed<{ type: 'GroupChatEvent' } & GroupChatEvent>
+			SignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>
 		>,
 		myReadMessages: EntryHashB64[],
 	) {
@@ -257,7 +257,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							)
 							? this.renderMessageSetFromMe(eventSet as EventSet<GroupMessage>)
 							: this.renderMessageSetToMe(eventSet as EventSet<GroupMessage>)
-						: this.renderEvent(eventSet[0][1] as Signed<GroupChatEvent>),
+						: this.renderEvent(eventSet[0][1] as SignedEntry<GroupChatEvent>),
 				)}
 				<div style="align-self: center">
 					<sl-tag>

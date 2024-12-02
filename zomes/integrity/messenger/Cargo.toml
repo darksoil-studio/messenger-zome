@@ -12,4 +12,4 @@ name = "messenger_integrity"
 serde = { workspace = true }
 hdi = { workspace = true }
 
-linked_devices_types = { git = "https://github.com/darksoil-studio/linked-devices-zome", branch = "main-0.3" }
+linked_devices_types = { git = "https://github.com/darksoil-studio/linked-devices-zome", branch = "main-0.4" }

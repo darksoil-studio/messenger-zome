@@ -41,7 +41,7 @@ export interface SignedContent<T> {
 	timestamp: Timestamp;
 }
 
-export interface Signed<T> {
+export interface SignedEntry<T> {
 	signed_content: SignedContent<T>;
 	provenance: AgentPubKey;
 	signature: Signature;
@@ -180,14 +180,14 @@ export interface CreateGroupChat {
 
 export type PrivateMessengerEntry = PeerChatEntry | GroupChatEntry;
 
-export type PeerChatEntry = Signed<
+export type PeerChatEntry = SignedEntry<
 	| ({ type: 'CreatePeerChat' } & CreatePeerChat)
 	| ({ type: 'PeerChatEvent' } & PeerChatEvent)
 	| ({ type: 'PeerMessage' } & PeerMessage)
 	| ({ type: 'ReadPeerMessages' } & ReadPeerMessages)
 >;
 
-export type GroupChatEntry = Signed<
+export type GroupChatEntry = SignedEntry<
 	| ({ type: 'CreateGroupChat' } & CreateGroupChat)
 	| ({ type: 'GroupChatEvent' } & GroupChatEvent)
 	| ({ type: 'GroupMessage' } & GroupMessage)

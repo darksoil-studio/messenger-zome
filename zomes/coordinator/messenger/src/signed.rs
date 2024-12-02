@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use hdk::prelude::*;
 use messenger_integrity::*;
 
-pub fn build_signed<T: Serialize + Debug + Clone>(content: T) -> ExternResult<Signed<T>> {
+pub fn build_signed<T: Serialize + Debug + Clone>(content: T) -> ExternResult<SignedEntry<T>> {
     let my_pub_key = agent_info()?.agent_latest_pubkey;
 
     let timestamp = sys_time()?;
@@ -12,13 +12,13 @@ pub fn build_signed<T: Serialize + Debug + Clone>(content: T) -> ExternResult<Si
 
     let signature = sign(my_pub_key.clone(), signed_content.clone())?;
 
-    Ok(Signed {
+    Ok(SignedEntry {
         signed_content,
         signature,
         provenance: my_pub_key,
     })
 }
 
-pub fn verify_signed<T: Serialize + Debug + Clone>(signed: Signed<T>) -> ExternResult<bool> {
+pub fn verify_signed<T: Serialize + Debug + Clone>(signed: SignedEntry<T>) -> ExternResult<bool> {
     verify_signature(signed.provenance, signed.signature, signed.signed_content)
 }

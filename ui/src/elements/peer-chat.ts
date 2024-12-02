@@ -33,7 +33,7 @@ import {
 	Message,
 	PeerChat,
 	PeerMessage,
-	Signed,
+	SignedEntry,
 } from '../types.js';
 import './message-input.js';
 
@@ -83,7 +83,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 
 	private renderChat(
 		peerChat: PeerChat,
-		messages: Record<EntryHashB64, Signed<PeerMessage>>,
+		messages: Record<EntryHashB64, SignedEntry<PeerMessage>>,
 		myReadMessages: Array<EntryHashB64>,
 	) {
 		const peerIsTyping = this.store.peerChats

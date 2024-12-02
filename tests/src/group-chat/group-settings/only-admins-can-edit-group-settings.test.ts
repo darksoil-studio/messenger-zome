@@ -3,7 +3,7 @@ import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@tnesh-stack/signals';
 import { assert, expect, test } from 'vitest';
 
-import { setup, waitUntil } from '../../setup.js';
+import { groupConsistency, setup, waitUntil } from '../../setup.js';
 
 test('only admins can edit group settings', async () => {
 	await runScenario(async scenario => {
@@ -26,9 +26,8 @@ test('only admins can edit group settings', async () => {
 			settings,
 		);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await expect(() =>
@@ -41,9 +40,8 @@ test('only admins can edit group settings', async () => {
 			sync_message_history_with_new_members: true,
 		});
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		let groupChat = await toPromise(
@@ -57,9 +55,8 @@ test('only admins can edit group settings', async () => {
 			.get(groupHash)
 			.addMember([carol.player.agentPubKey]);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await expect(() =>
@@ -70,9 +67,8 @@ test('only admins can edit group settings', async () => {
 			.get(groupHash)
 			.promoteMemberToAdmin([carol.player.agentPubKey]);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await carol.store.groupChats

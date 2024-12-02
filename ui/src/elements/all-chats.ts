@@ -38,7 +38,7 @@ import {
 	GroupEvent,
 	MessengerProfile,
 	PeerMessage,
-	Signed,
+	SignedEntry,
 } from '../types.js';
 
 @localized()

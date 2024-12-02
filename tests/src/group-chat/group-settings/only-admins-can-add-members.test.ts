@@ -3,7 +3,7 @@ import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@tnesh-stack/signals';
 import { assert, expect, test } from 'vitest';
 
-import { setup, waitUntil } from '../../setup.js';
+import { groupConsistency, setup, waitUntil } from '../../setup.js';
 
 test('only_admins_can_add_members works appropriately', async () => {
 	await runScenario(async scenario => {
@@ -26,9 +26,8 @@ test('only_admins_can_add_members works appropriately', async () => {
 			settings,
 		);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player, dave.player, eric.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await bob.store.groupChats
@@ -42,9 +41,8 @@ test('only_admins_can_add_members works appropriately', async () => {
 				only_admins_can_add_members: true,
 			});
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player, dave.player, eric.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		let events = await toPromise(bob.store.groupChats.get(groupHash).events);
@@ -58,9 +56,8 @@ test('only_admins_can_add_members works appropriately', async () => {
 			.get(groupHash)
 			.addMember([dave.player.agentPubKey]);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player, dave.player, eric.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol, dave].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await expect(() =>
@@ -72,9 +69,8 @@ test('only_admins_can_add_members works appropriately', async () => {
 			only_admins_can_add_members: false,
 		});
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player, dave.player, eric.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol, dave].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await dave.store.groupChats

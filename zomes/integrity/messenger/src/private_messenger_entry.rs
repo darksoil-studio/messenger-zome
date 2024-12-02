@@ -23,7 +23,7 @@ pub enum PrivateMessengerEntryContent {
 
 #[hdk_entry_helper]
 #[derive(Clone)]
-pub struct PrivateMessengerEntry(pub Signed<PrivateMessengerEntryContent>);
+pub struct PrivateMessengerEntry(pub SignedEntry<PrivateMessengerEntryContent>);
 
 pub fn validate_create_private_messenger_entry(
     _action: EntryCreationAction,
