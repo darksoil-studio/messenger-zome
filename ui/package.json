@@ -47,7 +47,6 @@
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.10.3",
-    "@lit-labs/virtualizer": "^2.0.14",
     "@lit/localize-tools": "^0.6.3",
     "@types/color-hash": "^2.0.0",
     "@vaadin/virtual-list": "^24.5.3",

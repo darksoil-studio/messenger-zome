@@ -4,62 +4,6 @@
   "modules": [
     {
       "kind": "javascript-module",
-      "path": "locales/locales.js",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "sourceLocale",
-          "default": "`en`",
-          "description": "The locale code that templates in this source code are written in."
-        },
-        {
-          "kind": "variable",
-          "name": "targetLocales",
-          "type": {
-            "text": "array"
-          },
-          "default": "[ , ]",
-          "description": "The other locale codes that this application is localized into. Sorted\nlexicographically."
-        },
-        {
-          "kind": "variable",
-          "name": "allLocales",
-          "type": {
-            "text": "array"
-          },
-          "default": "[ `en`, ]",
-          "description": "All valid project locale codes. Sorted lexicographically."
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "sourceLocale",
-          "declaration": {
-            "name": "sourceLocale",
-            "module": "locales/locales.js"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "targetLocales",
-          "declaration": {
-            "name": "targetLocales",
-            "module": "locales/locales.js"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "allLocales",
-          "declaration": {
-            "name": "allLocales",
-            "module": "locales/locales.js"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
       "path": "src/context.ts",
       "declarations": [
         {
@@ -98,7 +42,7 @@
             {
               "name": "events",
               "type": {
-                "text": "Record<EntryHashB64, Signed<T>>"
+                "text": "Record<EntryHashB64, SignedEntry<T>>"
               }
             },
             {
@@ -156,7 +100,7 @@
               "kind": "field",
               "name": "groupChatEntries",
               "privacy": "private",
-              "default": "new AsyncComputed(() => { const privateMessengerEntriesResult = this.messengerStore.privateMessengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const groupChatHashB64 = encodeHashToBase64(this.groupChatHash); const groupChatEntries = privateMessengerEntriesResult.value.groupChats[groupChatHashB64]; const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {}; const initialEventsHashes: Array<EntryHashB64> = []; for (const [entryHash, groupChatEvent] of Object.entries( groupChatEntries.events, )) { const previousEventsHashes = groupChatEvent.signed_content.content.previous_group_chat_events_hashes; if (previousEventsHashes.length === 0) { initialEventsHashes.push(entryHash); } else { for (const previous of previousEventsHashes) { const previousB64 = encodeHashToBase64(previous); if (!previousToNexts[previousB64]) { previousToNexts[previousB64] = []; } previousToNexts[previousB64].push(entryHash); } } } const allEventsWithDescendants = Object.keys(previousToNexts); const currentEventsHashes = Object.keys(groupChatEntries.events).filter( eventHash => !allEventsWithDescendants.includes(eventHash), ); return { status: 'completed', value: { ...groupChatEntries, previousToNexts, currentEventsHashes, initialEventsHashes, }, }; })"
+              "default": "new AsyncComputed(() => { const privateMessengerEntriesResult = this.messengerStore.privateMessengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const groupChatHashB64 = encodeHashToBase64(this.groupChatHash); const groupChatEntries = privateMessengerEntriesResult.value.groupChats[groupChatHashB64]; const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {}; const initialEventsHashes: Array<EntryHashB64> = []; if (!groupChatEntries) { return { status: 'error' as const, error: msg('Group not found'), }; } for (const [entryHash, groupChatEvent] of Object.entries( groupChatEntries.events, )) { const previousEventsHashes = groupChatEvent.signed_content.content.previous_group_chat_events_hashes; if (previousEventsHashes.length === 0) { initialEventsHashes.push(entryHash); } else { for (const previous of previousEventsHashes) { const previousB64 = encodeHashToBase64(previous); if (!previousToNexts[previousB64]) { previousToNexts[previousB64] = []; } previousToNexts[previousB64].push(entryHash); } } } const allEventsWithDescendants = Object.keys(previousToNexts); const currentEventsHashes = Object.keys(groupChatEntries.events).filter( eventHash => !allEventsWithDescendants.includes(eventHash), ); return { status: 'completed', value: { ...groupChatEntries, previousToNexts, currentEventsHashes, initialEventsHashes, }, }; })"
             },
             {
               "kind": "field",
@@ -189,7 +133,7 @@
             {
               "kind": "field",
               "name": "summary",
-              "default": "new AsyncComputed<GroupChatSummary>(() => { const currentGroupChat = this.currentGroupChat.get(); const entries = this.groupChatEntries.get(); const readMessages = this.readMessages.get(); if (currentGroupChat.status !== 'completed') return currentGroupChat; if (entries.status !== 'completed') return entries; if (readMessages.status !== 'completed') return readMessages; const me = currentGroupChat.value.members.find(m => m.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ), )!; const myUnreadMessages = Object.entries(entries.value.messages) .filter( ([messageHash, message]) => !readMessages.value.myReadMessages.includes(messageHash) && !me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(message.provenance), ), ) .map(([hash, _]) => hash); const allActivity: GroupChatEntry[] = [ ...Object.values(entries.value.messages).map(m => ({ ...m, signed_content: { content: { type: 'GroupMessage' as const, ...m.signed_content.content, }, timestamp: m.signed_content.timestamp, }, })), { ...entries.value.createGroupChat, signed_content: { content: { type: 'CreateGroupChat' as const, ...entries.value.createGroupChat.signed_content.content, }, timestamp: entries.value.createGroupChat.signed_content.timestamp, }, }, ...Object.values(entries.value.events).map(e => ({ ...e, signed_content: { content: { type: 'GroupChatEvent' as const, ...e.signed_content.content, }, timestamp: e.signed_content.timestamp, }, })), ]; const lastActivity = allActivity.sort( (m1, m2) => m2.signed_content.timestamp - m1.signed_content.timestamp, )[0]; return { status: 'completed', value: { groupChatHash: this.groupChatHash, currentGroup: currentGroupChat.value, lastActivity, myUnreadMessages, }, }; })"
+              "default": "new AsyncComputed<GroupChatSummary>(() => { const currentGroupChat = this.currentGroupChat.get(); const entries = this.groupChatEntries.get(); const readMessages = this.readMessages.get(); if (currentGroupChat.status !== 'completed') return currentGroupChat; if (entries.status !== 'completed') return entries; if (readMessages.status !== 'completed') return readMessages; const me = currentGroupChat.value.members.find(m => m.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ), )!; const myUnreadMessages = Object.entries(entries.value.messages) .filter( ([messageHash, message]) => !readMessages.value.myReadMessages.includes(messageHash) && !me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(message.provenance), ), ) .map(([hash, _]) => hash); const allActivity: GroupChatEntry[] = [ ...Object.values(entries.value.messages).map(m => ({ ...m, signed_content: { content: { ...m.signed_content.content, }, timestamp: m.signed_content.timestamp, }, })), { ...entries.value.createGroupChat, signed_content: { content: { type: 'CreateGroupChat' as const, ...entries.value.createGroupChat.signed_content.content, }, timestamp: entries.value.createGroupChat.signed_content.timestamp, }, }, ...Object.values(entries.value.events) .filter(e => { const type = e.signed_content.content.event.type; return ( type === 'AddMember' || type === 'RemoveMember' || type === 'UpdateGroupInfo' || type === 'LeaveGroup' || type === 'DeleteGroup' ); }) .map(e => ({ ...e, signed_content: { content: { ...e.signed_content.content, }, timestamp: e.signed_content.timestamp, }, })), ]; const lastActivity = allActivity.sort( (m1, m2) => m2.signed_content.timestamp - m1.signed_content.timestamp, )[0]; return { status: 'completed', value: { groupChatHash: this.groupChatHash, currentGroup: currentGroupChat.value, lastActivity, myUnreadMessages, }, }; })"
             },
             {
               "kind": "method",
@@ -1174,6 +1118,62 @@
     },
     {
       "kind": "javascript-module",
+      "path": "locales/locales.js",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "sourceLocale",
+          "default": "`en`",
+          "description": "The locale code that templates in this source code are written in."
+        },
+        {
+          "kind": "variable",
+          "name": "targetLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ , ]",
+          "description": "The other locale codes that this application is localized into. Sorted\nlexicographically."
+        },
+        {
+          "kind": "variable",
+          "name": "allLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ `en`, ]",
+          "description": "All valid project locale codes. Sorted lexicographically."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "sourceLocale",
+          "declaration": {
+            "name": "sourceLocale",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "targetLocales",
+          "declaration": {
+            "name": "targetLocales",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "allLocales",
+          "declaration": {
+            "name": "allLocales",
+            "module": "locales/locales.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
       "path": "src/elements/all-chats.ts",
       "declarations": [
         {
@@ -1252,6 +1252,30 @@
                   "name": "messengerProfile",
                   "type": {
                     "text": "MessengerProfile | undefined"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderGroupEventLastActivity",
+              "parameters": [
+                {
+                  "name": "groupChat",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                },
+                {
+                  "name": "provenance",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "event",
+                  "type": {
+                    "text": "GroupEvent"
                   }
                 }
               ]
@@ -1455,7 +1479,7 @@
                 {
                   "name": "event",
                   "type": {
-                    "text": "Signed<GroupChatEvent>"
+                    "text": "SignedEntry<GroupChatEvent>"
                   }
                 }
               ]
@@ -1468,7 +1492,7 @@
                 {
                   "name": "createGroupChat",
                   "type": {
-                    "text": "Signed<CreateGroupChat>"
+                    "text": "SignedEntry<CreateGroupChat>"
                   }
                 },
                 {
@@ -1480,13 +1504,13 @@
                 {
                   "name": "messages",
                   "type": {
-                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSigned<{ type: 'GroupMessage' } & GroupMessage>\n\t\t>"
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupMessage' } & GroupMessage>\n\t\t>"
                   }
                 },
                 {
                   "name": "events",
                   "type": {
-                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSigned<{ type: 'GroupChatEvent' } & GroupChatEvent>\n\t\t>"
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>\n\t\t>"
                   }
                 },
                 {
@@ -1884,9 +1908,15 @@
               "privacy": "private",
               "parameters": [
                 {
-                  "name": "imAdmin",
+                  "name": "isGroupDeleted",
                   "type": {
                     "text": "boolean"
+                  }
+                },
+                {
+                  "name": "me",
+                  "type": {
+                    "text": "GroupMember"
                   }
                 },
                 {
@@ -2288,7 +2318,7 @@
                 {
                   "name": "messages",
                   "type": {
-                    "text": "Record<EntryHashB64, Signed<PeerMessage>>"
+                    "text": "Record<EntryHashB64, SignedEntry<PeerMessage>>"
                   }
                 },
                 {
