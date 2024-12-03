@@ -1,3 +1,4 @@
+import '@darksoil-studio/file-storage-zome/dist/elements/show-avatar-image.js';
 import {
 	Profile,
 	ProfilesStore,
@@ -14,17 +15,23 @@ import {
 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg, str } from '@lit/localize';
+import { mdiArrowLeft } from '@mdi/js';
 import { SlTextarea } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
-import { hashProperty, notifyError, sharedStyles } from '@tnesh-stack/elements';
+import {
+	hashProperty,
+	notifyError,
+	sharedStyles,
+	wrapPathInSvg,
+} from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
 import { AsyncResult, SignalWatcher, joinAsync } from '@tnesh-stack/signals';
 import { EntryRecord } from '@tnesh-stack/utils';
 import ColorHash from 'color-hash';
 import { LitElement, css, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
@@ -43,6 +50,7 @@ import {
 	PeerMessage,
 	SignedEntry,
 } from '../types.js';
+import './group-details.js';
 import './message-input.js';
 
 const colorHash = new ColorHash({ lightness: [0.1, 0.2, 0.3, 0.4] });
@@ -58,6 +66,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 	@consume({ context: profilesStoreContext, subscribe: true })
 	profilesStore!: ProfilesStore;
+
+	@state()
+	private showDetails = false;
 
 	private renderEvent(event: SignedEntry<GroupChatEvent>) {
 		switch (event.signed_content.content.event.type) {
@@ -101,6 +112,26 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					</sl-tag>
 				`;
 		}
+	}
+
+	private renderTopBar(groupChat: GroupChat) {
+		alert(groupChat.info);
+		return html`
+			<div class="row" style="flex: 1; align-items: center; gap: 8px">
+				<slot name="top-bar-left-action"></slot>
+				<div
+					class="row"
+					style="flex: 1; align-items: center; gap: 8px; cursor: pointer"
+					@click=${() => {
+						this.showDetails = true;
+					}}
+				>
+					<show-avatar-image .imageHash=${groupChat.info.avatar_hash}>
+					</show-avatar-image>
+					<span>${groupChat.info.name} </span>
+				</div>
+			</div>
+		`;
 	}
 
 	private renderChat(
@@ -159,80 +190,83 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			.typingPeers.get();
 
 		return html`<div class="column" style="flex: 1;">
-			<div class="flex-scrollable-parent">
-				<div class="flex-scrollable-container">
-					<div
-						class="flex-scrollable-y"
-						id="scrolling-chat"
-						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
-						${ref(el => {
-							if (!el) return;
-							if (me.removed) return;
-							const theirEventsSets = (
-								[] as EventSet<
-									| ({ type: 'GroupMessage' } & GroupMessage)
-									| ({ type: 'GroupChatEvent' } & GroupChatEvent)
-								>[]
-							)
-								.concat(
-									...eventsSetsInDay.map(
-										eventSetsInDay => eventSetsInDay.eventsSets,
-									),
+			${this.renderTopBar(currentGroup)}
+			<div class="column" style="flex: 1;">
+				<div class="flex-scrollable-parent">
+					<div class="flex-scrollable-container">
+						<div
+							class="flex-scrollable-y"
+							id="scrolling-chat"
+							style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
+							${ref(el => {
+								if (!el) return;
+								if (me.removed) return;
+								const theirEventsSets = (
+									[] as EventSet<
+										| ({ type: 'GroupMessage' } & GroupMessage)
+										| ({ type: 'GroupChatEvent' } & GroupChatEvent)
+									>[]
 								)
-								.filter(
-									eventSet =>
-										!myAgentsB64.includes(
-											encodeHashToBase64(eventSet[0][1].provenance),
+									.concat(
+										...eventsSetsInDay.map(
+											eventSetsInDay => eventSetsInDay.eventsSets,
 										),
-								);
+									)
+									.filter(
+										eventSet =>
+											!myAgentsB64.includes(
+												encodeHashToBase64(eventSet[0][1].provenance),
+											),
+									);
 
-							const unreadMessages: EntryHash[] = [];
+								const unreadMessages: EntryHash[] = [];
 
-							for (const eventSet of theirEventsSets) {
-								for (const [messageHash, _] of eventSet) {
-									if (!myReadMessages.includes(messageHash)) {
-										unreadMessages.push(decodeHashFromBase64(messageHash));
+								for (const eventSet of theirEventsSets) {
+									for (const [messageHash, _] of eventSet) {
+										if (!myReadMessages.includes(messageHash)) {
+											unreadMessages.push(decodeHashFromBase64(messageHash));
+										}
 									}
 								}
-							}
 
-							if (unreadMessages.length > 0) {
-								this.store.groupChats
-									.get(this.groupChatHash)
-									.markMessagesAsRead(unreadMessages);
-							}
-						})}
-					>
-						<div style="margin-bottom: 4px"></div>
-						${this.renderTypingIndicators(typingPeers)}
-						${eventsSetsInDay.map(eventSetsInDay =>
-							this.renderEventsSetsInDay(
-								myAgentsB64,
-								eventSetsInDay.day,
-								eventSetsInDay.eventsSets,
-							),
-						)}
-						<sl-tag style="align-self: center; margin: 4px">
-							${msg(str`Group was created by`)}&nbsp;
-							${this.renderAgentNickname(createGroupChat.provenance)}
-						</sl-tag>
+								if (unreadMessages.length > 0) {
+									this.store.groupChats
+										.get(this.groupChatHash)
+										.markMessagesAsRead(unreadMessages);
+								}
+							})}
+						>
+							<div style="margin-bottom: 4px"></div>
+							${this.renderTypingIndicators(typingPeers)}
+							${eventsSetsInDay.map(eventSetsInDay =>
+								this.renderEventsSetsInDay(
+									myAgentsB64,
+									eventSetsInDay.day,
+									eventSetsInDay.eventsSets,
+								),
+							)}
+							<sl-tag style="align-self: center; margin: 4px">
+								${msg(str`Group was created by`)}&nbsp;
+								${this.renderAgentNickname(createGroupChat.provenance)}
+							</sl-tag>
+						</div>
 					</div>
 				</div>
+				${currentGroup.deleted || me.removed
+					? html``
+					: html`
+							<message-input
+								@input=${() =>
+									this.store.client.sendGroupChatTypingIndicator(
+										this.groupChatHash,
+										otherMembers.filter(m => !m.removed).map(m => m.agents),
+									)}
+								@send-message=${(e: CustomEvent) =>
+									this.sendMessage(e.detail.message as Message)}
+							>
+							</message-input>
+						`}
 			</div>
-			${currentGroup.deleted || me.removed
-				? html``
-				: html`
-						<message-input
-							@input=${() =>
-								this.store.client.sendGroupChatTypingIndicator(
-									this.groupChatHash,
-									otherMembers.filter(m => !m.removed).map(m => m.agents),
-								)}
-							@send-message=${(e: CustomEvent) =>
-								this.sendMessage(e.detail.message as Message)}
-						>
-						</message-input>
-					`}
 		</div> `;
 	}
 
@@ -512,12 +546,32 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					.error=${groupInfo.error}
 				></display-error>`;
 			case 'completed':
-				// const group = messages.value.group;
-				// if (!group) {
-				// 	return html`<display-error
-				// 		.headline=${msg('Group not found')}
-				// 	></display-error>`;
-				// }
+				if (this.showDetails)
+					return html`
+						<div class="flex-scrollable-parent">
+							<div class="flex-scrollable-container">
+								<div class="flex-scrollable-y">
+									<div class="column" style="flex: 1">
+										<div class="row">
+											<sl-icon-button
+												style="color: black"
+												.src=${wrapPathInSvg(mdiArrowLeft)}
+												@click=${() => {
+													this.showDetails = false;
+												}}
+											></sl-icon-button>
+										</div>
+										<group-details
+											.groupChatHash=${this.groupChatHash}
+											style="flex: 1"
+										>
+										</group-details>
+									</div>
+								</div>
+							</div>
+						</div>
+					`;
+
 				const [
 					createGroupChat,
 					currentGroupChat,

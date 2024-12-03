@@ -133,17 +133,13 @@
 									>
 									</all-chats>
 								</div>
-								<div class="column" style="width: 300px; height: 800px">
+								<div class="column" style="width: 300px; height: 400px">
 									<h2>Chat</h2>
 									${this.groupChatHash
 										? html`<group-chat
-													.groupChatHash=${this.groupChatHash}
-													style="flex:1"
-												></group-chat
-												><group-details
-													.groupChatHash=${this.groupChatHash}
-													style="flex:1"
-												></group-details>`
+												.groupChatHash=${this.groupChatHash}
+												style="flex:1"
+											></group-chat>`
 										: html``}
 									${this.peerChatHash
 										? html`<peer-chat
