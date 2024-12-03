@@ -12,8 +12,6 @@ import {
 	decodeHashFromBase64,
 	encodeHashToBase64,
 } from '@holochain/client';
-import '@lit-labs/virtualizer';
-import { LitVirtualizer } from '@lit-labs/virtualizer';
 import { consume } from '@lit/context';
 import { localized, msg, str } from '@lit/localize';
 import { SlTextarea } from '@shoelace-style/shoelace';
@@ -278,19 +276,18 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			<div
 				class="column"
 				${ref(el => {
-					const virtualizer = this.shadowRoot!.getElementById(
-						'scrolling-chat',
-					)! as LitVirtualizer;
+					const scrollingChat =
+						this.shadowRoot!.getElementById('scrolling-chat')!;
 
 					if (
-						virtualizer.scrollHeight -
-							virtualizer.offsetHeight -
-							virtualizer.scrollTop <
+						scrollingChat.scrollHeight -
+							scrollingChat.offsetHeight -
+							scrollingChat.scrollTop <
 						40
 					) {
 						setTimeout(() => {
-							virtualizer.scrollTo({
-								top: virtualizer.scrollHeight,
+							scrollingChat.scrollTo({
+								top: scrollingChat.scrollHeight,
 								behavior: 'smooth',
 							});
 						}, 40);
