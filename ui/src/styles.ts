@@ -40,5 +40,21 @@ export const messengerStyles = [
 			color: var(--sl-color-neutral-500);
 			font-size: 24px;
 		}
+
+		.top-bar {
+			background-color: var(--sl-color-primary-600);
+			color: var(--sl-color-neutral-100);
+			box-shadow: rgba(149, 157, 165, 0.2) 0px 4px 8px;
+			padding: 8px;
+		}
+		.top-bar profile-list-item {
+			color: var(--sl-color-neutral-100);
+		}
+		.top-bar sl-icon-button {
+			color: white;
+		}
+		.top-bar sl-icon-button::part(base):hover {
+			color: rgb(220, 220, 220);
+		}
 	`,
 ];

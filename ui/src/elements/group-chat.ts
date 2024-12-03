@@ -116,7 +116,11 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 	private renderTopBar(groupChat: GroupChat) {
 		return html`
-			<div part="top-bar" class="row" style="align-items: center; gap: 8px">
+			<div
+				part="top-bar"
+				class="row top-bar"
+				style="align-items: center; gap: 8px"
+			>
 				<slot name="top-bar-left-action"></slot>
 				<div
 					class="row"
@@ -551,9 +555,8 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							<div class="flex-scrollable-container">
 								<div class="flex-scrollable-y">
 									<div class="column" style="flex: 1">
-										<div class="row">
+										<div part="top-bar" class="row top-bar">
 											<sl-icon-button
-												style="color: black"
 												.src=${wrapPathInSvg(mdiArrowLeft)}
 												@click=${() => {
 													this.showDetails = false;

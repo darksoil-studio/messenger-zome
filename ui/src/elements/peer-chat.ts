@@ -3,6 +3,12 @@ import {
 	linkedDevicesStoreContext,
 } from '@darksoil-studio/linked-devices-zome';
 import {
+	Profile,
+	ProfilesStore,
+	profilesStoreContext,
+} from '@darksoil-studio/profiles-zome';
+import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item.js';
+import {
 	AgentPubKey,
 	AgentPubKeyB64,
 	EntryHash,
@@ -12,13 +18,18 @@ import {
 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
-import { SlTextarea } from '@shoelace-style/shoelace';
+import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
 import { hashProperty, notifyError, sharedStyles } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
-import { SignalWatcher, joinAsync, toPromise } from '@tnesh-stack/signals';
+import {
+	AsyncResult,
+	SignalWatcher,
+	joinAsync,
+	toPromise,
+} from '@tnesh-stack/signals';
 import { LitElement, css, html, render } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -31,6 +42,7 @@ import { messengerStyles } from '../styles.js';
 import {
 	GroupMessage,
 	Message,
+	MessengerProfile,
 	PeerChat,
 	PeerMessage,
 	SignedEntry,
@@ -52,6 +64,9 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 	@consume({ context: linkedDevicesStoreContext, subscribe: true })
 	linkedDevicesStore: LinkedDevicesStore | undefined;
 
+	@consume({ context: profilesStoreContext, subscribe: true })
+	profilesStore!: ProfilesStore;
+
 	async firstUpdated() {
 		if (!this.peer && !this.peerChatHash)
 			throw new Error(
@@ -69,6 +84,36 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 			}
 			// TODO: what to do in the case of more than one PeerChat for this one peer?
 		}
+	}
+
+	private renderTopBar(peerChat: PeerChat) {
+		const peer = peerChat.peer_1.agents.find(
+			a =>
+				encodeHashToBase64(a) ===
+				encodeHashToBase64(this.store.client.client.myPubKey),
+		)
+			? peerChat.peer_2
+			: peerChat.peer_1;
+
+		return html`
+			<div
+				part="top-bar"
+				class="row top-bar"
+				style="align-items: center; gap: 8px"
+			>
+				<slot name="top-bar-left-action"></slot>
+				${peer.profile
+					? html`
+							<div class="row" style="align-items: center; gap: 8px">
+								<sl-avatar .image=${peer.profile.avatar_src}></sl-avatar>
+							</div>
+						`
+					: html`
+							<profile-list-item .agentPubKey=${peer.agents[0]}>
+							</profile-list-item>
+						`}
+			</div>
+		`;
 	}
 
 	private renderTypingIndicator() {
@@ -105,66 +150,69 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 		]);
 
 		return html`<div class="column" style="flex: 1;">
-			<div class="flex-scrollable-parent">
-				<div class="flex-scrollable-container">
-					<div
-						${ref(el => {
-							if (!el) return;
-							const theirMessageSets = ([] as EventSet<PeerMessage>[])
-								.concat(...messageSetsInDays.map(esid => esid.eventsSets))
-								.filter(
-									set =>
-										!myAgentsB64.includes(
-											encodeHashToBase64(set[0][1].provenance),
-										),
-								);
+			${this.renderTopBar(peerChat)}
+			<div class="column" style="flex: 1;">
+				<div class="flex-scrollable-parent">
+					<div class="flex-scrollable-container">
+						<div
+							${ref(el => {
+								if (!el) return;
+								const theirMessageSets = ([] as EventSet<PeerMessage>[])
+									.concat(...messageSetsInDays.map(esid => esid.eventsSets))
+									.filter(
+										set =>
+											!myAgentsB64.includes(
+												encodeHashToBase64(set[0][1].provenance),
+											),
+									);
 
-							const unreadMessages: EntryHash[] = [];
+								const unreadMessages: EntryHash[] = [];
 
-							for (const messageSet of theirMessageSets) {
-								for (const [messageHash, _] of messageSet) {
-									if (!myReadMessages.includes(messageHash)) {
-										unreadMessages.push(decodeHashFromBase64(messageHash));
+								for (const messageSet of theirMessageSets) {
+									for (const [messageHash, _] of messageSet) {
+										if (!myReadMessages.includes(messageHash)) {
+											unreadMessages.push(decodeHashFromBase64(messageHash));
+										}
 									}
 								}
-							}
 
-							if (unreadMessages.length > 0) {
-								this.store.peerChats
-									.get(this.peerChatHash)
-									.markMessagesAsRead(unreadMessages);
-							}
-						})}
-						class="flex-scrollable-y"
-						id="scrolling-chat"
-						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
-					>
-						<div style="margin-bottom: 4px"></div>
-						${peerIsTyping ? this.renderTypingIndicator() : html``}
-						${messageSetsInDays.map(messageSetInDay =>
-							this.renderEventsSetsInDay(
-								myAgentsB64,
-								messageSetInDay.day,
-								messageSetInDay.eventsSets,
-							),
-						)}
-						<div class="row" style="justify-content: center">
-							<sl-tag style="margin-top: 12px"
-								>${msg('Beginning of chat history')}
-							</sl-tag>
+								if (unreadMessages.length > 0) {
+									this.store.peerChats
+										.get(this.peerChatHash)
+										.markMessagesAsRead(unreadMessages);
+								}
+							})}
+							class="flex-scrollable-y"
+							id="scrolling-chat"
+							style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
+						>
+							<div style="margin-bottom: 4px"></div>
+							${peerIsTyping ? this.renderTypingIndicator() : html``}
+							${messageSetsInDays.map(messageSetInDay =>
+								this.renderEventsSetsInDay(
+									myAgentsB64,
+									messageSetInDay.day,
+									messageSetInDay.eventsSets,
+								),
+							)}
+							<div class="row" style="justify-content: center">
+								<sl-tag style="margin-top: 12px"
+									>${msg('Beginning of chat history')}
+								</sl-tag>
+							</div>
 						</div>
 					</div>
 				</div>
+				<message-input
+					@input=${() =>
+						this.store.client.sendPeerChatTypingIndicator(
+							this.peerChatHash,
+							theirAgents,
+						)}
+					@send-message=${(e: CustomEvent) =>
+						this.sendMessage(e.detail.message as Message)}
+				></message-input>
 			</div>
-			<message-input
-				@input=${() =>
-					this.store.client.sendPeerChatTypingIndicator(
-						this.peerChatHash,
-						theirAgents,
-					)}
-				@send-message=${(e: CustomEvent) =>
-					this.sendMessage(e.detail.message as Message)}
-			></message-input>
 		</div> `;
 	}
 
