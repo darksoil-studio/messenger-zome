@@ -563,11 +563,13 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 												}}
 											></sl-icon-button>
 										</div>
-										<group-details
-											.groupChatHash=${this.groupChatHash}
-											style="flex: 1"
-										>
-										</group-details>
+										<div class="row" style="max-width: 600px;">
+											<group-details
+												.groupChatHash=${this.groupChatHash}
+												style="flex: 1"
+											>
+											</group-details>
+										</div>
 									</div>
 								</div>
 							</div>
