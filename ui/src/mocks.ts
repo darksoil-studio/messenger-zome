@@ -49,7 +49,7 @@ import {
 
 export class MessengerZomeMock extends ZomeMock implements AppClient {
 	constructor(myPubKey?: AgentPubKey) {
-		super('messenger_test', 'messenger', myPubKey);
+		super('messenger_test', 'messenger', 'messenger_test', myPubKey);
 	}
 
 	entries: Record<EntryHashB64, PrivateMessengerEntry> = {};
