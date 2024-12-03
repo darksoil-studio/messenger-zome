@@ -77,7 +77,12 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 			>
 				<div class="row" style="gap: 8px; align-items: center">
 					<upload-avatar label="" name="avatar"> </upload-avatar>
-					<sl-input required .placeholder=${msg('Name')} name="name"></sl-input>
+					<sl-input
+						style="flex: 1"
+						required
+						.placeholder=${msg('Name')}
+						name="name"
+					></sl-input>
 				</div>
 
 				<search-profiles

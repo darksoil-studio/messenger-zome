@@ -10759,11 +10759,11 @@
         "tnesh-stack": "tnesh-stack_31"
       },
       "locked": {
-        "lastModified": 1733140386,
-        "narHash": "sha256-FfN6T+l+3uo7rw53dn6rCoMtrd7pvohJnf6my+rZWIc=",
+        "lastModified": 1733150609,
+        "narHash": "sha256-Wb3hTLbhv/x+SzBBRVC4VMGaCvkX5/vErqvIiWtH2cY=",
         "owner": "darksoil-studio",
         "repo": "linked-devices-zome",
-        "rev": "c8b08f5da81d030e846dcb7afa8e244d3c0a6d50",
+        "rev": "7801fc92421fde6a8f9ac2899f2202a29f62e327",
         "type": "github"
       },
       "original": {
@@ -13476,11 +13476,11 @@
         "webkitgtknixpkgs": "webkitgtknixpkgs_17"
       },
       "locked": {
-        "lastModified": 1733138696,
-        "narHash": "sha256-2OOjBrwgjrf7MnPqfTtAa+C66Qnl5KOqm4bV196u/6o=",
+        "lastModified": 1733235285,
+        "narHash": "sha256-AVzDa5V1jr46B9PWaNoiPAOfweewxbDzEWRtHPQ1JOM=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "7778076ecce5fc851cd9210912740dd21d670ad8",
+        "rev": "60f86e14743a8cbdbcc0dcdceddc15d111e90b63",
         "type": "github"
       },
       "original": {
@@ -14743,11 +14743,11 @@
         "tnesh-stack": "tnesh-stack_35"
       },
       "locked": {
-        "lastModified": 1733235880,
-        "narHash": "sha256-0NDQVHJiLcFU1z1xYQAlBhSyg4BE6EVRa9oSLHcOeqk=",
+        "lastModified": 1733241158,
+        "narHash": "sha256-/g8b1qwnd74MAyfF1Ui4duCxqSmBw21h2Ig61twa4rU=",
         "owner": "darksoil-studio",
         "repo": "profiles-zome",
-        "rev": "b35b61c62783f7f63b99057fe5b00549d8faaf5b",
+        "rev": "2a35159c98b36708e4981d506023c2d50d0519c4",
         "type": "github"
       },
       "original": {
@@ -18270,11 +18270,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1733134827,
-        "narHash": "sha256-0GigVJSIosSoWPdhy6YvfloWdlRxhjmFqCH5lPls5Ys=",
+        "lastModified": 1733235709,
+        "narHash": "sha256-9llt8ZGV4uFdI7yba+MDlmx9j0AxJ084IREEGqx40wg=",
         "owner": "darksoil-studio",
         "repo": "tnesh-stack",
-        "rev": "0d336b4eb7b86fd2dbab5fb54ec56b75e20f0fa4",
+        "rev": "6e284f00a408bbc01073a74462921a9f9e7ce87a",
         "type": "github"
       },
       "original": {
