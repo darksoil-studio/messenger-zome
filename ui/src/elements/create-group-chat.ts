@@ -39,7 +39,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 					toPromise(this.profilesStore.agentsForProfile.get(h)),
 				),
 			);
-			await this.store.client.createGroupChat(
+			const groupChatHash = await this.store.client.createGroupChat(
 				otherAgents.map(a => a[0]),
 				{
 					avatar_hash: fields.avatar,
@@ -51,6 +51,15 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 					only_admins_can_edit_group_info: false,
 					sync_message_history_with_new_members: false,
 				},
+			);
+			this.dispatchEvent(
+				new CustomEvent('group-chat-created', {
+					bubbles: true,
+					composed: true,
+					detail: {
+						groupChatHash,
+					},
+				}),
 			);
 		} catch (e) {
 			console.error(e);
