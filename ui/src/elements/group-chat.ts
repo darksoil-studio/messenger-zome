@@ -115,9 +115,8 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	}
 
 	private renderTopBar(groupChat: GroupChat) {
-		alert(groupChat.info);
 		return html`
-			<div class="row" style="flex: 1; align-items: center; gap: 8px">
+			<div part="top-bar" class="row" style="align-items: center; gap: 8px">
 				<slot name="top-bar-left-action"></slot>
 				<div
 					class="row"

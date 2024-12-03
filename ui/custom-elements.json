@@ -1480,6 +1480,15 @@
               }
             },
             {
+              "kind": "field",
+              "name": "showDetails",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
               "kind": "method",
               "name": "renderEvent",
               "privacy": "private",
@@ -1488,6 +1497,19 @@
                   "name": "event",
                   "type": {
                     "text": "SignedEntry<GroupChatEvent>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderTopBar",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "groupChat",
+                  "type": {
+                    "text": "GroupChat"
                   }
                 }
               ]

@@ -1920,11 +1920,11 @@
         "tnesh-stack": "tnesh-stack_4"
       },
       "locked": {
-        "lastModified": 1733141719,
-        "narHash": "sha256-nSG9XkDRN5/Ku2SNrzYvvHFrACo0VcIe9j4m533btHo=",
+        "lastModified": 1733246615,
+        "narHash": "sha256-bxQ3ntZMz1dxowKJxMFWMVFtD8Va2sCSvLog5hvshkc=",
         "owner": "darksoil-studio",
         "repo": "file-storage",
-        "rev": "40908026f903164dc522b149b43b4c61a624155d",
+        "rev": "3d2362bed697e62b5e63891189e331bb56567be7",
         "type": "github"
       },
       "original": {

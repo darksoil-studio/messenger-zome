@@ -47,7 +47,7 @@ export class GroupInfoEl extends SignalWatcher(LitElement) {
 							style="font-size: 64px; border-radius: 50%; align-self: center; height: 150px"
 							class="placeholder"
 						></sl-icon>`}
-				<span>${info.name}</span>
+				<span class="title">${info.name}</span>
 				${info.description
 					? html` <span class="placeholder">${info.description}</span> `
 					: html``}
