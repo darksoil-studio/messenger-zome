@@ -65,7 +65,7 @@
           buildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
             wrapProgram $out/bin/scaffold-remote-zome \
-              --add-flags "messenger \
+              --add-flags "messenger-zome \
                 --integrity-zome-name messenger_integrity \
                 --coordinator-zome-name messenger \
                 --remote-zome-git-url github:darksoil-studio/messenger-zome \

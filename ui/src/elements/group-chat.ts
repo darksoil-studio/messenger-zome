@@ -66,6 +66,9 @@ import {
 	PeerMessage,
 	SignedEntry,
 } from '../types.js';
+import './group-info.js';
+import './group-members.js';
+import './group-settings.js';
 import './message-input.js';
 
 const colorHash = new ColorHash({ lightness: [0.1, 0.2, 0.3, 0.4] });
