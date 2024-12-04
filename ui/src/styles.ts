@@ -6,8 +6,8 @@ export const messengerStyles = [
 	css`
 		.message {
 			border-radius: 4px;
-			border: 1px solid var(--sl-color-gray-300, lightgrey);
 			padding: 4px;
+			border: 1px solid var(--sl-color-gray-300, lightgrey);
 			box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px;
 			background-color: var(--sl-color-neutral-100, white);
 		}
