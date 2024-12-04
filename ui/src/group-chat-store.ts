@@ -24,14 +24,10 @@ import {
 	CreateGroupChat,
 	GroupChat,
 	GroupChatEntry,
-	GroupChatEvent,
 	GroupEvent,
 	GroupInfo,
-	GroupMember,
-	GroupMessage,
 	GroupSettings,
 	Message,
-	SignedEntry,
 } from './types.js';
 import {
 	TYPING_INDICATOR_TTL_MS,
@@ -42,7 +38,7 @@ import {
 export class GroupChatStore {
 	typingPeers = new Signal.State<AgentPubKey[]>([]);
 
-	private timeouts: Record<AgentPubKeyB64, any> = {};
+	private timeouts: Record<AgentPubKeyB64, number> = {};
 
 	constructor(
 		public messengerStore: MessengerStore,
@@ -195,7 +191,7 @@ export class GroupChatStore {
 					),
 				);
 				if (previousGroupChats.status !== 'completed')
-					return previousGroupChats as any;
+					return previousGroupChats;
 
 				let currentGroupChat = previousGroupChats.value[0];
 				for (let i = 1; i < previousGroupChats.value.length; i++) {
@@ -239,8 +235,7 @@ export class GroupChatStore {
 						.get() as AsyncResult<GroupChat>,
 			),
 		);
-		if (previousGroupChats.status !== 'completed')
-			return previousGroupChats as any;
+		if (previousGroupChats.status !== 'completed') return previousGroupChats;
 
 		let currentGroupChat = previousGroupChats.value[0];
 		for (let i = 1; i < previousGroupChats.value.length; i++) {
@@ -268,11 +263,11 @@ export class GroupChatStore {
 		)!;
 
 		let myReadMessages: EntryHashB64[] = [];
-		let theirReadMessages: Record<AgentPubKeyB64, EntryHashB64[]> = {};
+		const theirReadMessages: Record<AgentPubKeyB64, EntryHashB64[]> = {};
 
 		for (const readMessages of Object.values(entries.value.readMessages)) {
 			if (
-				!!me.agents.find(
+				me.agents.find(
 					a =>
 						encodeHashToBase64(a) ===
 						encodeHashToBase64(readMessages.provenance),
@@ -574,7 +569,7 @@ function apply(
 			};
 			break;
 		case 'AddMember':
-			let member0 = groupChat.members.find(m =>
+			const member0 = groupChat.members.find(m =>
 				m.agents.find(a =>
 					groupEvent.member_agents.find(
 						a2 => encodeHashToBase64(a) === encodeHashToBase64(a2),
@@ -597,7 +592,7 @@ function apply(
 			}
 			break;
 		case 'RemoveMember':
-			let member = groupChat.members.find(m =>
+			const member = groupChat.members.find(m =>
 				m.agents.find(a =>
 					groupEvent.member_agents.find(
 						a2 => encodeHashToBase64(a) === encodeHashToBase64(a2),
@@ -608,7 +603,7 @@ function apply(
 			member!.removed = true;
 			break;
 		case 'NewAgentForMember':
-			let member2 = groupChat.members.find(m =>
+			const member2 = groupChat.members.find(m =>
 				m.agents.find(
 					a => encodeHashToBase64(a) === encodeHashToBase64(provenance),
 				),
@@ -617,7 +612,7 @@ function apply(
 			member2!.agents.push(groupEvent.new_agent);
 			break;
 		case 'PromoteMemberToAdmin':
-			let member3 = groupChat.members.find(m =>
+			const member3 = groupChat.members.find(m =>
 				m.agents.find(a =>
 					groupEvent.member_agents.find(
 						a2 => encodeHashToBase64(a) === encodeHashToBase64(a2),
@@ -628,7 +623,7 @@ function apply(
 			member3!.admin = true;
 			break;
 		case 'DemoteMemberFromAdmin':
-			let member4 = groupChat.members.find(m =>
+			const member4 = groupChat.members.find(m =>
 				m.agents.find(a =>
 					groupEvent.member_agents.find(
 						a2 => encodeHashToBase64(a) === encodeHashToBase64(a2),
@@ -639,7 +634,7 @@ function apply(
 			member4!.admin = false;
 			break;
 		case 'LeaveGroup':
-			let member5 = groupChat.members.find(m =>
+			const member5 = groupChat.members.find(m =>
 				m.agents.find(
 					a => encodeHashToBase64(a) === encodeHashToBase64(provenance),
 				),

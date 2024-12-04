@@ -27,6 +27,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 	@consume({ context: profilesStoreContext, subscribe: true })
 	profilesStore!: ProfilesStore;
 
+	// eslint-disable-next-line
 	private async createGroupChat(fields: any) {
 		try {
 			const profileHashes: ActionHash[] = Array.isArray(fields.members)

@@ -82,6 +82,7 @@ fn get_message(agent_encrypted_message_link: &Link) -> ExternResult<Option<Seria
     }
 }
 
+#[hdk_extern]
 pub fn commit_my_pending_encrypted_messages() -> ExternResult<()> {
     let my_pub_key = agent_info()?.agent_latest_pubkey;
     let links = get_links(

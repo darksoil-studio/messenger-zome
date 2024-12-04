@@ -151,7 +151,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 
 		return html`<div class="column" style="flex: 1;">
 			${this.renderTopBar(peerChat)}
-			<div class="column" style="flex: 1;">
+			<div part="chat" class="column" style="flex: 1; margin: 8px">
 				<div class="flex-scrollable-parent">
 					<div class="flex-scrollable-container">
 						<div
@@ -196,7 +196,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 								),
 							)}
 							<div class="row" style="justify-content: center">
-								<sl-tag style="margin-top: 12px"
+								<sl-tag style="margin-top: 8px"
 									>${msg('Beginning of chat history')}
 								</sl-tag>
 							</div>

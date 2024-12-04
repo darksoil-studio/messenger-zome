@@ -1,38 +1,11 @@
 import {
-	ActionHash,
 	AgentPubKey,
 	AppClient,
-	Delete,
-	EntryHash,
 	EntryHashB64,
-	Link,
-	NewEntryAction,
-	SignedActionHashed,
-	decodeHashFromBase64,
 	encodeHashToBase64,
-	fakeActionHash,
-	fakeAgentPubKey,
-	fakeDnaHash,
-	fakeEntryHash,
 } from '@holochain/client';
-import { encode } from '@msgpack/msgpack';
-import {
-	AgentPubKeyMap,
-	HashType,
-	HoloHashMap,
-	ZomeMock,
-	decodeEntry,
-	fakeCreateAction,
-	fakeDeleteEntry,
-	fakeEntry,
-	fakeRecord,
-	fakeUpdateEntry,
-	hash,
-	hashEntry,
-	pickBy,
-} from '@tnesh-stack/utils';
+import { HashType, ZomeMock, fakeCreateAction, hash } from '@tnesh-stack/utils';
 
-import { MessengerClient } from './messenger-client.js';
 import {
 	CreateGroupChat,
 	CreatePeerChat,
@@ -73,6 +46,7 @@ export class MessengerZomeMock extends ZomeMock implements AppClient {
 			provenance: this.myPubKey,
 			signature: new Uint8Array(),
 			signed_content: {
+				// eslint-disable-next-line
 				content: entry as any,
 				timestamp: Date.now() * 1000,
 			},

@@ -4,19 +4,13 @@ import {
 } from '@darksoil-studio/linked-devices-zome';
 import {
 	AgentPubKey,
-	AgentPubKeyB64,
 	EntryHash,
 	EntryHashB64,
 	decodeHashFromBase64,
 	encodeHashToBase64,
 } from '@holochain/client';
 import { decode } from '@msgpack/msgpack';
-import {
-	AsyncComputed,
-	Signal,
-	joinAsync,
-	toPromise,
-} from '@tnesh-stack/signals';
+import { AsyncComputed, joinAsync, toPromise } from '@tnesh-stack/signals';
 import { HashType, MemoHoloHashMap, retype } from '@tnesh-stack/utils';
 
 import { GroupChatStore, GroupChatSummary } from './group-chat-store.js';
@@ -24,11 +18,9 @@ import { MessengerClient } from './messenger-client.js';
 import { PeerChatStore, PeerChatSummary } from './peer-chat-store.js';
 import {
 	CreateGroupChat,
-	CreatePeer,
 	CreatePeerChat,
 	GroupChatEvent,
 	GroupMessage,
-	PeerChat,
 	PeerChatEvent,
 	PeerMessage,
 	PrivateMessengerEntry,
@@ -36,7 +28,7 @@ import {
 	ReadPeerMessages,
 	SignedEntry,
 } from './types.js';
-import { TYPING_INDICATOR_TTL_MS, asyncReadable } from './utils.js';
+import { asyncReadable } from './utils.js';
 
 export type ChatSummary =
 	| ({
@@ -78,6 +70,7 @@ export class MessengerStore {
 		public client: MessengerClient,
 		public linkedDevicesStore?: LinkedDevicesStore,
 	) {
+		this.client.commitMyPendingEncryptedMessages();
 		if (this.linkedDevicesStore) {
 			this.linkedDevicesStore.client.onSignal(signal => {
 				if (

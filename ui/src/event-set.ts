@@ -61,7 +61,9 @@ export function orderInEventSets<T>(
 				lastEvent.signed_content.timestamp - event.signed_content.timestamp <
 				MESSAGE_SET_TIMEFRAME_INTERVAL;
 			const sameType =
+				// eslint-disable-next-line
 				(event.signed_content.content as any).type ===
+				// eslint-disable-next-line
 				(lastEvent.signed_content.content as any).type;
 
 			const date = new Date(event.signed_content.timestamp / 1000);

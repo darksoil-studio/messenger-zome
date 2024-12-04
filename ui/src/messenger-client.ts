@@ -35,6 +35,10 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		return this.callZome('query_private_messenger_entries', undefined);
 	}
 
+	async commitMyPendingEncryptedMessages(): Promise<void> {
+		return this.callZome('commit_my_pending_encrypted_messages', undefined);
+	}
+
 	/** Peer Chat */
 
 	async createPeerChat(peer: AgentPubKey): Promise<EntryHash> {

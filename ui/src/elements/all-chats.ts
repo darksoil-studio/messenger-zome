@@ -203,8 +203,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 						${this.renderAgentNickname(
 							event.member_agents[0],
 							memberProfile,
-						)}&nbsp;
-						${msg(str`was added to the group.`)}
+						)}&nbsp;${msg(str`was added to the group.`)}
 					</span>
 				`;
 			case 'RemoveMember':

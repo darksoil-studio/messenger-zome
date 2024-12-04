@@ -25,10 +25,7 @@ import {
 	Peer,
 	PeerChat,
 	PeerChatEntry,
-	PeerChatEvent,
 	PeerEvent,
-	PeerMessage,
-	SignedEntry,
 } from './types.js';
 import { TYPING_INDICATOR_TTL_MS, mergeProfiles } from './utils.js';
 
@@ -39,7 +36,7 @@ export class PeerChatStore {
 		public messengerStore: MessengerStore,
 		public peerChatHash: EntryHash,
 	) {
-		let timeout: any;
+		let timeout: number;
 		this.messengerStore.client.onSignal(signal => {
 			if (signal.type === 'PeerChatTypingIndicator') {
 				if (
@@ -155,8 +152,7 @@ export class PeerChatStore {
 								.get() as AsyncResult<PeerChat>,
 					),
 				);
-				if (previousPeerChats.status !== 'completed')
-					return previousPeerChats as any;
+				if (previousPeerChats.status !== 'completed') return previousPeerChats;
 
 				let currentPeerChat = previousPeerChats.value[0];
 				for (let i = 1; i < previousPeerChats.value.length; i++) {
@@ -195,8 +191,7 @@ export class PeerChatStore {
 						.get() as AsyncResult<PeerChat>,
 			),
 		);
-		if (previousPeerChats.status !== 'completed')
-			return previousPeerChats as any;
+		if (previousPeerChats.status !== 'completed') return previousPeerChats;
 
 		let currentPeerChat = previousPeerChats.value[0];
 		for (let i = 1; i < previousPeerChats.value.length; i++) {
@@ -233,7 +228,7 @@ export class PeerChatStore {
 
 		for (const readMessages of Object.values(entries.value.readMessages)) {
 			if (
-				!!me.agents.find(
+				me.agents.find(
 					a =>
 						encodeHashToBase64(a) ===
 						encodeHashToBase64(readMessages.provenance),

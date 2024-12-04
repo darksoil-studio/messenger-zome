@@ -1,14 +1,5 @@
-import { Profile, ProfilesStore } from '@darksoil-studio/profiles-zome';
-import { AgentPubKey, HoloHash, encodeHashToBase64 } from '@holochain/client';
-import {
-	AsyncComputed,
-	AsyncResult,
-	AsyncSignal,
-	AsyncState,
-	Signal,
-	pipe,
-} from '@tnesh-stack/signals';
-import { EntryRecord } from '@tnesh-stack/utils';
+import { HoloHash, encodeHashToBase64 } from '@holochain/client';
+import { AsyncState, Signal } from '@tnesh-stack/signals';
 
 import { MessengerProfile } from './types';
 

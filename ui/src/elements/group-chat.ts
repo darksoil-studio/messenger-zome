@@ -5,6 +5,7 @@ import {
 	profilesStoreContext,
 } from '@darksoil-studio/profiles-zome';
 import '@darksoil-studio/profiles-zome/dist/elements/agent-avatar.js';
+import { SearchProfiles } from '@darksoil-studio/profiles-zome/dist/elements/search-profiles.js';
 import {
 	AgentPubKey,
 	AgentPubKeyB64,
@@ -15,20 +16,34 @@ import {
 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg, str } from '@lit/localize';
-import { mdiArrowLeft } from '@mdi/js';
-import { SlTextarea } from '@shoelace-style/shoelace';
+import { mdiArrowLeft, mdiClose, mdiDelete, mdiPencil } from '@mdi/js';
+import { SlDialog, SlTextarea } from '@shoelace-style/shoelace';
+import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@shoelace-style/shoelace/dist/components/card/card.js';
+import '@shoelace-style/shoelace/dist/components/details/details.js';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
+import '@shoelace-style/shoelace/dist/components/icon-button/icon-button.js';
+import '@shoelace-style/shoelace/dist/components/icon/icon.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
+import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
+import '@shoelace-style/shoelace/dist/components/switch/switch.js';
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
 import {
 	hashProperty,
 	notifyError,
+	onSubmit,
 	sharedStyles,
 	wrapPathInSvg,
 } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
-import { AsyncResult, SignalWatcher, joinAsync } from '@tnesh-stack/signals';
-import { EntryRecord } from '@tnesh-stack/utils';
+import {
+	AsyncResult,
+	SignalWatcher,
+	joinAsync,
+	joinAsyncMap,
+	toPromise,
+} from '@tnesh-stack/signals';
+import { EntryRecord, mapValues, slice } from '@tnesh-stack/utils';
 import ColorHash from 'color-hash';
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -45,12 +60,12 @@ import {
 	GroupChat,
 	GroupChatEntry,
 	GroupChatEvent,
+	GroupInfo,
 	GroupMessage,
 	Message,
 	PeerMessage,
 	SignedEntry,
 } from '../types.js';
-import './group-details.js';
 import './message-input.js';
 
 const colorHash = new ColorHash({ lightness: [0.1, 0.2, 0.3, 0.4] });
@@ -68,7 +83,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	profilesStore!: ProfilesStore;
 
 	@state()
-	private showDetails = false;
+	view: 'chat' | 'details' | 'add-members' | 'edit-info' = 'chat';
 
 	private renderEvent(event: SignedEntry<GroupChatEvent>) {
 		switch (event.signed_content.content.event.type) {
@@ -84,8 +99,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					<sl-tag style="align-self: center; margin: 4px 0">
 						${this.renderAgentNickname(
 							event.signed_content.content.event.member_agents[0],
-						)}&nbsp;
-						${msg(str`was added to the group.`)}
+						)}&nbsp;${msg(str`was added to the group.`)}
 					</sl-tag>
 				`;
 			case 'RemoveMember':
@@ -126,7 +140,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					class="row"
 					style="flex: 1; align-items: center; gap: 8px; cursor: pointer"
 					@click=${() => {
-						this.showDetails = true;
+						this.view = 'details';
 					}}
 				>
 					<show-avatar-image .imageHash=${groupChat.info.avatar_hash}>
@@ -194,7 +208,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 		return html`<div class="column" style="flex: 1;">
 			${this.renderTopBar(currentGroup)}
-			<div class="column" style="flex: 1;">
+			<div part="chat" class="column" style="flex: 1; margin: 8px">
 				<div class="flex-scrollable-parent">
 					<div class="flex-scrollable-container">
 						<div
@@ -248,10 +262,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 									eventSetsInDay.eventsSets,
 								),
 							)}
-							<sl-tag style="align-self: center; margin: 4px">
-								${msg(str`Group was created by`)}&nbsp;
-								${this.renderAgentNickname(createGroupChat.provenance)}
-							</sl-tag>
+							<div class="row" style="justify-content: center">
+								<sl-tag style="align-self: center; margin: 8px">
+									${msg(str`Group was created by`)}&nbsp;
+									${this.renderAgentNickname(createGroupChat.provenance)}
+								</sl-tag>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -521,7 +537,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		}
 	}
 
-	groupInfo() {
+	private groupInfo() {
 		const groupStore = this.store.groupChats.get(this.groupChatHash);
 
 		return joinAsync([
@@ -531,6 +547,368 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			groupStore.events.get(),
 			groupStore.readMessages.get(),
 		]);
+	}
+
+	// eslint-disable-next-line
+	async updateGroupInfo(fields: Record<string, any>) {
+		try {
+			await this.store.groupChats.get(this.groupChatHash).updateGroupChatInfo({
+				avatar_hash: fields.avatar === 'null' ? undefined : fields.avatar,
+				name: fields.name,
+				description: fields.description,
+			});
+			this.view = 'details';
+		} catch (e) {
+			console.log(e);
+			notifyError(msg("Error updating the group's info."));
+		}
+	}
+
+	get profilesToBeAdded() {
+		const searchProfiles = this.shadowRoot?.getElementById(
+			'profiles',
+		) as SearchProfiles;
+		if (!searchProfiles) return undefined;
+		return searchProfiles.value;
+	}
+
+	async addMembers() {
+		try {
+			const profilesToBeAdded = this.profilesToBeAdded!;
+
+			for (const profileToBeAdded of profilesToBeAdded) {
+				const agents = await toPromise(
+					this.profilesStore.agentsForProfile.get(profileToBeAdded),
+				);
+
+				await this.store.groupChats.get(this.groupChatHash).addMember(agents);
+			}
+
+			this.view = 'details';
+		} catch (e) {
+			console.log(e);
+			notifyError(msg('Error adding members.'));
+		}
+	}
+
+	profileHashesForAgents(agents: AgentPubKey[]) {
+		const result = joinAsyncMap(
+			mapValues(slice(this.profilesStore.profileForAgent, agents), v =>
+				v.get(),
+			),
+		);
+		if (result.status !== 'completed') return [];
+		const profileHashes = Array.from(result.value.values())
+			.filter(p => !!p)
+			.map(p => p!.profileHash);
+		return profileHashes;
+	}
+
+	private renderAddMembers(groupChat: GroupChat) {
+		return html`
+			<div class="column" style="flex: 1">
+				<div
+					part="top-bar"
+					class="row top-bar"
+					style="gap: 8px; align-items: center"
+				>
+					<sl-icon-button
+						.src=${wrapPathInSvg(mdiArrowLeft)}
+						@click=${() => {
+							this.view = 'details';
+						}}
+					></sl-icon-button>
+					<span>${msg('Add Members')}</span>
+				</div>
+
+				<div class="row" style="justify-content: center; flex: 1; margin: 8px">
+					<div class="column" style="gap: 8px; flex-basis: 500px">
+						<div class="flex-scrollable-parent">
+							<div class="flex-scrollable-container">
+								<div class="flex-scrollable-y">
+									<search-profiles
+										id="profiles"
+										.excludedProfiles=${this.profileHashesForAgents(
+											groupChat.members
+												.filter(m => !m.removed)
+												.map(m => m.agents[0]),
+										)}
+										@profile-selected=${(e: CustomEvent) => {
+											this.requestUpdate();
+										}}
+									>
+									</search-profiles>
+								</div>
+							</div>
+						</div>
+
+						<div style="flex: 1"></div>
+
+						<sl-button
+							variant="primary"
+							.disabled=${this.profilesToBeAdded &&
+							this.profilesToBeAdded.length === 0}
+							@click=${() => {
+								this.addMembers();
+							}}
+							>${msg('Add Members')}
+						</sl-button>
+					</div>
+				</div>
+			</div>
+		`;
+	}
+
+	private renderEditInfo(info: GroupInfo) {
+		return html`
+			<form
+				class="column"
+				style="flex: 1"
+				${onSubmit(fields => this.updateGroupInfo(fields))}
+			>
+				<div
+					part="top-bar"
+					class="row top-bar"
+					style="gap: 8px; align-items: center "
+				>
+					<sl-icon-button
+						.src=${wrapPathInSvg(mdiArrowLeft)}
+						@click=${() => {
+							this.view = 'details';
+						}}
+					></sl-icon-button>
+					<span>${msg('Edit Group Info')}</span>
+				</div>
+
+				<div class="row" style="justify-content: center; flex: 1; margin: 8px">
+					<div class="column" style="gap: 8px; flex-basis: 500px">
+						<upload-avatar
+							name="avatar"
+							.value=${info.avatar_hash}
+						></upload-avatar>
+						<sl-input
+							required
+							.label=${msg('Name')}
+							name="name"
+							.value=${info.name}
+						></sl-input>
+						<sl-input
+							.label=${msg('Description')}
+							name="description"
+							.value=${info.description}
+						></sl-input>
+						<div style="flex: 1"></div>
+						<sl-button type="submit" variant="primary"
+							>${msg('Save')}
+						</sl-button>
+					</div>
+				</div>
+			</form>
+		`;
+	}
+
+	private renderDetails(groupChat: GroupChat) {
+		const me = groupChat.members.find(m =>
+			m.agents.find(
+				a =>
+					encodeHashToBase64(a) ===
+					encodeHashToBase64(this.store.client.client.myPubKey),
+			),
+		)!;
+
+		return html`
+			<div class="column" style="flex: 1">
+				<div part="top-bar" class="row top-bar" style="align-items: center;">
+					<sl-icon-button
+						.src=${wrapPathInSvg(mdiArrowLeft)}
+						@click=${() => {
+							this.view = 'chat';
+						}}
+					></sl-icon-button>
+					<span>${msg('Group Info')}</span>
+					<div style="flex: 1"></div>
+
+					${!groupChat.deleted &&
+					!me.removed &&
+					(me.admin || !groupChat.settings.only_admins_can_edit_group_info)
+						? html`
+								<sl-button
+									@click=${() => {
+										this.view = 'edit-info';
+									}}
+									variant="text"
+									style="margin: -8px"
+								>
+									<sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}>
+									</sl-icon>
+									${msg('Edit')}
+								</sl-button>
+							`
+						: html``}
+				</div>
+				<div class="flex-scrollable-parent">
+					<div class="flex-scrollable-container">
+						<div class="flex-scrollable-y">
+							<div
+								class="row"
+								style="justify-content: center; flex: 1; margin: 8px"
+							>
+								<div class="column" style="gap: 8px; flex-basis: 500px">
+									<group-info .groupChatHash=${this.groupChatHash}></group-info>
+
+									<sl-card>
+										<group-members
+											style="flex: 1"
+											.groupChatHash=${this.groupChatHash}
+											@add-members-clicked=${() => {
+												this.view = 'add-members';
+											}}
+										></group-members>
+									</sl-card>
+
+									${!groupChat.deleted
+										? html` <sl-details .summary=${msg('Settings')}>
+												<group-settings
+													.groupChatHash=${this.groupChatHash}
+												></group-settings>
+											</sl-details>`
+										: html``}
+									${!groupChat.deleted && !me.removed
+										? html`
+												<sl-dialog
+													id="leave-group-dialog"
+													.label=${msg('leave Group')}
+												>
+													<span
+														>${msg(
+															'Are you sure you want to leave this group?',
+														)}
+													</span>
+													<sl-button
+														slot="footer"
+														@click=${async () => {
+															try {
+																await this.store.groupChats
+																	.get(this.groupChatHash)
+																	.leaveGroup();
+																const dialog = this.shadowRoot!.getElementById(
+																	'leave-group-dialog',
+																) as SlDialog;
+																dialog.hide();
+															} catch (e) {
+																console.log(e);
+																notifyError(msg('Error leaving the group.'));
+															}
+														}}
+														variant="danger"
+														>${msg('Leave Group')}
+													</sl-button>
+												</sl-dialog>
+												<sl-button
+													variant="danger"
+													outline
+													@click=${async () => {
+														const dialog = this.shadowRoot!.getElementById(
+															'leave-group-dialog',
+														) as SlDialog;
+														dialog.show();
+													}}
+												>
+													<sl-icon
+														slot="prefix"
+														.src=${wrapPathInSvg(mdiClose)}
+													>
+													</sl-icon>
+													${msg('Leave group')}
+												</sl-button>
+											`
+										: html``}
+									${me.admin && !me.removed && !groupChat.deleted
+										? html`<sl-dialog
+													id="delete-group-dialog"
+													.label=${msg('Delete Group')}
+												>
+													<span
+														>${msg(
+															'Are you sure you want to delete this group?',
+														)}
+													</span>
+													<sl-button
+														slot="footer"
+														@click=${async () => {
+															try {
+																await this.store.groupChats
+																	.get(this.groupChatHash)
+																	.deleteGroupChat();
+																const dialog = this.shadowRoot!.getElementById(
+																	'delete-group-dialog',
+																) as SlDialog;
+																dialog.hide();
+															} catch (e) {
+																console.log(e);
+																notifyError(msg('Error deleting the group.'));
+															}
+														}}
+														variant="danger"
+														>${msg('Delete Group')}
+													</sl-button>
+												</sl-dialog>
+												<sl-button
+													variant="danger"
+													outline
+													@click=${async () => {
+														const dialog = this.shadowRoot!.getElementById(
+															'delete-group-dialog',
+														) as SlDialog;
+														dialog.show();
+													}}
+												>
+													<sl-icon
+														slot="prefix"
+														.src=${wrapPathInSvg(mdiDelete)}
+													>
+													</sl-icon>
+													${msg('Delete group')}
+												</sl-button> `
+										: html``}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		`;
+	}
+
+	renderView(
+		createGroupChat: SignedEntry<CreateGroupChat>,
+		currentGroup: GroupChat,
+		messages: Record<
+			EntryHashB64,
+			SignedEntry<{ type: 'GroupMessage' } & GroupMessage>
+		>,
+		events: Record<
+			EntryHashB64,
+			SignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>
+		>,
+		myReadMessages: EntryHashB64[],
+	) {
+		switch (this.view) {
+			case 'chat':
+				return this.renderChat(
+					createGroupChat,
+					currentGroup,
+					messages,
+					events,
+					myReadMessages,
+				);
+			case 'details':
+				return this.renderDetails(currentGroup);
+			case 'add-members':
+				return this.renderAddMembers(currentGroup);
+			case 'edit-info':
+				return this.renderEditInfo(currentGroup.info);
+		}
 	}
 
 	render() {
@@ -549,33 +927,6 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					.error=${groupInfo.error}
 				></display-error>`;
 			case 'completed':
-				if (this.showDetails)
-					return html`
-						<div class="flex-scrollable-parent">
-							<div class="flex-scrollable-container">
-								<div class="flex-scrollable-y">
-									<div class="column" style="flex: 1">
-										<div part="top-bar" class="row top-bar">
-											<sl-icon-button
-												.src=${wrapPathInSvg(mdiArrowLeft)}
-												@click=${() => {
-													this.showDetails = false;
-												}}
-											></sl-icon-button>
-										</div>
-										<div class="row" style="max-width: 600px;">
-											<group-details
-												.groupChatHash=${this.groupChatHash}
-												style="flex: 1"
-											>
-											</group-details>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					`;
-
 				const [
 					createGroupChat,
 					currentGroupChat,
@@ -583,7 +934,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					events,
 					readMessages,
 				] = groupInfo.value;
-				return this.renderChat(
+				return this.renderView(
 					createGroupChat,
 					currentGroupChat,
 					messages,
