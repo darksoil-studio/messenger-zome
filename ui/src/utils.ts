@@ -36,7 +36,7 @@ export function asyncReadable<T>(
 	return signal;
 }
 
-export const TYPING_INDICATOR_TTL_MS = 1 * 1000; // 1 second
+export const TYPING_INDICATOR_TTL_MS = 3 * 1000; // 1 second
 
 export function mergeStrings(s1: string, s2: string): string {
 	if (s1! < s2!) return s2;

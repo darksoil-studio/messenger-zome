@@ -794,10 +794,6 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 																await this.store.groupChats
 																	.get(this.groupChatHash)
 																	.leaveGroup();
-																const dialog = this.shadowRoot!.getElementById(
-																	'leave-group-dialog',
-																) as SlDialog;
-																dialog.hide();
 															} catch (e) {
 																console.log(e);
 																notifyError(msg('Error leaving the group.'));
@@ -843,10 +839,6 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 																await this.store.groupChats
 																	.get(this.groupChatHash)
 																	.deleteGroupChat();
-																const dialog = this.shadowRoot!.getElementById(
-																	'delete-group-dialog',
-																) as SlDialog;
-																dialog.hide();
 															} catch (e) {
 																console.log(e);
 																notifyError(msg('Error deleting the group.'));
