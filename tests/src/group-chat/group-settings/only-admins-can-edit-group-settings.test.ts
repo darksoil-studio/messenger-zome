@@ -59,13 +59,13 @@ test('only admins can edit group settings', async () => {
 			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
-		await expect(() =>
-			carol.store.groupChats.get(groupHash).updateGroupChatSettings(settings),
-		).rejects.toThrow();
-
 		await alice.store.groupChats
 			.get(groupHash)
 			.promoteMemberToAdmin([carol.player.agentPubKey]);
+
+		await expect(() =>
+			carol.store.groupChats.get(groupHash).updateGroupChatSettings(settings),
+		).rejects.toThrow();
 
 		await groupConsistency(
 			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
