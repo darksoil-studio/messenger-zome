@@ -42,7 +42,7 @@ export interface MessengerEntries {
 	peerChats: Record<
 		EntryHashB64,
 		{
-			createPeerChat: SignedEntry<CreatePeerChat>;
+			createPeerChat: SignedEntry<CreatePeerChat> | undefined;
 			events: Record<EntryHashB64, SignedEntry<PeerChatEvent>>;
 			messages: Record<EntryHashB64, SignedEntry<PeerMessage>>;
 			readMessages: Record<EntryHashB64, SignedEntry<ReadPeerMessages>>;
@@ -51,7 +51,7 @@ export interface MessengerEntries {
 	groupChats: Record<
 		EntryHashB64,
 		{
-			createGroupChat: SignedEntry<CreateGroupChat>;
+			createGroupChat: SignedEntry<CreateGroupChat> | undefined;
 			events: Record<
 				EntryHashB64,
 				SignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>
@@ -124,24 +124,39 @@ export class MessengerStore {
 			peerChats: {},
 		};
 
+		const initPeerChat = (peerChatHash: EntryHashB64) => {
+			messengerEntries.peerChats[peerChatHash] = {
+				createPeerChat: undefined,
+				events: {},
+				messages: {},
+				readMessages: {},
+			};
+		};
+		const initGroupChat = (groupChatHash: EntryHashB64) => {
+			messengerEntries.groupChats[groupChatHash] = {
+				createGroupChat: undefined,
+				events: {},
+				messages: {},
+				readMessages: {},
+			};
+		};
+
 		const addEntry = (
 			entryHash: EntryHashB64,
 			messengerEntry: PrivateMessengerEntry,
 		) => {
 			switch (messengerEntry.signed_content.content.type) {
 				case 'CreatePeerChat':
-					messengerEntries.peerChats[entryHash] = {
-						createPeerChat: messengerEntry as SignedEntry<CreatePeerChat>,
-						events: {},
-						messages: {},
-						readMessages: {},
-					};
+					initPeerChat(entryHash);
+					messengerEntries.peerChats[entryHash].createPeerChat =
+						messengerEntry as SignedEntry<CreatePeerChat>;
 					break;
 				case 'PeerChatEvent':
 					const peerChatEvent = messengerEntry as SignedEntry<PeerChatEvent>;
 					const peerChatHash1 = encodeHashToBase64(
 						peerChatEvent.signed_content.content.peer_chat_hash,
 					);
+					initPeerChat(peerChatHash1);
 					messengerEntries.peerChats[peerChatHash1].events[entryHash] =
 						peerChatEvent;
 					break;
@@ -151,6 +166,7 @@ export class MessengerStore {
 					const peerChatHash2 = encodeHashToBase64(
 						readPeerMessages.signed_content.content.peer_chat_hash,
 					);
+					initPeerChat(peerChatHash2);
 					messengerEntries.peerChats[peerChatHash2].readMessages[entryHash] =
 						readPeerMessages;
 					break;
@@ -159,16 +175,14 @@ export class MessengerStore {
 					const peerChatHash3 = encodeHashToBase64(
 						peerMessage.signed_content.content.peer_chat_hash,
 					);
+					initPeerChat(peerChatHash3);
 					messengerEntries.peerChats[peerChatHash3].messages[entryHash] =
 						peerMessage;
 					break;
 				case 'CreateGroupChat':
-					messengerEntries.groupChats[entryHash] = {
-						createGroupChat: messengerEntry as SignedEntry<CreateGroupChat>,
-						events: {},
-						messages: {},
-						readMessages: {},
-					};
+					initGroupChat(entryHash);
+					messengerEntries.groupChats[entryHash].createGroupChat =
+						messengerEntry as SignedEntry<CreateGroupChat>;
 					break;
 				case 'GroupChatEvent':
 					const groupChatEvent = messengerEntry as SignedEntry<
@@ -179,6 +193,7 @@ export class MessengerStore {
 					const groupChatHash1 = encodeHashToBase64(
 						groupChatEvent.signed_content.content.group_chat_hash,
 					);
+					initGroupChat(groupChatHash1);
 					messengerEntries.groupChats[groupChatHash1].events[entryHash] =
 						groupChatEvent;
 					break;
@@ -188,6 +203,7 @@ export class MessengerStore {
 					const groupChatHash2 = encodeHashToBase64(
 						readGroupMessages.signed_content.content.group_chat_hash,
 					);
+					initGroupChat(groupChatHash2);
 					messengerEntries.groupChats[groupChatHash2].readMessages[entryHash] =
 						readGroupMessages;
 					break;
@@ -200,6 +216,7 @@ export class MessengerStore {
 					const groupChatHash3 = encodeHashToBase64(
 						groupMessage.signed_content.content.group_chat_hash,
 					);
+					initGroupChat(groupChatHash3);
 					messengerEntries.groupChats[groupChatHash3].messages[entryHash] =
 						groupMessage;
 					break;
