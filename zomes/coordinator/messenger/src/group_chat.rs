@@ -90,7 +90,7 @@ pub fn validate_create_group_chat(
 #[hdk_extern]
 pub fn create_group_chat_event(group_chat_event: GroupChatEvent) -> ExternResult<EntryHash> {
     let content = PrivateMessengerEntryContent::GroupChatEvent(group_chat_event);
-    create_private_messenger_entry(content)
+    create_relaxed_private_messenger_entry(content)
 }
 
 pub fn query_create_group_chat(

@@ -58,7 +58,7 @@ pub fn delete_link_relaxed(address: ActionHash) -> ExternResult<()> {
     Ok(())
 }
 
-pub fn delete_relaxed(address: ActionHash) -> ExternResult<()> {
+pub fn _delete_relaxed(address: ActionHash) -> ExternResult<()> {
     HDK.with(|h| {
         h.borrow()
             .delete(DeleteInput::new(address, ChainTopOrdering::Relaxed))

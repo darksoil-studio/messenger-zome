@@ -98,10 +98,10 @@ fn internal_create_private_messenger_entry(
     match valid {
         ValidateCallbackResult::Valid => {
             match relaxed {
-                false => {
+                true => {
                     create_relaxed(entry)?;
                 }
-                true => {
+                false => {
                     create_entry(entry)?;
                 }
             };

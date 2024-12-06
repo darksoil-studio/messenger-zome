@@ -108,6 +108,7 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 			'create_group_chat_event',
 			groupChatEvent,
 		);
+
 		return new Promise<EntryHash>(resolve => {
 			this.onSignal(signal => {
 				if (
