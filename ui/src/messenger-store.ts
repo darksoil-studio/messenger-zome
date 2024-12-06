@@ -125,20 +125,24 @@ export class MessengerStore {
 		};
 
 		const initPeerChat = (peerChatHash: EntryHashB64) => {
-			messengerEntries.peerChats[peerChatHash] = {
-				createPeerChat: undefined,
-				events: {},
-				messages: {},
-				readMessages: {},
-			};
+			if (!messengerEntries.peerChats[peerChatHash]) {
+				messengerEntries.peerChats[peerChatHash] = {
+					createPeerChat: undefined,
+					events: {},
+					messages: {},
+					readMessages: {},
+				};
+			}
 		};
 		const initGroupChat = (groupChatHash: EntryHashB64) => {
-			messengerEntries.groupChats[groupChatHash] = {
-				createGroupChat: undefined,
-				events: {},
-				messages: {},
-				readMessages: {},
-			};
+			if (!messengerEntries.groupChats[groupChatHash]) {
+				messengerEntries.groupChats[groupChatHash] = {
+					createGroupChat: undefined,
+					events: {},
+					messages: {},
+					readMessages: {},
+				};
+			}
 		};
 
 		const addEntry = (
