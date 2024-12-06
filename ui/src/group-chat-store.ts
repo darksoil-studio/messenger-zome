@@ -310,10 +310,20 @@ export class GroupChatStore {
 		};
 	});
 
-	originalGroupChat = mapCompleted(
-		this.groupChatEntries,
-		e => e.createGroupChat,
-	);
+	originalGroupChat = new AsyncComputed(() => {
+		const entries = this.groupChatEntries.get();
+		if (entries.status !== 'completed') return entries;
+		if (!entries.value.createGroupChat) {
+			return {
+				status: 'error' as const,
+				error: msg('Group chat not found.'),
+			};
+		}
+		return {
+			status: 'completed' as const,
+			value: entries.value.createGroupChat,
+		};
+	});
 
 	messages = mapCompleted(this.groupChatEntries, e => e.messages);
 
