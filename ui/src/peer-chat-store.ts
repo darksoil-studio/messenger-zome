@@ -77,7 +77,7 @@ export class PeerChatStore {
 			privateMessengerEntriesResult.value.peerChats[peerChatHashB64];
 		if (!peerChatEntries)
 			return {
-				status: 'error',
+				status: 'error' as const,
 				error: msg('Peer Chat not found'),
 			};
 
@@ -122,6 +122,13 @@ export class PeerChatStore {
 			new AsyncComputed<PeerChat>((): AsyncResult<PeerChat> => {
 				const entries = this.peerChatEntries.get();
 				if (entries.status !== 'completed') return entries;
+
+				if (!entries.value.createPeerChat) {
+					return {
+						status: 'error' as const,
+						error: msg('Peer chat not found.'),
+					};
+				}
 
 				const eventHashB64 = encodeHashToBase64(eventHash);
 
@@ -175,6 +182,12 @@ export class PeerChatStore {
 	currentPeerChat = new AsyncComputed<PeerChat>(() => {
 		const entries = this.peerChatEntries.get();
 		if (entries.status !== 'completed') return entries;
+		if (!entries.value.createPeerChat) {
+			return {
+				status: 'error' as const,
+				error: msg('Peer chat not found.'),
+			};
+		}
 
 		if (entries.value.currentEventsHashes.length === 0) {
 			return {
@@ -266,6 +279,12 @@ export class PeerChatStore {
 		if (entries.status !== 'completed') return entries;
 		if (currentPeerChat.status !== 'completed') return currentPeerChat;
 		if (readMessages.status !== 'completed') return readMessages;
+		if (!entries.value.createPeerChat) {
+			return {
+				status: 'error' as const,
+				error: msg('Peer chat not found.'),
+			};
+		}
 
 		const imPeer1 = !!currentPeerChat.value.peer_1.agents.find(
 			a =>

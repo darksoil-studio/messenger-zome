@@ -157,10 +157,10 @@ export class GroupChatStore {
 
 				const event = entries.value.events[eventHashB64];
 
-				if (!event) {
+				if (!event || !entries.value.createGroupChat) {
 					return {
 						status: 'error' as const,
-						error: msg('Group Chat not found'),
+						error: msg('Group chat not found.'),
 					};
 				}
 
@@ -217,6 +217,12 @@ export class GroupChatStore {
 	currentGroupChat = new AsyncComputed<GroupChat>(() => {
 		const entries = this.groupChatEntries.get();
 		if (entries.status !== 'completed') return entries;
+		if (!entries.value.createGroupChat) {
+			return {
+				status: 'error' as const,
+				error: msg('Group chat not found.'),
+			};
+		}
 
 		if (entries.value.currentEventsHashes.length === 0) {
 			return {
@@ -320,6 +326,12 @@ export class GroupChatStore {
 		if (currentGroupChat.status !== 'completed') return currentGroupChat;
 		if (entries.status !== 'completed') return entries;
 		if (readMessages.status !== 'completed') return readMessages;
+		if (!entries.value.createGroupChat) {
+			return {
+				status: 'error' as const,
+				error: msg('Group chat not found.'),
+			};
+		}
 
 		const me = currentGroupChat.value.members.find(m =>
 			m.agents.find(
