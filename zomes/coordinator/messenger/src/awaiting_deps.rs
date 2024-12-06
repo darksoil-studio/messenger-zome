@@ -7,12 +7,12 @@ use crate::{
     private_messenger_entries::{
         post_receive_entry, query_private_messenger_entries, validate_private_messenger_entry,
     },
-    utils::{create_relaxed, delete_relaxed},
+    utils::create_relaxed,
 };
 
 #[hdk_extern]
 pub fn attempt_commit_awaiting_deps_entries() -> ExternResult<()> {
-    let mut entries: Vec<(ActionHash, PrivateMessengerEntry)> =
+    let mut entries: Vec<(EntryHash, PrivateMessengerEntry)> =
         query_awaiting_deps_entries()?.into_iter().collect();
 
     entries.sort_by(|e1, e2| {
@@ -23,7 +23,7 @@ pub fn attempt_commit_awaiting_deps_entries() -> ExternResult<()> {
     });
 
     let private_messenger_entries = query_private_messenger_entries(())?;
-    for (action_hash, private_messenger_entry) in entries {
+    for (_action_hash, private_messenger_entry) in entries {
         let entry_hash = hash_entry(&private_messenger_entry)?;
 
         if !private_messenger_entries.contains_key(&entry_hash.clone().into()) {
@@ -36,40 +36,28 @@ pub fn attempt_commit_awaiting_deps_entries() -> ExternResult<()> {
                     ))?;
                     post_receive_entry(private_messenger_entry)?;
                 }
-                ValidateCallbackResult::UnresolvedDependencies(_) => {
-                    continue;
-                }
                 ValidateCallbackResult::Invalid(reason) => {
                     error!("Invalid awaiting dependencies entry: {reason}");
+                    // delete_relaxed(action_hash)?;
                 }
+                ValidateCallbackResult::UnresolvedDependencies(_) => {}
             }
         }
-        delete_relaxed(action_hash)?;
     }
 
     Ok(())
 }
 
-pub fn query_awaiting_deps_entries() -> ExternResult<BTreeMap<ActionHash, PrivateMessengerEntry>> {
+pub fn query_awaiting_deps_entries() -> ExternResult<BTreeMap<EntryHash, PrivateMessengerEntry>> {
+    let existing_private_messenger_entries = query_private_messenger_entries(())?;
+
     let filter = ChainQueryFilter::new()
         .entry_type(UnitEntryTypes::AwaitingDepsEntry.try_into()?)
         .include_entries(true)
         .action_type(ActionType::Create);
     let create_records = query(filter)?;
-    let filter = ChainQueryFilter::new()
-        .entry_type(UnitEntryTypes::AwaitingDepsEntry.try_into()?)
-        .action_type(ActionType::Delete);
-    let delete_records = query(filter)?;
 
-    let all_deleted_hashes: Vec<EntryHash> = delete_records
-        .into_iter()
-        .filter_map(|r| match r.action() {
-            Action::Delete(delete) => Some(delete.deletes_entry_address.clone()),
-            _ => None,
-        })
-        .collect();
-
-    let mut entries: BTreeMap<ActionHash, PrivateMessengerEntry> = BTreeMap::new();
+    let mut entries: BTreeMap<EntryHash, PrivateMessengerEntry> = BTreeMap::new();
 
     for record in create_records {
         let Ok(Some(private_messenger_entry)) = record
@@ -82,10 +70,11 @@ pub fn query_awaiting_deps_entries() -> ExternResult<BTreeMap<ActionHash, Privat
         let Some(entry_hash) = record.action().entry_hash() else {
             continue;
         };
-        if all_deleted_hashes.contains(&entry_hash) {
+        if existing_private_messenger_entries.contains_key(&EntryHashB64::from(entry_hash.clone()))
+        {
             continue;
         }
-        entries.insert(record.action_address().clone(), private_messenger_entry);
+        entries.insert(entry_hash.clone(), private_messenger_entry);
     }
 
     Ok(entries)
