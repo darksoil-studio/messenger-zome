@@ -84,48 +84,48 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 
 		await carol.store.groupChats.get(groupHash).updateGroupChatInfo(info);
 
-		// await carol.store.groupChats
-		// 	.get(groupHash)
-		// 	.removeMember([bob.player.agentPubKey]);
+		await carol.store.groupChats
+			.get(groupHash)
+			.removeMember([bob.player.agentPubKey]);
 
-		// await dhtSync(
-		// 	[alice.player, bob.player, carol.player],
-		// 	alice.player.cells[0].cell_id[0],
-		// );
+		await dhtSync(
+			[alice.player, bob.player, carol.player],
+			alice.player.cells[0].cell_id[0],
+		);
 
-		// await expect(async () =>
-		// 	bob.store.groupChats.get(groupHash).updateGroupChatInfo({
-		// 		...info,
-		// 		name: 'anothername',
-		// 	}),
-		// ).rejects.toThrow();
+		await expect(async () =>
+			bob.store.groupChats.get(groupHash).updateGroupChatInfo({
+				...info,
+				name: 'anothername',
+			}),
+		).rejects.toThrow();
 
-		// // Carol deletes the group at the same time as Alice updates it
-		// // Should result in the group being deleted
+		// Carol deletes the group at the same time as Alice updates it
+		// Should result in the group being deleted
 
-		// await carol.store.groupChats.get(groupHash).deleteGroupChat();
+		await carol.store.groupChats.get(groupHash).deleteGroupChat();
 
-		// await alice.store.groupChats.get(groupHash).updateGroupChatInfo({
-		// 	...info,
-		// 	name: 'anothername',
-		// });
+		await alice.store.groupChats.get(groupHash).updateGroupChatInfo({
+			...info,
+			name: 'anothername',
+		});
 
-		// await dhtSync(
-		// 	[alice.player, bob.player, carol.player],
-		// 	alice.player.cells[0].cell_id[0],
-		// );
+		await dhtSync(
+			[alice.player, bob.player, carol.player],
+			alice.player.cells[0].cell_id[0],
+		);
 
-		// const group = await toPromise(
-		// 	alice.store.groupChats.get(groupHash).currentGroupChat,
-		// );
+		const group = await toPromise(
+			alice.store.groupChats.get(groupHash).currentGroupChat,
+		);
 
-		// assert.ok(group.deleted);
+		assert.ok(group.deleted);
 
-		// await expect(async () =>
-		// 	alice.store.groupChats.get(groupHash).updateGroupChatInfo({
-		// 		...info,
-		// 		name: 'anothername',
-		// 	}),
-		// ).rejects.toThrow();
+		await expect(async () =>
+			alice.store.groupChats.get(groupHash).updateGroupChatInfo({
+				...info,
+				name: 'anothername',
+			}),
+		).rejects.toThrow();
 	});
 });

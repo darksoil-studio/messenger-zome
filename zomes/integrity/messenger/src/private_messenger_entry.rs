@@ -58,11 +58,13 @@ pub fn validate_update_awaiting_deps_entry(
     _private_messenger_entry: PrivateMessengerEntry,
 ) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Invalid(format!(
-        "PrivateMessengerEntries cannot be updated"
+        "AwaitingDeps entries cannot be updated"
     )))
 }
 pub fn validate_delete_awaiting_deps_entry(
     _action: Delete,
 ) -> ExternResult<ValidateCallbackResult> {
-    Ok(ValidateCallbackResult::Valid)
+    Ok(ValidateCallbackResult::Invalid(format!(
+        "AwaitingDeps entries cannot be deleted"
+    )))
 }

@@ -271,7 +271,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 								? html`
 										<div
 											class="placeholder column"
-											style="font-size: 12px; width: 4.5em; overflow: hidden; text-align: right"
+											style="font-size: 12px; text-align: right"
 										>
 											${lessThanAMinuteAgo
 												? html`<span>${msg('now')}</span>`

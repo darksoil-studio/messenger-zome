@@ -53,6 +53,10 @@ impl GroupChat {
             ));
         };
         let author_is_admin = author_member.admin;
+
+        if self.deleted {
+            return Err(wasm_error!("Group is deleted."));
+        }
         match event {
             GroupEvent::UpdateGroupInfo(info) => {
                 if self.settings.only_admins_can_edit_group_info && !author_is_admin {
