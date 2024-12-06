@@ -381,7 +381,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					([messageHash, message], i) => html`
 						<div
 							class="message row"
-							style="align-items: end; flex-wrap: wrap; gap: 8px;"
+							style="align-items: end; flex-wrap: wrap; gap: 16px;"
 						>
 							<span style="flex: 1; word-break: break-all"
 								>${message.signed_content.content.message.message}</span
@@ -479,7 +479,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							}
 							<div
 								class="row"
-								style="gap: 8px; align-items: end; flex-wrap: wrap; "
+								style="gap: 16px; align-items: end; flex-wrap: wrap; "
 							>
 								<span style="flex: 1; word-break: break-all"
 									>${message.signed_content.content.message.message}</span

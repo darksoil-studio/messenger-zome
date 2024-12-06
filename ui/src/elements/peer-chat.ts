@@ -262,7 +262,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 					([messageHash, message], i) => html`
 						<div
 							class="message row"
-							style="align-items: end; flex-wrap: wrap; gap: 8px;"
+							style="align-items: end; flex-wrap: wrap; gap: 16px;"
 						>
 							<span style="flex: 1; word-break: break-all"
 								>${message.signed_content.content.message.message}</span
