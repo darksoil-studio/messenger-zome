@@ -71,6 +71,15 @@ export class MessengerStore {
 		public linkedDevicesStore?: LinkedDevicesStore,
 	) {
 		this.client.commitMyPendingEncryptedMessages();
+		setTimeout(() => {
+			this.client.commitMyPendingEncryptedMessages();
+		}, 2000);
+		setTimeout(() => {
+			this.client.commitMyPendingEncryptedMessages();
+		}, 10000);
+		setTimeout(() => {
+			this.client.commitMyPendingEncryptedMessages();
+		}, 20000);
 		if (this.linkedDevicesStore) {
 			this.linkedDevicesStore.client.onSignal(signal => {
 				if (

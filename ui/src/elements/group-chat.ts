@@ -17,7 +17,7 @@ import {
 import { consume } from '@lit/context';
 import { localized, msg, str } from '@lit/localize';
 import { mdiArrowLeft, mdiClose, mdiDelete, mdiPencil } from '@mdi/js';
-import { SlDialog, SlTextarea } from '@shoelace-style/shoelace';
+import { SlDialog } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/details/details.js';
