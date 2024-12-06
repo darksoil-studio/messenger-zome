@@ -109,8 +109,14 @@ export async function linkDevices(
 	const store1Passcode = [1, 3, 7, 2];
 	const store2Passcode = [9, 3, 8, 4];
 
-	await store1.client.prepareLinkDevices(store1Passcode);
-	await store2.client.prepareLinkDevices(store2Passcode);
+	await store1.client.prepareLinkDevicesRequestor(
+		store2.client.client.myPubKey,
+		store1Passcode,
+	);
+	await store2.client.prepareLinkDevicesRecipient(
+		store1.client.client.myPubKey,
+		store2Passcode,
+	);
 
 	await store1.client.requestLinkDevices(
 		store2.client.client.myPubKey,
