@@ -93,7 +93,11 @@ export class AllChats extends SignalWatcher(LitElement) {
 						? html`<sl-badge variant="primary" pill
 								>${chat.myUnreadMessages.length}</sl-badge
 							>`
-						: html``}
+						: html`
+								<sl-badge variant="primary" pill style="opacity: 0"
+									>${chat.myUnreadMessages.length}</sl-badge
+								>
+							`}
 				</div>
 			</div>
 		</div>`;
@@ -142,7 +146,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 		return html`
 			<sl-relative-time
 				sync
-				style="width: 3em; height: 14px; overflow: hidden; text-align: right"
+				style="text-align: right"
 				format="narrow"
 				.date=${new Date(timestamp)}
 			>
