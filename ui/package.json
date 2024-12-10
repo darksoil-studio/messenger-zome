@@ -40,7 +40,7 @@
     "@shoelace-style/shoelace": "^2.11.0",
     "@tnesh-stack/elements": "^0.400.0-rc",
     "@tnesh-stack/signals": "^0.400.0-rc",
-    "@tnesh-stack/utils": "^0.400.0-rc",
+    "@tnesh-stack/utils": "github:darksoil-studio/tnesh-stack#a2760f04d24b24b370cdd37037fa4c32a1f2a19e&path:packages/utils",
     "color-hash": "^2.0.2",
     "lit": "^3.0.0"
   },

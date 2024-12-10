@@ -135,8 +135,8 @@ importers:
         specifier: ^0.400.0-rc
         version: 0.400.0-rc.0
       '@tnesh-stack/utils':
-        specifier: ^0.400.0-rc
-        version: 0.400.0-rc.0
+        specifier: github:darksoil-studio/tnesh-stack#a2760f04d24b24b370cdd37037fa4c32a1f2a19e&path:packages/utils
+        version: https://codeload.github.com/darksoil-studio/tnesh-stack/tar.gz/a2760f04d24b24b370cdd37037fa4c32a1f2a19e#path:packages/utils
       color-hash:
         specifier: ^2.0.2
         version: 2.0.2
@@ -995,6 +995,10 @@ packages:
 
   '@tnesh-stack/utils@0.400.0-rc.0':
     resolution: {integrity: sha512-N69oS3YXDCTHz5Zl57SjoJtC9nikfzsjFjDy4nEnuMGpYSvMxwWjEwIp1Jx+doPoMMEfrSv2LDqLR6qKXCZ3xQ==}
+
+  '@tnesh-stack/utils@https://codeload.github.com/darksoil-studio/tnesh-stack/tar.gz/a2760f04d24b24b370cdd37037fa4c32a1f2a19e#path:packages/utils':
+    resolution: {path: packages/utils, tarball: https://codeload.github.com/darksoil-studio/tnesh-stack/tar.gz/a2760f04d24b24b370cdd37037fa4c32a1f2a19e}
+    version: 0.400.0-rc.1
 
   '@trivago/prettier-plugin-sort-imports@4.3.0':
     resolution: {integrity: sha512-r3n0onD3BTOVUNPhR4lhVK4/pABGpbA7bW3eumZnYdKaHkf1qEC+Mag6DPbGNuuh0eG8AaYj+YqmVHSiGslaTQ==}
@@ -3854,6 +3858,19 @@ snapshots:
       - utf-8-validate
 
   '@tnesh-stack/utils@0.400.0-rc.0':
+    dependencies:
+      '@holochain/client': 0.18.0-rc.1
+      '@msgpack/msgpack': 2.8.0
+      blakejs: 1.2.1
+      emittery: 1.0.3
+      js-base64: 3.7.7
+      lodash-es: 4.17.21
+      sort-keys: 5.1.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@tnesh-stack/utils@https://codeload.github.com/darksoil-studio/tnesh-stack/tar.gz/a2760f04d24b24b370cdd37037fa4c32a1f2a19e#path:packages/utils':
     dependencies:
       '@holochain/client': 0.18.0-rc.1
       '@msgpack/msgpack': 2.8.0
