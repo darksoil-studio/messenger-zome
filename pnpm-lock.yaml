@@ -134,9 +134,6 @@ importers:
       '@tnesh-stack/signals':
         specifier: ^0.400.0-rc
         version: 0.400.0-rc.0
-      '@tnesh-stack/utils':
-        specifier: ^0.400.0-rc
-        version: 0.400.0-rc.0
       color-hash:
         specifier: ^2.0.2
         version: 2.0.2
