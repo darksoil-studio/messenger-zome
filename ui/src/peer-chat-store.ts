@@ -16,8 +16,8 @@ import {
 	toPromise,
 	uniquify,
 } from '@tnesh-stack/signals';
-import { MemoHoloHashMap } from '@tnesh-stack/utils';
 
+import { MemoHoloHashMap } from './imported-utils';
 import { MessengerStore } from './messenger-store.js';
 import {
 	CreatePeerChat,
