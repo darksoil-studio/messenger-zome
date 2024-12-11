@@ -21,13 +21,13 @@ import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
 import { wrapPathInSvg } from '@tnesh-stack/elements';
 import { AsyncResult, SignalWatcher } from '@tnesh-stack/signals';
-import { EntryRecord } from '@tnesh-stack/utils';
 import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { join } from 'lit/directives/join.js';
 
 import { messengerStoreContext } from '../context.js';
 import { GroupChatSummary } from '../group-chat-store.js';
+import { EntryRecord } from '../imported-utils';
 import { ChatSummary, MessengerStore } from '../messenger-store.js';
 import { PeerChatSummary } from '../peer-chat-store.js';
 import { messengerStyles } from '../styles.js';
@@ -177,10 +177,14 @@ export class AllChats extends SignalWatcher(LitElement) {
 		const latestValue = profile.value.latestVersion.get() as AsyncResult<
 			EntryRecord<Profile> | undefined
 		>;
-		if (latestValue.status !== 'completed')
+		if (
+			latestValue.status !== 'completed' ||
+			!latestValue.value ||
+			!latestValue.value.entry
+		)
 			return html`${msg('Profile not found')}`;
 
-		return html`<span>${latestValue.value?.entry.nickname}</span>`;
+		return html`<span>${latestValue.value.entry.nickname}</span>`;
 	}
 
 	renderGroupEventLastActivity(

@@ -6,7 +6,8 @@ import {
 	Signature,
 	Timestamp,
 } from '@holochain/client';
-import { ActionCommittedSignal } from '@tnesh-stack/utils';
+
+import { ActionCommittedSignal } from './imported-utils';
 
 export type MessengerSignal =
 	| ActionCommittedSignal<EntryTypes, LinkTypes>

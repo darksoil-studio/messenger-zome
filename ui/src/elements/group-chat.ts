@@ -43,7 +43,6 @@ import {
 	joinAsyncMap,
 	toPromise,
 } from '@tnesh-stack/signals';
-import { EntryRecord, mapValues, slice } from '@tnesh-stack/utils';
 import ColorHash from 'color-hash';
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -53,6 +52,7 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { messengerStoreContext } from '../context.js';
 import { EventSet, orderInEventSets } from '../event-set.js';
 import { GroupChatStore } from '../group-chat-store.js';
+import { EntryRecord, mapValues, slice } from '../imported-utils';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
 import {
@@ -430,7 +430,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		const latestValue = profile.value.latestVersion.get() as AsyncResult<
 			EntryRecord<Profile> | undefined
 		>;
-		if (latestValue.status !== 'completed')
+		if (latestValue.status !== 'completed' || !latestValue.value?.entry)
 			return html`${msg('Profile not found')}`;
 
 		return html`

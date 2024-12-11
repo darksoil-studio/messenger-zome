@@ -360,6 +360,692 @@
     },
     {
       "kind": "javascript-module",
+      "path": "src/imported-utils.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "roleNameForCellId",
+          "return": {
+            "type": {
+              "text": "RoleName | undefined"
+            }
+          },
+          "parameters": [
+            {
+              "name": "appInfo",
+              "type": {
+                "text": "AppInfo"
+              }
+            },
+            {
+              "name": "cellId",
+              "type": {
+                "text": "CellId"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "isSignalFromCellWithRole",
+          "return": {
+            "type": {
+              "text": "Promise<boolean>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "client",
+              "type": {
+                "text": "AppClient"
+              }
+            },
+            {
+              "name": "roleName",
+              "type": {
+                "text": "RoleName"
+              }
+            },
+            {
+              "name": "signal",
+              "type": {
+                "text": "AppSignal"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "description": "",
+          "name": "ZomeClient",
+          "members": [
+            {
+              "kind": "method",
+              "name": "onSignal",
+              "return": {
+                "type": {
+                  "text": "UnsubscribeFunction"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "listener",
+                  "type": {
+                    "text": "(eventData: SIGNAL_PAYLOAD) => void | Promise<void>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "callZome",
+              "privacy": "protected",
+              "parameters": [
+                {
+                  "name": "fn_name",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "payload",
+                  "type": {
+                    "text": "any"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "variable",
+          "name": "AGENT_PREFIX",
+          "type": {
+            "text": "string"
+          },
+          "default": "'hCAk'"
+        },
+        {
+          "kind": "variable",
+          "name": "ENTRY_PREFIX",
+          "type": {
+            "text": "string"
+          },
+          "default": "'hCEk'"
+        },
+        {
+          "kind": "variable",
+          "name": "DHTOP_PREFIX",
+          "type": {
+            "text": "string"
+          },
+          "default": "'hCQk'"
+        },
+        {
+          "kind": "variable",
+          "name": "DNA_PREFIX",
+          "type": {
+            "text": "string"
+          },
+          "default": "'hC0k'"
+        },
+        {
+          "kind": "variable",
+          "name": "ACTION_PREFIX",
+          "type": {
+            "text": "string"
+          },
+          "default": "'hCkk'"
+        },
+        {
+          "kind": "function",
+          "name": "retype",
+          "return": {
+            "type": {
+              "text": "HoloHash"
+            }
+          },
+          "parameters": [
+            {
+              "name": "hash",
+              "type": {
+                "text": "HoloHash"
+              }
+            },
+            {
+              "name": "type",
+              "type": {
+                "text": "HashType"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "description": "",
+          "name": "HoloHashMap",
+          "members": [
+            {
+              "kind": "field",
+              "name": "_map",
+              "type": {
+                "text": "Map<string, V>"
+              },
+              "default": "new Map()"
+            },
+            {
+              "kind": "method",
+              "name": "has",
+              "parameters": [
+                {
+                  "name": "key",
+                  "type": {
+                    "text": "K"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "get",
+              "return": {
+                "type": {
+                  "text": "V"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "key",
+                  "type": {
+                    "text": "K"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "set",
+              "parameters": [
+                {
+                  "name": "key",
+                  "type": {
+                    "text": "K"
+                  }
+                },
+                {
+                  "name": "value",
+                  "type": {
+                    "text": "V"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "delete",
+              "parameters": [
+                {
+                  "name": "key",
+                  "type": {
+                    "text": "K"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "keys"
+            },
+            {
+              "kind": "method",
+              "name": "values"
+            },
+            {
+              "kind": "method",
+              "name": "entries"
+            },
+            {
+              "kind": "method",
+              "name": "clear"
+            },
+            {
+              "kind": "method",
+              "name": "forEach",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "callbackfn",
+                  "type": {
+                    "text": "(value: V, key: K, map: Map<K, V>) => void"
+                  }
+                },
+                {
+                  "name": "thisArg",
+                  "optional": true,
+                  "type": {
+                    "text": "any"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "size",
+              "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "[Symbol.iterator]",
+              "return": {
+                "type": {
+                  "text": "IterableIterator<[K, V]>"
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "[Symbol.toStringTag]",
+              "type": {
+                "text": "string"
+              },
+              "readonly": true
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "description": "",
+          "name": "MemoMap",
+          "members": [
+            {
+              "kind": "field",
+              "name": "map",
+              "default": "new Map<K, V>()"
+            },
+            {
+              "kind": "method",
+              "name": "get",
+              "return": {
+                "type": {
+                  "text": "V"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "hash",
+                  "type": {
+                    "text": "K"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "description": "",
+          "name": "MemoHoloHashMap",
+          "members": [
+            {
+              "kind": "field",
+              "name": "map",
+              "default": "new HoloHashMap<K, V>()"
+            },
+            {
+              "kind": "method",
+              "name": "get",
+              "return": {
+                "type": {
+                  "text": "V"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "hash",
+                  "type": {
+                    "text": "K"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "timestampToMillis",
+          "return": {
+            "type": {
+              "text": "number"
+            }
+          },
+          "parameters": [
+            {
+              "name": "timestamp",
+              "type": {
+                "text": "Timestamp"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "decodeEntry",
+          "return": {
+            "type": {
+              "text": "T | undefined"
+            }
+          },
+          "parameters": [
+            {
+              "name": "record",
+              "type": {
+                "text": "Record"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "description": "",
+          "name": "EntryRecord",
+          "members": [
+            {
+              "kind": "field",
+              "name": "actionHash",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "action",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "entry",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "entryHash",
+              "readonly": true
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "decodeCountersignedEntry",
+          "return": {
+            "type": {
+              "text": "T | undefined"
+            }
+          },
+          "parameters": [
+            {
+              "name": "record",
+              "type": {
+                "text": "Record"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "description": "",
+          "name": "CountersignedEntryRecord",
+          "members": [
+            {
+              "kind": "field",
+              "name": "entry",
+              "readonly": true,
+              "type": {
+                "text": "T"
+              },
+              "inheritedFrom": {
+                "name": "EntryRecord",
+                "module": "src/imported-utils.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "actionHash",
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "EntryRecord",
+                "module": "src/imported-utils.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "action",
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "EntryRecord",
+                "module": "src/imported-utils.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "entryHash",
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "EntryRecord",
+                "module": "src/imported-utils.ts"
+              }
+            }
+          ],
+          "superclass": {
+            "name": "EntryRecord",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "function",
+          "name": "mapValues",
+          "return": {
+            "type": {
+              "text": "HoloHashMap<K, U>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "map",
+              "type": {
+                "text": "ReadonlyMap<K, V>"
+              }
+            },
+            {
+              "name": "mappingFn",
+              "type": {
+                "text": "(value: V, key: K) => U"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "slice",
+          "return": {
+            "type": {
+              "text": "ReadonlyMap<K, V>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "map",
+              "type": {
+                "text": "GetonlyMap<K, V>"
+              }
+            },
+            {
+              "name": "keys",
+              "type": {
+                "text": "K[]"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "roleNameForCellId",
+          "declaration": {
+            "name": "roleNameForCellId",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "isSignalFromCellWithRole",
+          "declaration": {
+            "name": "isSignalFromCellWithRole",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "ZomeClient",
+          "declaration": {
+            "name": "ZomeClient",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "AGENT_PREFIX",
+          "declaration": {
+            "name": "AGENT_PREFIX",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "ENTRY_PREFIX",
+          "declaration": {
+            "name": "ENTRY_PREFIX",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "DHTOP_PREFIX",
+          "declaration": {
+            "name": "DHTOP_PREFIX",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "DNA_PREFIX",
+          "declaration": {
+            "name": "DNA_PREFIX",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "ACTION_PREFIX",
+          "declaration": {
+            "name": "ACTION_PREFIX",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "retype",
+          "declaration": {
+            "name": "retype",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "HoloHashMap",
+          "declaration": {
+            "name": "HoloHashMap",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "MemoMap",
+          "declaration": {
+            "name": "MemoMap",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "MemoHoloHashMap",
+          "declaration": {
+            "name": "MemoHoloHashMap",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "timestampToMillis",
+          "declaration": {
+            "name": "timestampToMillis",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "decodeEntry",
+          "declaration": {
+            "name": "decodeEntry",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "EntryRecord",
+          "declaration": {
+            "name": "EntryRecord",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "decodeCountersignedEntry",
+          "declaration": {
+            "name": "decodeCountersignedEntry",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "CountersignedEntryRecord",
+          "declaration": {
+            "name": "CountersignedEntryRecord",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "mapValues",
+          "declaration": {
+            "name": "mapValues",
+            "module": "src/imported-utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "slice",
+          "declaration": {
+            "name": "slice",
+            "module": "src/imported-utils.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
       "path": "src/index.ts",
       "declarations": [],
       "exports": [
@@ -651,11 +1337,55 @@
                 }
               ],
               "description": "Linked Devices"
+            },
+            {
+              "kind": "method",
+              "name": "onSignal",
+              "return": {
+                "type": {
+                  "text": "UnsubscribeFunction"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "listener",
+                  "type": {
+                    "text": "(eventData: SIGNAL_PAYLOAD) => void | Promise<void>"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "ZomeClient",
+                "module": "src/imported-utils.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "callZome",
+              "privacy": "protected",
+              "parameters": [
+                {
+                  "name": "fn_name",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "payload",
+                  "type": {
+                    "text": "any"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "ZomeClient",
+                "module": "src/imported-utils.ts"
+              }
             }
           ],
           "superclass": {
             "name": "ZomeClient",
-            "package": "@tnesh-stack/utils"
+            "module": "/src/imported-utils.js"
           }
         }
       ],

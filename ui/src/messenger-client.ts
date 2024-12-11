@@ -5,8 +5,8 @@ import {
 	EntryHashB64,
 	encodeHashToBase64,
 } from '@holochain/client';
-import { ZomeClient } from '@tnesh-stack/utils';
 
+import { ZomeClient } from './imported-utils.js';
 import {
 	CreateGroupChat,
 	CreatePeerChat,

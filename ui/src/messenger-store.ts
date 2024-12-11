@@ -11,9 +11,9 @@ import {
 } from '@holochain/client';
 import { decode } from '@msgpack/msgpack';
 import { AsyncComputed, joinAsync, toPromise } from '@tnesh-stack/signals';
-import { HashType, MemoHoloHashMap, retype } from '@tnesh-stack/utils';
 
 import { GroupChatStore, GroupChatSummary } from './group-chat-store.js';
+import { HashType, MemoHoloHashMap, retype } from './imported-utils';
 import { MessengerClient } from './messenger-client.js';
 import { PeerChatStore, PeerChatSummary } from './peer-chat-store.js';
 import {

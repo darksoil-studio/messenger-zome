@@ -140,6 +140,9 @@ importers:
       color-hash:
         specifier: ^2.0.2
         version: 2.0.2
+      js-base64:
+        specifier: ^3.7.7
+        version: 3.7.7
       lit:
         specifier: ^3.0.0
         version: 3.2.1
