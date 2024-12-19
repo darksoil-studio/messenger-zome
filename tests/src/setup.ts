@@ -31,7 +31,6 @@ import { MessengerClient } from '../../ui/src/messenger-client.js';
 import { MessengerStore } from '../../ui/src/messenger-store.js';
 
 async function setupStore(player: Player) {
-	patchCallZome(player.appWs as AppWebsocket);
 	await player.conductor
 		.adminWs()
 		.authorizeSigningCredentials(player.cells[0].cell_id);
@@ -57,7 +56,6 @@ async function setupStore(player: Player) {
 					installed_app_id: player.appId,
 				});
 			const appWs = await player.conductor.connectAppWs(issued.token, port);
-			patchCallZome(appWs);
 			store.client.client = appWs;
 			linkedDevicesStore.client.client = appWs;
 		},
@@ -86,22 +84,6 @@ export async function setup(scenario: Scenario, playerNum = 2) {
 	return playersAndStores;
 }
 
-function patchCallZome(appWs: AppWebsocket) {
-	const callZome = appWs.callZome;
-	appWs.callZome = async req => {
-		try {
-			const result = await callZome(req);
-			return result;
-		} catch (e) {
-			if (
-				!e.toString().includes('Socket is not open') &&
-				!e.toString().includes('ClientClosedWithPendingRequests')
-			) {
-				throw e;
-			}
-		}
-	};
-}
 export async function linkDevices(
 	store1: LinkedDevicesStore,
 	store2: LinkedDevicesStore,
