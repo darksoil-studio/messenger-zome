@@ -1,0 +1,2482 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "locales/locales.js",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "sourceLocale",
+          "default": "`en`",
+          "description": "The locale code that templates in this source code are written in."
+        },
+        {
+          "kind": "variable",
+          "name": "targetLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ , ]",
+          "description": "The other locale codes that this application is localized into. Sorted\nlexicographically."
+        },
+        {
+          "kind": "variable",
+          "name": "allLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ `en`, ]",
+          "description": "All valid project locale codes. Sorted lexicographically."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "sourceLocale",
+          "declaration": {
+            "name": "sourceLocale",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "targetLocales",
+          "declaration": {
+            "name": "targetLocales",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "allLocales",
+          "declaration": {
+            "name": "allLocales",
+            "module": "locales/locales.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/context.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "messengerStoreContext"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "messengerStoreContext",
+          "declaration": {
+            "name": "messengerStoreContext",
+            "module": "src/context.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/event-set.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "MESSAGE_SET_TIMEFRAME_INTERVAL"
+        },
+        {
+          "kind": "function",
+          "name": "orderInEventSets",
+          "return": {
+            "type": {
+              "text": "Array<EventSetsInDay<T>>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "events",
+              "type": {
+                "text": "Record<EntryHashB64, SignedEntry<T>>"
+              }
+            },
+            {
+              "name": "agentSets",
+              "type": {
+                "text": "Array<Array<AgentPubKey>>"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MESSAGE_SET_TIMEFRAME_INTERVAL",
+          "declaration": {
+            "name": "MESSAGE_SET_TIMEFRAME_INTERVAL",
+            "module": "src/event-set.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "orderInEventSets",
+          "declaration": {
+            "name": "orderInEventSets",
+            "module": "src/event-set.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/group-chat-store.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "GroupChatStore",
+          "members": [
+            {
+              "kind": "field",
+              "name": "typingPeers",
+              "default": "new Signal.State<AgentPubKey[]>([])"
+            },
+            {
+              "kind": "field",
+              "name": "timeouts",
+              "type": {
+                "text": "Record<AgentPubKeyB64, number>"
+              },
+              "privacy": "private",
+              "default": "{}"
+            },
+            {
+              "kind": "field",
+              "name": "groupChatEntries",
+              "privacy": "private",
+              "default": "new AsyncComputed(() => { const privateMessengerEntriesResult = this.messengerStore.privateMessengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const groupChatHashB64 = encodeHashToBase64(this.groupChatHash); const groupChatEntries = privateMessengerEntriesResult.value.groupChats[groupChatHashB64]; const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {}; const initialEventsHashes: Array<EntryHashB64> = []; if (!groupChatEntries) { return { status: 'error' as const, error: msg('Group not found'), }; } for (const [entryHash, groupChatEvent] of Object.entries( groupChatEntries.events, )) { const previousEventsHashes = groupChatEvent.signed_content.content.previous_group_chat_events_hashes; if (previousEventsHashes.length === 0) { initialEventsHashes.push(entryHash); } else { for (const previous of previousEventsHashes) { const previousB64 = encodeHashToBase64(previous); if (!previousToNexts[previousB64]) { previousToNexts[previousB64] = []; } previousToNexts[previousB64].push(entryHash); } } } const allEventsWithDescendants = Object.keys(previousToNexts); const currentEventsHashes = Object.keys(groupChatEntries.events).filter( eventHash => !allEventsWithDescendants.includes(eventHash), ); return { status: 'completed', value: { ...groupChatEntries, previousToNexts, currentEventsHashes, initialEventsHashes, }, }; })"
+            },
+            {
+              "kind": "field",
+              "name": "groupChatAtEvent",
+              "privacy": "private",
+              "default": "new MemoHoloHashMap( (eventHash: EntryHash) => new AsyncComputed<GroupChat>((): AsyncResult<GroupChat> => { const entries = this.groupChatEntries.get(); if (entries.status !== 'completed') return entries; const eventHashB64 = encodeHashToBase64(eventHash); const event = entries.value.events[eventHashB64]; if (!event || !entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } const previousEventsHashes = event.signed_content.content.previous_group_chat_events_hashes; if (previousEventsHashes.length === 0) { const originalGroupChat: GroupChat = initialGroupChat( entries.value.createGroupChat.signed_content.content, ); const groupChat = apply( originalGroupChat, event.provenance, event.signed_content.content.event, ); return { status: 'completed', value: groupChat, }; } const previousGroupChats = joinAsync( previousEventsHashes.map( eventHash => this.groupChatAtEvent .get(eventHash) .get() as AsyncResult<GroupChat>, ), ); if (previousGroupChats.status !== 'completed') return previousGroupChats; let currentGroupChat = previousGroupChats.value[0]; for (let i = 1; i < previousGroupChats.value.length; i++) { currentGroupChat = merge( currentGroupChat, previousGroupChats.value[i], ); } currentGroupChat = apply( currentGroupChat, event.provenance, event.signed_content.content.event, ); return { status: 'completed', value: currentGroupChat, }; }), )"
+            },
+            {
+              "kind": "field",
+              "name": "currentGroupChat",
+              "default": "new AsyncComputed<GroupChat>(() => { const entries = this.groupChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } if (entries.value.currentEventsHashes.length === 0) { return { status: 'completed' as const, value: initialGroupChat( entries.value.createGroupChat.signed_content.content, ), }; } const previousGroupChats = joinAsync( entries.value.currentEventsHashes.map( eventHash => this.groupChatAtEvent .get(decodeHashFromBase64(eventHash)) .get() as AsyncResult<GroupChat>, ), ); if (previousGroupChats.status !== 'completed') return previousGroupChats; let currentGroupChat = previousGroupChats.value[0]; for (let i = 1; i < previousGroupChats.value.length; i++) { currentGroupChat = merge(currentGroupChat, previousGroupChats.value[i]); } return { status: 'completed' as const, value: currentGroupChat, }; })"
+            },
+            {
+              "kind": "field",
+              "name": "readMessages",
+              "default": "new AsyncComputed(() => { const entries = this.groupChatEntries.get(); const currentGroupChat = this.currentGroupChat.get(); if (entries.status !== 'completed') return entries; if (currentGroupChat.status !== 'completed') return currentGroupChat; const me = currentGroupChat.value.members.find(m => m.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ), )!; let myReadMessages: EntryHashB64[] = []; const theirReadMessages: Record<AgentPubKeyB64, EntryHashB64[]> = {}; for (const readMessages of Object.values(entries.value.readMessages)) { if ( me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(readMessages.provenance), ) ) { myReadMessages = [ ...myReadMessages, ...readMessages.signed_content.content.read_messages_hashes.map( encodeHashToBase64, ), ]; } else { const provenance = encodeHashToBase64(readMessages.provenance); if (!theirReadMessages[provenance]) { theirReadMessages[provenance] = []; } theirReadMessages[provenance] = Array.from( new Set([ ...theirReadMessages[provenance], ...readMessages.signed_content.content.read_messages_hashes.map( encodeHashToBase64, ), ]), ); } } return { status: 'completed' as const, value: { myReadMessages: Array.from(new Set(myReadMessages)), theirReadMessages, }, }; })"
+            },
+            {
+              "kind": "field",
+              "name": "originalGroupChat",
+              "default": "new AsyncComputed(() => { const entries = this.groupChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } return { status: 'completed' as const, value: entries.value.createGroupChat, }; })"
+            },
+            {
+              "kind": "field",
+              "name": "messages"
+            },
+            {
+              "kind": "field",
+              "name": "events"
+            },
+            {
+              "kind": "field",
+              "name": "summary",
+              "default": "new AsyncComputed<GroupChatSummary>(() => { const currentGroupChat = this.currentGroupChat.get(); const entries = this.groupChatEntries.get(); const readMessages = this.readMessages.get(); if (currentGroupChat.status !== 'completed') return currentGroupChat; if (entries.status !== 'completed') return entries; if (readMessages.status !== 'completed') return readMessages; if (!entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } const me = currentGroupChat.value.members.find(m => m.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ), )!; const myUnreadMessages = Object.entries(entries.value.messages) .filter( ([messageHash, message]) => !readMessages.value.myReadMessages.includes(messageHash) && !me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(message.provenance), ), ) .map(([hash, _]) => hash); const allActivity: GroupChatEntry[] = [ ...Object.values(entries.value.messages).map(m => ({ ...m, signed_content: { content: { ...m.signed_content.content, }, timestamp: m.signed_content.timestamp, }, })), { ...entries.value.createGroupChat, signed_content: { content: { type: 'CreateGroupChat' as const, ...entries.value.createGroupChat.signed_content.content, }, timestamp: entries.value.createGroupChat.signed_content.timestamp, }, }, ...Object.values(entries.value.events) .filter(e => { const type = e.signed_content.content.event.type; return ( type === 'AddMember' || type === 'RemoveMember' || type === 'UpdateGroupInfo' || type === 'LeaveGroup' || type === 'DeleteGroup' ); }) .map(e => ({ ...e, signed_content: { content: { ...e.signed_content.content, }, timestamp: e.signed_content.timestamp, }, })), ]; const lastActivity = allActivity.sort( (m1, m2) => m2.signed_content.timestamp - m1.signed_content.timestamp, )[0]; return { status: 'completed', value: { groupChatHash: this.groupChatHash, currentGroup: currentGroupChat.value, lastActivity, myUnreadMessages, }, }; })"
+            },
+            {
+              "kind": "method",
+              "name": "sendMessage",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "Message"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "markMessagesAsRead",
+              "return": {
+                "type": {
+                  "text": "Promise<void>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "messagesHashes",
+                  "type": {
+                    "text": "EntryHash[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "addMember",
+              "parameters": [
+                {
+                  "name": "newMemberAgents",
+                  "type": {
+                    "text": "AgentPubKey[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "promoteMemberToAdmin",
+              "parameters": [
+                {
+                  "name": "memberAgents",
+                  "type": {
+                    "text": "AgentPubKey[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "demoteMemberFromAdmin",
+              "parameters": [
+                {
+                  "name": "memberAgents",
+                  "type": {
+                    "text": "AgentPubKey[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "removeMember",
+              "parameters": [
+                {
+                  "name": "memberAgents",
+                  "type": {
+                    "text": "AgentPubKey[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "notifyNewAgent",
+              "parameters": [
+                {
+                  "name": "newAgent",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "proofs",
+                  "type": {
+                    "text": "Array<LinkedDevicesProof>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "updateGroupChatInfo",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "groupInfo",
+                  "type": {
+                    "text": "GroupInfo"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "updateGroupChatSettings",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "groupSettings",
+                  "type": {
+                    "text": "GroupSettings"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "leaveGroup",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "deleteGroupChat",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "GroupChatStore",
+          "declaration": {
+            "name": "GroupChatStore",
+            "module": "src/group-chat-store.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/index.ts",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "package": "./messenger-store.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "package": "./messenger-client.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "package": "./context.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "package": "./types.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/messenger-client.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "MessengerClient",
+          "members": [
+            {
+              "kind": "method",
+              "name": "queryPrivateMessengerEntries",
+              "return": {
+                "type": {
+                  "text": "Promise<\n\t\tRecord<EntryHashB64, PrivateMessengerEntry>\n\t>"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "commitMyPendingEncryptedMessages",
+              "return": {
+                "type": {
+                  "text": "Promise<void>"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "createPeerChat",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "peer",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                }
+              ],
+              "description": "Peer Chat"
+            },
+            {
+              "kind": "method",
+              "name": "sendPeerMessage",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "peerChatHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                },
+                {
+                  "name": "currentPeerChatEventsHashes",
+                  "type": {
+                    "text": "Array<EntryHash>"
+                  }
+                },
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "Message"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "markPeerMessagesAsRead",
+              "parameters": [
+                {
+                  "name": "peerChatHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                },
+                {
+                  "name": "currentPeerChatEventsHashes",
+                  "type": {
+                    "text": "Array<EntryHash>"
+                  }
+                },
+                {
+                  "name": "readMessagesHashes",
+                  "type": {
+                    "text": "Array<EntryHash>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "createPeerChatEvent",
+              "parameters": [
+                {
+                  "name": "peerChatEvent",
+                  "type": {
+                    "text": "PeerChatEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "createGroupChat",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "otherMembers",
+                  "type": {
+                    "text": "Array<AgentPubKey>"
+                  }
+                },
+                {
+                  "name": "info",
+                  "type": {
+                    "text": "GroupInfo"
+                  }
+                },
+                {
+                  "name": "settings",
+                  "type": {
+                    "text": "GroupSettings"
+                  }
+                }
+              ],
+              "description": "Group Chat"
+            },
+            {
+              "kind": "method",
+              "name": "createGroupChatEvent",
+              "parameters": [
+                {
+                  "name": "groupChatEvent",
+                  "type": {
+                    "text": "GroupChatEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "sendGroupMessage",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "groupChatHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                },
+                {
+                  "name": "currentGroupChatEventsHashes",
+                  "type": {
+                    "text": "EntryHash[]"
+                  }
+                },
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "Message"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "markGroupMessagesAsRead",
+              "parameters": [
+                {
+                  "name": "groupChatHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                },
+                {
+                  "name": "currentGroupChatEventsHashes",
+                  "type": {
+                    "text": "EntryHash[]"
+                  }
+                },
+                {
+                  "name": "readMessagesHashes",
+                  "type": {
+                    "text": "Array<EntryHash>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "sendPeerChatTypingIndicator",
+              "parameters": [
+                {
+                  "name": "peerChatHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                },
+                {
+                  "name": "peerAgents",
+                  "type": {
+                    "text": "AgentPubKey[]"
+                  }
+                }
+              ],
+              "description": "Typing Indicator"
+            },
+            {
+              "kind": "method",
+              "name": "sendGroupChatTypingIndicator",
+              "parameters": [
+                {
+                  "name": "groupHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                },
+                {
+                  "name": "allAgents",
+                  "type": {
+                    "text": "Array<Array<AgentPubKey>>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "synchronizeWithLinkedDevice",
+              "parameters": [
+                {
+                  "name": "linkedDevice",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                }
+              ],
+              "description": "Linked Devices"
+            }
+          ],
+          "superclass": {
+            "name": "ZomeClient",
+            "package": "@tnesh-stack/utils"
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MessengerClient",
+          "declaration": {
+            "name": "MessengerClient",
+            "module": "src/messenger-client.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/messenger-store.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "MessengerStore",
+          "members": [
+            {
+              "kind": "field",
+              "name": "privateMessengerEntries"
+            },
+            {
+              "kind": "field",
+              "name": "groupChats",
+              "default": "new MemoHoloHashMap( (groupChatHash: EntryHash) => new GroupChatStore(this, groupChatHash), )"
+            },
+            {
+              "kind": "field",
+              "name": "peerChats",
+              "default": "new MemoHoloHashMap( (peerChatHash: EntryHash) => new PeerChatStore(this, peerChatHash), )"
+            },
+            {
+              "kind": "field",
+              "name": "peerChatsForPeer",
+              "default": "new MemoHoloHashMap( (agent: AgentPubKey) => new AsyncComputed(() => { const entries = this.privateMessengerEntries.get(); if (entries.status !== 'completed') return entries; const allPeerChatsHashes = Object.keys(entries.value.peerChats); const allCurrentPeerChats = joinAsync( allPeerChatsHashes.map(peerChatHash => this.peerChats .get(decodeHashFromBase64(peerChatHash)) .currentPeerChat.get(), ), ); if (allCurrentPeerChats.status !== 'completed') return allCurrentPeerChats; const peerChatsHashesForPeer: EntryHash[] = []; for (let i = 0; i < allCurrentPeerChats.value.length; i++) { if ( allCurrentPeerChats.value[i].peer_1.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(agent), ) || allCurrentPeerChats.value[i].peer_2.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(agent), ) ) { peerChatsHashesForPeer.push( decodeHashFromBase64(allPeerChatsHashes[i]), ); } } return { status: 'completed', value: peerChatsHashesForPeer, }; }), )"
+            },
+            {
+              "kind": "field",
+              "name": "allChats",
+              "default": "new AsyncComputed<Array<ChatSummary>>(() => { const entries = this.privateMessengerEntries.get(); if (entries.status !== 'completed') return entries; const peerChatsHashes = Object.keys(entries.value.peerChats); const peerChatsSummaries = joinAsync( peerChatsHashes.map(peerChatHash => this.peerChats.get(decodeHashFromBase64(peerChatHash)).summary.get(), ), ); const groupChatsHashes = Object.keys(entries.value.groupChats); const groupChatsSummaries = joinAsync( groupChatsHashes.map(groupChatHash => this.groupChats.get(decodeHashFromBase64(groupChatHash)).summary.get(), ), ); if (peerChatsSummaries.status !== 'completed') return peerChatsSummaries; if (groupChatsSummaries.status !== 'completed') return groupChatsSummaries; const chats: ChatSummary[] = [ ...peerChatsSummaries.value.map(s => ({ type: 'PeerChat' as const, ...s, })), ...groupChatsSummaries.value.map(s => ({ type: 'GroupChat' as const, ...s, })), ]; const sortedChats = chats.sort( (c1, c2) => c2.lastActivity.signed_content.timestamp - c1.lastActivity.signed_content.timestamp, ); return { status: 'completed', value: sortedChats, }; })"
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MessengerStore",
+          "declaration": {
+            "name": "MessengerStore",
+            "module": "src/messenger-store.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/mocks.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "MessengerZomeMock",
+          "members": [
+            {
+              "kind": "field",
+              "name": "entries",
+              "type": {
+                "text": "Record<EntryHashB64, PrivateMessengerEntry>"
+              },
+              "default": "{}"
+            },
+            {
+              "kind": "method",
+              "name": "query_private_messenger_entries"
+            },
+            {
+              "kind": "method",
+              "name": "createPrivateEntry",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "entry",
+                  "type": {
+                    "text": "| ({ type: 'CreatePeerChat' } & CreatePeerChat)\n\t\t\t| ({ type: 'PeerChatEvent' } & PeerChatEvent)\n\t\t\t| ({ type: 'PeerMessage' } & PeerMessage)\n\t\t\t| ({ type: 'ReadPeerMessages' } & ReadPeerMessages)\n\t\t\t| ({ type: 'CreateGroupChat' } & CreateGroupChat)\n\t\t\t| ({ type: 'GroupChatEvent' } & GroupChatEvent)\n\t\t\t| ({ type: 'GroupMessage' } & GroupMessage)\n\t\t\t| ({ type: 'ReadGroupMessages' } & ReadGroupMessages)"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "create_group_chat",
+              "parameters": [
+                {
+                  "name": "{\n\t\tothers,\n\t\tinfo,\n\t\tsettings,\n\t}",
+                  "type": {
+                    "text": "{\n\t\tothers: Array<AgentPubKey>;\n\t\tinfo: GroupInfo;\n\t\tsettings: GroupSettings;\n\t}"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "create_group_event",
+              "parameters": [
+                {
+                  "name": "groupEvent",
+                  "type": {
+                    "text": "GroupChatEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "send_group_message",
+              "parameters": [
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "GroupMessage"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "mark_group_messages_as_read",
+              "parameters": [
+                {
+                  "name": "read",
+                  "type": {
+                    "text": "ReadGroupMessages"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "create_peer_chat",
+              "parameters": [
+                {
+                  "name": "peer",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "create_peer_event",
+              "parameters": [
+                {
+                  "name": "peerEvent",
+                  "type": {
+                    "text": "PeerChatEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "send_peer_message",
+              "parameters": [
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "PeerMessage"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "mark_peer_messages_as_read",
+              "parameters": [
+                {
+                  "name": "read",
+                  "type": {
+                    "text": "ReadPeerMessages"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "send_group_chat_typing_indicator"
+            },
+            {
+              "kind": "method",
+              "name": "send_peer_chat_typing_indicator"
+            }
+          ],
+          "superclass": {
+            "name": "ZomeMock",
+            "package": "@tnesh-stack/utils"
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MessengerZomeMock",
+          "declaration": {
+            "name": "MessengerZomeMock",
+            "module": "src/mocks.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/peer-chat-store.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "PeerChatStore",
+          "members": [
+            {
+              "kind": "field",
+              "name": "peerIsTyping",
+              "default": "new Signal.State<boolean>(false)"
+            },
+            {
+              "kind": "field",
+              "name": "peerChatEntries",
+              "privacy": "private",
+              "default": "new AsyncComputed(() => { const privateMessengerEntriesResult = this.messengerStore.privateMessengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const peerChatHashB64 = encodeHashToBase64(this.peerChatHash); const peerChatEntries = privateMessengerEntriesResult.value.peerChats[peerChatHashB64]; if (!peerChatEntries) return { status: 'error' as const, error: msg('Peer Chat not found'), }; const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {}; const initialEventsHashes: Array<EntryHashB64> = []; for (const [entryHash, peerChatEvent] of Object.entries( peerChatEntries.events, )) { const previousEventsHashes = peerChatEvent.signed_content.content.previous_peer_chat_events_hashes; if (previousEventsHashes.length === 0) { initialEventsHashes.push(entryHash); } else { for (const previous of previousEventsHashes) { const previousB64 = encodeHashToBase64(previous); if (!previousToNexts[previousB64]) { previousToNexts[previousB64] = []; } previousToNexts[previousB64].push(entryHash); } } } const allEventsWithDescendants = Object.keys(previousToNexts); const currentEventsHashes = Object.keys(peerChatEntries.events).filter( eventHash => !allEventsWithDescendants.includes(eventHash), ); return { status: 'completed', value: { ...peerChatEntries, previousToNexts, currentEventsHashes, initialEventsHashes, }, }; })"
+            },
+            {
+              "kind": "field",
+              "name": "peerChatAtEvent",
+              "privacy": "private",
+              "default": "new MemoHoloHashMap( (eventHash: EntryHash) => new AsyncComputed<PeerChat>((): AsyncResult<PeerChat> => { const entries = this.peerChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createPeerChat) { return { status: 'error' as const, error: msg('Peer chat not found.'), }; } const eventHashB64 = encodeHashToBase64(eventHash); const event = entries.value.events[eventHashB64]; const previousEventsHashes = event.signed_content.content.previous_peer_chat_events_hashes; if (previousEventsHashes.length === 0) { const peerChat = apply( initialPeerChat( entries.value.createPeerChat.signed_content.content, ), event.provenance, event.signed_content.content.event, ); return { status: 'completed', value: peerChat, }; } const previousPeerChats = joinAsync( previousEventsHashes.map( eventHash => this.peerChatAtEvent .get(eventHash) .get() as AsyncResult<PeerChat>, ), ); if (previousPeerChats.status !== 'completed') return previousPeerChats; let currentPeerChat = previousPeerChats.value[0]; for (let i = 1; i < previousPeerChats.value.length; i++) { currentPeerChat = merge(currentPeerChat, previousPeerChats.value[i]); } currentPeerChat = apply( currentPeerChat, event.provenance, event.signed_content.content.event, ); return { status: 'completed', value: currentPeerChat, }; }), )"
+            },
+            {
+              "kind": "field",
+              "name": "currentPeerChat",
+              "default": "new AsyncComputed<PeerChat>(() => { const entries = this.peerChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createPeerChat) { return { status: 'error' as const, error: msg('Peer chat not found.'), }; } if (entries.value.currentEventsHashes.length === 0) { return { status: 'completed', value: entries.value.createPeerChat.signed_content.content, }; } const previousPeerChats = joinAsync( entries.value.currentEventsHashes.map( eventHash => this.peerChatAtEvent .get(decodeHashFromBase64(eventHash)) .get() as AsyncResult<PeerChat>, ), ); if (previousPeerChats.status !== 'completed') return previousPeerChats; let currentPeerChat = previousPeerChats.value[0]; for (let i = 1; i < previousPeerChats.value.length; i++) { currentPeerChat = merge(currentPeerChat, previousPeerChats.value[i]); } return { status: 'completed', value: currentPeerChat, }; })"
+            },
+            {
+              "kind": "field",
+              "name": "messages"
+            },
+            {
+              "kind": "field",
+              "name": "events"
+            },
+            {
+              "kind": "field",
+              "name": "readMessages",
+              "default": "new AsyncComputed(() => { const entries = this.peerChatEntries.get(); const currentPeerChat = this.currentPeerChat.get(); if (entries.status !== 'completed') return entries; if (currentPeerChat.status !== 'completed') return currentPeerChat; const imPeer1 = !!currentPeerChat.value.peer_1.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ); const me = imPeer1 ? currentPeerChat.value.peer_1 : currentPeerChat.value.peer_2; let myReadMessages: EntryHashB64[] = []; let theirReadMessages: EntryHashB64[] = []; for (const readMessages of Object.values(entries.value.readMessages)) { if ( me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(readMessages.provenance), ) ) { myReadMessages = [ ...myReadMessages, ...readMessages.signed_content.content.read_messages_hashes.map( encodeHashToBase64, ), ]; } else { theirReadMessages = [ ...theirReadMessages, ...readMessages.signed_content.content.read_messages_hashes.map( encodeHashToBase64, ), ]; } } return { status: 'completed' as const, value: { myReadMessages: Array.from(new Set(myReadMessages)), theirReadMessages: Array.from(new Set(theirReadMessages)), }, }; })"
+            },
+            {
+              "kind": "field",
+              "name": "summary",
+              "default": "new AsyncComputed<PeerChatSummary>(() => { const entries = this.peerChatEntries.get(); const currentPeerChat = this.currentPeerChat.get(); const readMessages = this.readMessages.get(); if (entries.status !== 'completed') return entries; if (currentPeerChat.status !== 'completed') return currentPeerChat; if (readMessages.status !== 'completed') return readMessages; if (!entries.value.createPeerChat) { return { status: 'error' as const, error: msg('Peer chat not found.'), }; } const imPeer1 = !!currentPeerChat.value.peer_1.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ); const me = imPeer1 ? currentPeerChat.value.peer_1 : currentPeerChat.value.peer_2; const peer = imPeer1 ? currentPeerChat.value.peer_2 : currentPeerChat.value.peer_1; const myUnreadMessages = Object.entries(entries.value.messages) .filter( ([messageHash, message]) => !readMessages.value.myReadMessages.includes(messageHash) && !me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(message.provenance), ), ) .map(([hash, _]) => hash); const allActivity: PeerChatEntry[] = [ ...Object.values(entries.value.messages).map(m => ({ ...m, signed_content: { content: { type: 'PeerMessage' as const, ...m.signed_content.content, }, timestamp: m.signed_content.timestamp, }, })), { ...entries.value.createPeerChat, signed_content: { content: { type: 'CreatePeerChat' as const, ...entries.value.createPeerChat.signed_content.content, }, timestamp: entries.value.createPeerChat.signed_content.timestamp, }, }, // ...Object.values(entries.value.events).map(e => ({ // ...e, // signed_content: { // content: { // type: 'PeerChatEvent' as const, // ...e.signed_content.content, // }, // timestamp: e.signed_content.timestamp, // }, // })), ]; const lastActivity = allActivity.sort( (m1, m2) => m2.signed_content.timestamp - m1.signed_content.timestamp, )[0]; return { status: 'completed', value: { peerChatHash: this.peerChatHash, lastActivity, me, peer, myUnreadMessages, }, }; })"
+            },
+            {
+              "kind": "method",
+              "name": "sendMessage",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryHash>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "Message"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "markMessagesAsRead",
+              "return": {
+                "type": {
+                  "text": "Promise<void>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "messagesHashes",
+                  "type": {
+                    "text": "EntryHash[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "notifyNewPeerAgent",
+              "parameters": [
+                {
+                  "name": "newAgent",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "proofs",
+                  "type": {
+                    "text": "Array<LinkedDevicesProof>"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "PeerChatStore",
+          "declaration": {
+            "name": "PeerChatStore",
+            "module": "src/peer-chat-store.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/styles.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "messengerStyles",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ ...sharedStyles, css` .message { border-radius: 4px; padding: 4px; border: 1px solid var(--sl-color-gray-300, lightgrey); box-shadow: rgba(149, 157, 165, 0.2) 2px 2px 4px; background-color: var(--sl-color-neutral-100, white); } .from-me { right: 0; } .from-me .message { background-color: var(--sl-color-primary-500, blue); align-self: end; color: white; } .from-me .message sl-relative-time { color: white; } .from-me .message sl-format-date { color: white; } .from-me .message span { color: white; } .typing-indicator { display: flex; flex-direction: row; align-items: end; border-radius: 4px; height: 16px; padding: 0 4px; background: var(--sl-color-neutral-300); color: var(--sl-color-neutral-500); font-size: 24px; } .top-bar { background-color: var(--sl-color-neutral-100); box-shadow: rgba(149, 157, 165, 0.2) 0px 4px 8px; padding: 8px; } `, ]"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "messengerStyles",
+          "declaration": {
+            "name": "messengerStyles",
+            "module": "src/styles.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/types.ts",
+      "declarations": [],
+      "exports": []
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/utils.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "asyncReadable",
+          "parameters": [
+            {
+              "name": "initFn",
+              "type": {
+                "text": "(set: (value: T) => void) => Promise<(() => void) | void>"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "variable",
+          "name": "TYPING_INDICATOR_TTL_MS"
+        },
+        {
+          "kind": "function",
+          "name": "mergeStrings",
+          "return": {
+            "type": {
+              "text": "string"
+            }
+          },
+          "parameters": [
+            {
+              "name": "s1",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "s2",
+              "type": {
+                "text": "string"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "mergeMaybeStrings",
+          "return": {
+            "type": {
+              "text": "string | undefined"
+            }
+          },
+          "parameters": [
+            {
+              "name": "s1",
+              "type": {
+                "text": "string | undefined"
+              }
+            },
+            {
+              "name": "s2",
+              "type": {
+                "text": "string | undefined"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "mergeMaybeHashes",
+          "return": {
+            "type": {
+              "text": "HoloHash | undefined"
+            }
+          },
+          "parameters": [
+            {
+              "name": "h1",
+              "type": {
+                "text": "HoloHash | undefined"
+              }
+            },
+            {
+              "name": "h2",
+              "type": {
+                "text": "HoloHash | undefined"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "mergeProfiles",
+          "return": {
+            "type": {
+              "text": "MessengerProfile | undefined"
+            }
+          },
+          "parameters": [
+            {
+              "name": "profile1",
+              "type": {
+                "text": "MessengerProfile | undefined"
+              }
+            },
+            {
+              "name": "profile2",
+              "type": {
+                "text": "MessengerProfile | undefined"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "asyncReadable",
+          "declaration": {
+            "name": "asyncReadable",
+            "module": "src/utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "TYPING_INDICATOR_TTL_MS",
+          "declaration": {
+            "name": "TYPING_INDICATOR_TTL_MS",
+            "module": "src/utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "mergeStrings",
+          "declaration": {
+            "name": "mergeStrings",
+            "module": "src/utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "mergeMaybeStrings",
+          "declaration": {
+            "name": "mergeMaybeStrings",
+            "module": "src/utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "mergeMaybeHashes",
+          "declaration": {
+            "name": "mergeMaybeHashes",
+            "module": "src/utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "mergeProfiles",
+          "declaration": {
+            "name": "mergeProfiles",
+            "module": "src/utils.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/all-chats.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "AllChats",
+          "members": [
+            {
+              "kind": "field",
+              "name": "store",
+              "type": {
+                "text": "MessengerStore"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "profilesStore",
+              "type": {
+                "text": "ProfilesStore"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "renderPeerChat",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "chat",
+                  "type": {
+                    "text": "PeerChatSummary"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderTime",
+              "parameters": [
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "text": "Timestamp"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderAvatar",
+              "parameters": [
+                {
+                  "name": "agent",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "messengerProfile",
+                  "type": {
+                    "text": "MessengerProfile | undefined"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderAgentNickname",
+              "parameters": [
+                {
+                  "name": "agent",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "messengerProfile",
+                  "type": {
+                    "text": "MessengerProfile | undefined"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderGroupEventLastActivity",
+              "parameters": [
+                {
+                  "name": "groupChat",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                },
+                {
+                  "name": "provenance",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "event",
+                  "type": {
+                    "text": "GroupEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderGroupLastActivity",
+              "parameters": [
+                {
+                  "name": "groupChat",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                },
+                {
+                  "name": "groupMessengerEntry",
+                  "type": {
+                    "text": "GroupChatEntry"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderGroupChat",
+              "parameters": [
+                {
+                  "name": "groupChatSummary",
+                  "type": {
+                    "text": "GroupChatSummary"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderChats",
+              "parameters": [
+                {
+                  "name": "chats",
+                  "type": {
+                    "text": "Array<ChatSummary>"
+                  }
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "name": "peer-chat-selected",
+              "type": {
+                "text": "CustomEvent"
+              }
+            },
+            {
+              "name": "group-chat-selected",
+              "type": {
+                "text": "CustomEvent"
+              }
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "all-chats",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "AllChats",
+          "declaration": {
+            "name": "AllChats",
+            "module": "src/elements/all-chats.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "all-chats",
+          "declaration": {
+            "name": "AllChats",
+            "module": "src/elements/all-chats.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/create-group-chat.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "CreateGroupChat",
+          "members": [
+            {
+              "kind": "field",
+              "name": "store",
+              "type": {
+                "text": "MessengerStore"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "profilesStore",
+              "type": {
+                "text": "ProfilesStore"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "createGroupChat",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "fields",
+                  "type": {
+                    "text": "any"
+                  }
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "name": "group-chat-created",
+              "type": {
+                "text": "CustomEvent"
+              }
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "create-group-chat",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "CreateGroupChat",
+          "declaration": {
+            "name": "CreateGroupChat",
+            "module": "src/elements/create-group-chat.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "create-group-chat",
+          "declaration": {
+            "name": "CreateGroupChat",
+            "module": "src/elements/create-group-chat.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/group-chat.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "GroupChatEl",
+          "members": [
+            {
+              "kind": "field",
+              "name": "groupChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "attribute": "groupChatHash"
+            },
+            {
+              "kind": "field",
+              "name": "store",
+              "type": {
+                "text": "MessengerStore"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "profilesStore",
+              "type": {
+                "text": "ProfilesStore"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "view",
+              "type": {
+                "text": "'chat' | 'details' | 'add-members' | 'edit-info'"
+              },
+              "default": "'chat'"
+            },
+            {
+              "kind": "method",
+              "name": "renderEvent",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "event",
+                  "type": {
+                    "text": "SignedEntry<GroupChatEvent>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderTopBar",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "groupChat",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderChat",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "createGroupChat",
+                  "type": {
+                    "text": "SignedEntry<CreateGroupChat>"
+                  }
+                },
+                {
+                  "name": "currentGroup",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                },
+                {
+                  "name": "messages",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupMessage' } & GroupMessage>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "events",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "myReadMessages",
+                  "type": {
+                    "text": "EntryHashB64[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderEventsSetsInDay",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "myAgentsB64",
+                  "type": {
+                    "text": "Array<AgentPubKeyB64>"
+                  }
+                },
+                {
+                  "name": "day",
+                  "type": {
+                    "text": "Date"
+                  }
+                },
+                {
+                  "name": "eventsSets",
+                  "type": {
+                    "text": "Array<\n\t\t\tEventSet<\n\t\t\t\t| ({ type: 'GroupChatEvent' } & GroupChatEvent)\n\t\t\t\t| ({ type: 'GroupMessage' } & GroupMessage)\n\t\t\t>\n\t\t>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderTypingIndicators",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "typingPeers",
+                  "type": {
+                    "text": "Array<AgentPubKey>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderMessageSetFromMe",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "messageSet",
+                  "type": {
+                    "text": "EventSet<GroupMessage>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderAgentNickname",
+              "parameters": [
+                {
+                  "name": "agent",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderMessageSetToMe",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "messageSet",
+                  "type": {
+                    "text": "EventSet<GroupMessage>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "sendMessage",
+              "parameters": [
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "Message"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "groupInfo",
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "updateGroupInfo",
+              "parameters": [
+                {
+                  "name": "fields",
+                  "type": {
+                    "text": "Record<string, any>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "profilesToBeAdded",
+              "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "addMembers"
+            },
+            {
+              "kind": "method",
+              "name": "profileHashesForAgents",
+              "parameters": [
+                {
+                  "name": "agents",
+                  "type": {
+                    "text": "AgentPubKey[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderAddMembers",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "groupChat",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderEditInfo",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "info",
+                  "type": {
+                    "text": "GroupInfo"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderDetails",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "groupChat",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderView",
+              "parameters": [
+                {
+                  "name": "createGroupChat",
+                  "type": {
+                    "text": "SignedEntry<CreateGroupChat>"
+                  }
+                },
+                {
+                  "name": "currentGroup",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                },
+                {
+                  "name": "messages",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupMessage' } & GroupMessage>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "events",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "myReadMessages",
+                  "type": {
+                    "text": "EntryHashB64[]"
+                  }
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "name": "agent-selected",
+              "type": {
+                "text": "CustomEvent"
+              }
+            }
+          ],
+          "attributes": [
+            {
+              "name": "groupChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "fieldName": "groupChatHash"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "group-chat",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "GroupChatEl",
+          "declaration": {
+            "name": "GroupChatEl",
+            "module": "src/elements/group-chat.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "group-chat",
+          "declaration": {
+            "name": "GroupChatEl",
+            "module": "src/elements/group-chat.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/group-info.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "GroupInfoEl",
+          "members": [
+            {
+              "kind": "field",
+              "name": "groupChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "attribute": "groupChatHash"
+            },
+            {
+              "kind": "field",
+              "name": "store",
+              "type": {
+                "text": "MessengerStore"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "renderInfo",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "info",
+                  "type": {
+                    "text": "GroupInfo"
+                  }
+                }
+              ]
+            }
+          ],
+          "attributes": [
+            {
+              "name": "groupChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "fieldName": "groupChatHash"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "group-info",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "GroupInfoEl",
+          "declaration": {
+            "name": "GroupInfoEl",
+            "module": "src/elements/group-info.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "group-info",
+          "declaration": {
+            "name": "GroupInfoEl",
+            "module": "src/elements/group-info.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/group-members.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "GroupMembers",
+          "members": [
+            {
+              "kind": "field",
+              "name": "groupChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "attribute": "groupChatHash"
+            },
+            {
+              "kind": "field",
+              "name": "store",
+              "type": {
+                "text": "MessengerStore"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "renderMember",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "isGroupDeleted",
+                  "type": {
+                    "text": "boolean"
+                  }
+                },
+                {
+                  "name": "me",
+                  "type": {
+                    "text": "GroupMember"
+                  }
+                },
+                {
+                  "name": "member",
+                  "type": {
+                    "text": "GroupMember"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderMembers",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "groupChat",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "name": "peer-chat-selected",
+              "type": {
+                "text": "CustomEvent"
+              }
+            },
+            {
+              "name": "add-members-clicked",
+              "type": {
+                "text": "CustomEvent"
+              }
+            }
+          ],
+          "attributes": [
+            {
+              "name": "groupChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "fieldName": "groupChatHash"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "group-members",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "GroupMembers",
+          "declaration": {
+            "name": "GroupMembers",
+            "module": "src/elements/group-members.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "group-members",
+          "declaration": {
+            "name": "GroupMembers",
+            "module": "src/elements/group-members.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/group-settings.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "GroupSettingsEl",
+          "members": [
+            {
+              "kind": "field",
+              "name": "groupChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "attribute": "groupChatHash"
+            },
+            {
+              "kind": "field",
+              "name": "store",
+              "type": {
+                "text": "MessengerStore"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "updateGroupSettings",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "settings",
+                  "type": {
+                    "text": "GroupSettings"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderSettings",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "iAmAdmin",
+                  "type": {
+                    "text": "boolean"
+                  }
+                },
+                {
+                  "name": "settings",
+                  "type": {
+                    "text": "GroupSettings"
+                  }
+                }
+              ]
+            }
+          ],
+          "attributes": [
+            {
+              "name": "groupChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "fieldName": "groupChatHash"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "group-settings",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "GroupSettingsEl",
+          "declaration": {
+            "name": "GroupSettingsEl",
+            "module": "src/elements/group-settings.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "group-settings",
+          "declaration": {
+            "name": "GroupSettingsEl",
+            "module": "src/elements/group-settings.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/message-input.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "MessageInput",
+          "members": [
+            {
+              "kind": "method",
+              "name": "dispatchSendMessage",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "name": "send-message",
+              "type": {
+                "text": "CustomEvent"
+              }
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "message-input",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MessageInput",
+          "declaration": {
+            "name": "MessageInput",
+            "module": "src/elements/message-input.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "message-input",
+          "declaration": {
+            "name": "MessageInput",
+            "module": "src/elements/message-input.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/messenger-context.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "MessengerContext",
+          "members": [
+            {
+              "kind": "field",
+              "name": "store",
+              "type": {
+                "text": "MessengerStore"
+              },
+              "attribute": "store"
+            },
+            {
+              "kind": "field",
+              "name": "client",
+              "type": {
+                "text": "AppClient"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "linkedDevicesStore",
+              "type": {
+                "text": "LinkedDevicesStore"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "role",
+              "type": {
+                "text": "string"
+              },
+              "attribute": "role"
+            },
+            {
+              "kind": "field",
+              "name": "zome",
+              "type": {
+                "text": "string"
+              },
+              "default": "'messenger'",
+              "attribute": "zome"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "store",
+              "type": {
+                "text": "MessengerStore"
+              },
+              "fieldName": "store"
+            },
+            {
+              "name": "role",
+              "type": {
+                "text": "string"
+              },
+              "fieldName": "role"
+            },
+            {
+              "name": "zome",
+              "type": {
+                "text": "string"
+              },
+              "default": "'messenger'",
+              "fieldName": "zome"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "messenger-context",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MessengerContext",
+          "declaration": {
+            "name": "MessengerContext",
+            "module": "src/elements/messenger-context.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "messenger-context",
+          "declaration": {
+            "name": "MessengerContext",
+            "module": "src/elements/messenger-context.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/peer-chat.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "PeerChatEl",
+          "members": [
+            {
+              "kind": "field",
+              "name": "peerChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "attribute": "peerChatHash"
+            },
+            {
+              "kind": "field",
+              "name": "peer",
+              "type": {
+                "text": "AgentPubKey | undefined"
+              },
+              "attribute": "peer"
+            },
+            {
+              "kind": "field",
+              "name": "store",
+              "type": {
+                "text": "MessengerStore"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "linkedDevicesStore",
+              "type": {
+                "text": "LinkedDevicesStore | undefined"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "profilesStore",
+              "type": {
+                "text": "ProfilesStore"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "renderTopBar",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "peerChat",
+                  "type": {
+                    "text": "PeerChat"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderTypingIndicator",
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "renderChat",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "peerChat",
+                  "type": {
+                    "text": "PeerChat"
+                  }
+                },
+                {
+                  "name": "messages",
+                  "type": {
+                    "text": "Record<EntryHashB64, SignedEntry<PeerMessage>>"
+                  }
+                },
+                {
+                  "name": "myReadMessages",
+                  "type": {
+                    "text": "Array<EntryHashB64>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderEventsSetsInDay",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "myAgentsB64",
+                  "type": {
+                    "text": "Array<AgentPubKeyB64>"
+                  }
+                },
+                {
+                  "name": "day",
+                  "type": {
+                    "text": "Date"
+                  }
+                },
+                {
+                  "name": "eventsSets",
+                  "type": {
+                    "text": "Array<EventSet<PeerMessage>>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderMessageSet",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "messageSet",
+                  "type": {
+                    "text": "EventSet<PeerMessage>"
+                  }
+                },
+                {
+                  "name": "myAgentsB64",
+                  "type": {
+                    "text": "AgentPubKeyB64[]"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "sendMessage",
+              "parameters": [
+                {
+                  "name": "message",
+                  "type": {
+                    "text": "Message"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "peerChatStore",
+              "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "chatInfo"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "peerChatHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "fieldName": "peerChatHash"
+            },
+            {
+              "name": "peer",
+              "type": {
+                "text": "AgentPubKey | undefined"
+              },
+              "fieldName": "peer"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "peer-chat",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "PeerChatEl",
+          "declaration": {
+            "name": "PeerChatEl",
+            "module": "src/elements/peer-chat.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "peer-chat",
+          "declaration": {
+            "name": "PeerChatEl",
+            "module": "src/elements/peer-chat.ts"
+          }
+        }
+      ]
+    }
+  ]
+}
