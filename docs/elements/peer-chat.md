@@ -2,7 +2,7 @@
 
 ## Usage
 
-0. If you haven't already, [go through the setup for the module](/setup).
+0. If you haven't already, [go through the setup for the module](../setup.md).
 
 1. Import the `<peer-chat>` element somewhere in the javascript side of your web-app like this:
 
