@@ -2176,11 +2176,11 @@
         "tnesh-stack": "tnesh-stack_4"
       },
       "locked": {
-        "lastModified": 1737121626,
-        "narHash": "sha256-eJk73/BiUwqCY4yU4Zyjxjc7QcwMCSZGKrMRtKwRuks=",
+        "lastModified": 1737122637,
+        "narHash": "sha256-zL/wegwCs12rFxoXM6CFJU9IHJ3K2IPvG9x1Te0vGGU=",
         "owner": "darksoil-studio",
         "repo": "file-storage",
-        "rev": "e4a961b53ced039f4fe0345315c92780876e3a49",
+        "rev": "cd4b4b7f2ee4d5a935f6bc0bb32dabe24cb770c9",
         "type": "github"
       },
       "original": {

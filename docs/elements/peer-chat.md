@@ -2,7 +2,7 @@
 
 ## Usage
 
-0. If you haven't already, [go through the setup for the module](/documentation/setup).
+0. If you haven't already, [go through the setup for the module](/setup).
 
 1. Import the `<peer-chat>` element somewhere in the javascript side of your web-app like this:
 
@@ -76,7 +76,6 @@ onMounted(async () => {
   const client = new MessengerClient(mock, "messenger_test");
 
   const peerChatHash = await client.createPeerChat(keys[1]);
-  const profiles = await demoProfiles();
 
   const store = new MessengerStore(client);
 
