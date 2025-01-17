@@ -51,11 +51,11 @@ importers:
         specifier: workspace:*
         version: link:../ui
       '@darksoil-studio/profiles-zome':
-        specifier: github:darksoil-studio/profiles-zome#main-0.4&path:ui
-        version: https://codeload.github.com/darksoil-studio/profiles-zome/tar.gz/8e608fd6e094c4674631e79a0fba8276b93116dd#path:ui(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
+        specifier: github:darksoil-studio/profiles-zome#aef779a35d2ca09cc8c6df417181f4d21af7f34a&path:ui
+        version: https://codeload.github.com/darksoil-studio/profiles-zome/tar.gz/aef779a35d2ca09cc8c6df417181f4d21af7f34a#path:ui(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
       '@holochain/client':
-        specifier: ^0.17.1
-        version: 0.17.1
+        specifier: ^0.18.0
+        version: 0.18.0
       '@shoelace-style/shoelace':
         specifier: ^2.11.0
         version: 2.19.0(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
@@ -371,14 +371,6 @@ packages:
   '@darksoil-studio/linked-devices-zome@https://codeload.github.com/darksoil-studio/linked-devices-zome/tar.gz/15d40409f54b6b826d5f0fbd666c34e59ff78fde#path:ui':
     resolution: {path: ui, tarball: https://codeload.github.com/darksoil-studio/linked-devices-zome/tar.gz/15d40409f54b6b826d5f0fbd666c34e59ff78fde}
     version: 0.1.0
-
-  '@darksoil-studio/linked-devices-zome@https://codeload.github.com/darksoil-studio/linked-devices-zome/tar.gz/5eb4af940554974d61c65b90636999fcd0b54662#path:ui':
-    resolution: {path: ui, tarball: https://codeload.github.com/darksoil-studio/linked-devices-zome/tar.gz/5eb4af940554974d61c65b90636999fcd0b54662}
-    version: 0.1.0
-
-  '@darksoil-studio/profiles-zome@https://codeload.github.com/darksoil-studio/profiles-zome/tar.gz/8e608fd6e094c4674631e79a0fba8276b93116dd#path:ui':
-    resolution: {path: ui, tarball: https://codeload.github.com/darksoil-studio/profiles-zome/tar.gz/8e608fd6e094c4674631e79a0fba8276b93116dd}
-    version: 0.400.0-rc
 
   '@darksoil-studio/profiles-zome@https://codeload.github.com/darksoil-studio/profiles-zome/tar.gz/aef779a35d2ca09cc8c6df417181f4d21af7f34a#path:ui':
     resolution: {path: ui, tarball: https://codeload.github.com/darksoil-studio/profiles-zome/tar.gz/aef779a35d2ca09cc8c6df417181f4d21af7f34a}
@@ -726,16 +718,8 @@ packages:
   '@holo-host/identicon@0.1.0':
     resolution: {integrity: sha512-Dn5pTV/m3XaK1Zvq3liw/vQUt7goM7Y84x2zUyH8cb9CNMs4kPCNHs3kalbJZ/ymzFvwcdiLwwNW8AKk+WWN5A==}
 
-  '@holochain/client@0.17.1':
-    resolution: {integrity: sha512-Jvh6DN+OdktV3KQH+tioRzvPT+LWJFBp1klMFG9vaccphIVvJN1LepJfRB8OyxW5iGAZ/TFCTwF19XSJuM1fQQ==}
-    engines: {node: '>=18.0.0 || >=20.0.0'}
-
   '@holochain/client@0.18.0':
     resolution: {integrity: sha512-I+YIJ2ZeDS8HeUdRvV1Ti9O8m3YPHti8mpUoqg9GZ0A77y+3NIihsB1X8vQBRBFKwNUyZ14U/ZgWQ8/2Y0/T5w==}
-    engines: {node: '>=18.0.0 || >=20.0.0'}
-
-  '@holochain/client@0.18.0-rc.1':
-    resolution: {integrity: sha512-01Xh5cpN0lHdtV41V2RtCUfTFEA9K9GWK5vvMPtdqj52WcSNO6gcrfVERKgSG/su8xJ3VmULPYNQyrEMmBReww==}
     engines: {node: '>=18.0.0 || >=20.0.0'}
 
   '@holochain/serialization@0.1.0-beta-rc.3':
@@ -1002,20 +986,11 @@ packages:
   '@tnesh-stack/elements@0.400.0':
     resolution: {integrity: sha512-6IfO9BKzptjBlovp3KW55nBonjrLsSnoSOV7WCHJ+7xhl37GvvOT3hE0GqYNkoL94LF6V0c1BhdAjLTo05QBVA==}
 
-  '@tnesh-stack/elements@0.400.0-rc.1':
-    resolution: {integrity: sha512-Y9BgDIOP/M4WNyWP4fbaEL98Vd9sTmUm7g9RfV53PHiNn37dWeAUnYikzQnIkjNvu8MfK5+QK1D9k8/QnRpwug==}
-
   '@tnesh-stack/signals@0.400.0':
     resolution: {integrity: sha512-xG2+t9IHQ3tSD+Pa8BGwpk60BY6HKNqJ08wYCn3JMFLDxDzC1mJdHbjE2eg9vgq/PYxwcH8XbGUBdmCutcpSPQ==}
 
-  '@tnesh-stack/signals@0.400.0-rc.0':
-    resolution: {integrity: sha512-YuC75wjWvy6U5skTtmULMHaqegFgopci/KdSSrmCjR9B94qZOAdFgHBEG9K98A0pIdwyollYeI3pkvyYkH4Vgg==}
-
   '@tnesh-stack/utils@0.400.0':
     resolution: {integrity: sha512-M03HRTPdXWZJNAl9JIS42WWkZLVb4Au/yZnijdrrq0L/swjU515rOAefTPljKzn7CmU7uH6uXmGFIob0/eE0kA==}
-
-  '@tnesh-stack/utils@0.400.0-rc.0':
-    resolution: {integrity: sha512-N69oS3YXDCTHz5Zl57SjoJtC9nikfzsjFjDy4nEnuMGpYSvMxwWjEwIp1Jx+doPoMMEfrSv2LDqLR6qKXCZ3xQ==}
 
   '@trivago/prettier-plugin-sort-imports@4.3.0':
     resolution: {integrity: sha512-r3n0onD3BTOVUNPhR4lhVK4/pABGpbA7bW3eumZnYdKaHkf1qEC+Mag6DPbGNuuh0eG8AaYj+YqmVHSiGslaTQ==}
@@ -3298,45 +3273,6 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@darksoil-studio/linked-devices-zome@https://codeload.github.com/darksoil-studio/linked-devices-zome/tar.gz/5eb4af940554974d61c65b90636999fcd0b54662#path:ui(@floating-ui/utils@0.2.8)(@types/react@18.3.15)':
-    dependencies:
-      '@holochain/client': 0.18.0
-      '@lit/context': 1.1.3
-      '@lit/localize': 0.12.2
-      '@mdi/js': 7.4.47
-      '@msgpack/msgpack': 2.8.0
-      '@shoelace-style/shoelace': 2.19.0(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
-      '@tauri-apps/plugin-barcode-scanner': 2.2.0
-      '@tnesh-stack/elements': 0.400.0(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
-      '@tnesh-stack/signals': 0.400.0
-      '@tnesh-stack/utils': 0.400.0
-      js-base64: 3.7.7
-      lit: 3.2.1
-    transitivePeerDependencies:
-      - '@floating-ui/utils'
-      - '@types/react'
-      - bufferutil
-      - utf-8-validate
-
-  '@darksoil-studio/profiles-zome@https://codeload.github.com/darksoil-studio/profiles-zome/tar.gz/8e608fd6e094c4674631e79a0fba8276b93116dd#path:ui(@floating-ui/utils@0.2.8)(@types/react@18.3.15)':
-    dependencies:
-      '@darksoil-studio/linked-devices-zome': https://codeload.github.com/darksoil-studio/linked-devices-zome/tar.gz/5eb4af940554974d61c65b90636999fcd0b54662#path:ui(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
-      '@holochain/client': 0.18.0-rc.1
-      '@lit/context': 1.1.3
-      '@lit/localize': 0.12.2
-      '@mdi/js': 7.4.47
-      '@msgpack/msgpack': 2.8.0
-      '@shoelace-style/shoelace': 2.19.0(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
-      '@tnesh-stack/elements': 0.400.0-rc.1(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
-      '@tnesh-stack/signals': 0.400.0-rc.0
-      '@tnesh-stack/utils': 0.400.0-rc.0
-      lit: 3.2.1
-    transitivePeerDependencies:
-      - '@floating-ui/utils'
-      - '@types/react'
-      - bufferutil
-      - utf-8-validate
-
   '@darksoil-studio/profiles-zome@https://codeload.github.com/darksoil-studio/profiles-zome/tar.gz/aef779a35d2ca09cc8c6df417181f4d21af7f34a#path:ui(@floating-ui/utils@0.2.8)(@types/react@18.3.15)':
     dependencies:
       '@darksoil-studio/linked-devices-zome': https://codeload.github.com/darksoil-studio/linked-devices-zome/tar.gz/15d40409f54b6b826d5f0fbd666c34e59ff78fde#path:ui(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
@@ -3572,37 +3508,7 @@ snapshots:
 
   '@holo-host/identicon@0.1.0': {}
 
-  '@holochain/client@0.17.1':
-    dependencies:
-      '@bitgo/blake2b': 3.2.4
-      '@holochain/serialization': 0.1.0-beta-rc.3
-      '@msgpack/msgpack': 2.8.0
-      emittery: 1.0.3
-      isomorphic-ws: 5.0.0(ws@8.18.0)
-      js-base64: 3.7.7
-      libsodium-wrappers: 0.7.15
-      lodash-es: 4.17.21
-      ws: 8.18.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   '@holochain/client@0.18.0':
-    dependencies:
-      '@bitgo/blake2b': 3.2.4
-      '@holochain/serialization': 0.1.0-beta-rc.3
-      '@msgpack/msgpack': 2.8.0
-      emittery: 1.0.3
-      isomorphic-ws: 5.0.0(ws@8.18.0)
-      js-base64: 3.7.7
-      libsodium-wrappers: 0.7.15
-      lodash-es: 4.17.21
-      ws: 8.18.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@holochain/client@0.18.0-rc.1':
     dependencies:
       '@bitgo/blake2b': 3.2.4
       '@holochain/serialization': 0.1.0-beta-rc.3
@@ -3915,22 +3821,6 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@tnesh-stack/elements@0.400.0-rc.1(@floating-ui/utils@0.2.8)(@types/react@18.3.15)':
-    dependencies:
-      '@holo-host/identicon': 0.1.0
-      '@holochain/client': 0.18.0
-      '@lit-labs/router': 0.1.3
-      '@lit/context': 1.1.3
-      '@lit/localize': 0.12.2
-      '@mdi/js': 7.4.47
-      '@shoelace-style/shoelace': 2.19.0(@floating-ui/utils@0.2.8)(@types/react@18.3.15)
-      lit: 3.2.1
-    transitivePeerDependencies:
-      - '@floating-ui/utils'
-      - '@types/react'
-      - bufferutil
-      - utf-8-validate
-
   '@tnesh-stack/signals@0.400.0':
     dependencies:
       '@holochain/client': 0.18.0
@@ -3944,33 +3834,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@tnesh-stack/signals@0.400.0-rc.0':
-    dependencies:
-      '@holochain/client': 0.18.0
-      '@msgpack/msgpack': 2.8.0
-      '@tnesh-stack/utils': 0.400.0
-      async-signals: 0.1.11
-      lit-signal-watcher: 0.1.1
-      lodash-es: 4.17.21
-      signal-polyfill: 0.1.2
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   '@tnesh-stack/utils@0.400.0':
-    dependencies:
-      '@holochain/client': 0.18.0
-      '@msgpack/msgpack': 2.8.0
-      blakejs: 1.2.1
-      emittery: 1.0.3
-      js-base64: 3.7.7
-      lodash-es: 4.17.21
-      sort-keys: 5.1.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@tnesh-stack/utils@0.400.0-rc.0':
     dependencies:
       '@holochain/client': 0.18.0
       '@msgpack/msgpack': 2.8.0
