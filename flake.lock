@@ -14880,11 +14880,11 @@
         "tnesh-stack": "tnesh-stack_35"
       },
       "locked": {
-        "lastModified": 1737121616,
-        "narHash": "sha256-pLbGrpl8PYnR3Cwy7UrWX7mpKl2yXrk+TmisQE/MIEk=",
+        "lastModified": 1737126929,
+        "narHash": "sha256-4VfoAVpwH1TYDVjumE7VFfw2QSrBi0yn7/8qNM1ldzY=",
         "owner": "darksoil-studio",
         "repo": "profiles-zome",
-        "rev": "aef779a35d2ca09cc8c6df417181f4d21af7f34a",
+        "rev": "92d29d0b9f7a186d24d7a820d0ab42506ee8cad9",
         "type": "github"
       },
       "original": {
