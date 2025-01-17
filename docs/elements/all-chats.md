@@ -66,7 +66,6 @@ onMounted(async () => {
       sync_message_history_with_new_members: false,
     }
   );
-  const groupHash = await client.createPeerChat(await fakeAgentPubKey());
 
   const store = new MessengerStore(client);
 
