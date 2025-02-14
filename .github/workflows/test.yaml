@@ -1,19 +1,16 @@
-name: "test"
+name: "Publish npm package"
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
   push: 
-    branches: [ main, develop, main-0.4 ]
-  pull_request:
-    branches: [ main, develop, main-0.4 ]
+    branches: [ main, 'main-**' ]
 
 jobs:
-  test-and-build:
+  publish-npm-package:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - uses: cachix/install-nix-action@v27
+      - name: Install nix
+        uses: cachix/install-nix-action@v27
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           nix_path: nixpkgs=channel:nixos-24.11
@@ -26,10 +23,14 @@ jobs:
         with:
           name: darksoil-studio
 
-      - uses: cachix/cachix-action@v15
-        with:
-          name: darksoil-studio
+      - name: Install jq
+        uses: dcarbone/install-jq-action@v2.1.0
 
       - name: Install and test
         run: |
-          nix develop --no-update-lock-file --accept-flake-config --command bash -c "pnpm i && pnpm t && pnpm -F @darksoil-studio/messenger-zome build"
+          nix develop .#npm-ci --no-update-lock-file --accept-flake-config --command bash -c "pnpm i && cd ui && pnpm build && npm-rev-version package.json"
+
+      - uses: JS-DevTools/npm-publish@v3
+        with:
+          package: "ui"
+          token: ${{ secrets.NPM_TOKEN }}
