@@ -29,10 +29,10 @@
     "./locales/*": "./locales/*"
   },
   "dependencies": {
-    "@darksoil-studio/file-storage-zome": "github:darksoil-studio/file-storage#40908026f903164dc522b149b43b4c61a624155d&path:ui",
-    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#c8b08f5da81d030e846dcb7afa8e244d3c0a6d50&path:ui",
-    "@darksoil-studio/notifications-zome": "github:darksoil-studio/notifications-zome#8de61fcacf7ee278c285742525b26116ba5be2cf&path:ui",
-    "@darksoil-studio/profiles-zome": "github:darksoil-studio/profiles-zome#b39f276988280a56ec9e3ed6f01a1a9c245d35de&path:ui",
+    "@darksoil-studio/file-storage-zome": "github:darksoil-studio/file-storage#d4819e883590e7f23589a2f137512910209ff424&path:ui",
+    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#15d40409f54b6b826d5f0fbd666c34e59ff78fde&path:ui",
+    "@darksoil-studio/notifications-zome": "github:darksoil-studio/notifications-zome#68d89aee037eacce3d27c2b9720797e3e839ee2e&path:ui",
+    "@darksoil-studio/profiles-zome": "github:darksoil-studio/profiles-zome#35c03da4936f3f4dc2ee33a337b77a1d0074658c&path:ui",
     "@holochain/client": "^0.18.0-rc",
     "@lit/context": "^1.0.0",
     "@lit/localize": "^0.12.0",
