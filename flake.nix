@@ -56,6 +56,7 @@
             inputs'.p2p-shipyard.packages.hc-pilot
           ];
         };
+        devShells.npm-ci = inputs'.tnesh-stack.devShells.synchronized-pnpm;
 
         packages.scaffold = pkgs.symlinkJoin {
           name = "scaffold-remote-zome";
@@ -68,7 +69,6 @@
                 --coordinator-zome-name messenger \
                 --remote-zome-git-url github:darksoil-studio/messenger-zome \
                 --remote-npm-package-name @darksoil-studio/messenger-zome \
-                --remote-npm-package-path ui \
                 --remote-zome-git-branch main-0.4 \
                 --context-element messenger-context \
                 --context-element-import @darksoil-studio/messenger-zome/dist/elements/messenger-context.js" 
