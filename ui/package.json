@@ -28,9 +28,9 @@
     "./locales/*": "./locales/*"
   },
   "dependencies": {
-    "@darksoil-studio/file-storage-zome": "0.400.0-rev.b46ef262c52d1b1381206f3fd2c30829ef3622c5",
-    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.75efce06804b842860a6e83b68a91e6e43188206",
-    "@darksoil-studio/profiles-zome": "0.400.0-rev.a195fcc45e2e196e316ed4cec98df051a324e23c",
+    "@darksoil-studio/file-storage-zome": "0.400.0-rev.cfce936c866beda78cb042cb94d9b05b0bed9699",
+    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.23d64f1ce59822d7e1849d75c2d978cb6a0d62c8",
+    "@darksoil-studio/profiles-zome": "0.400.0-rev.cca82532f957ff1656da8cf2be3d7d6a9c9d4c68",
     "@holochain/client": "^0.18.0",
     "@lit/context": "^1.0.0",
     "@lit/localize": "^0.12.0",

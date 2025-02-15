@@ -1920,11 +1920,11 @@
         "tnesh-stack": "tnesh-stack_4"
       },
       "locked": {
-        "lastModified": 1739537239,
-        "narHash": "sha256-VbZW39OHqexCrNMcRKuVc0yb3tkIfAOuGwJW+iyuSdU=",
+        "lastModified": 1739558020,
+        "narHash": "sha256-KPYV2rdgNL2jUrd68lRUs5cvGkV0rnuK6F15Rjlymxc=",
         "owner": "darksoil-studio",
         "repo": "file-storage",
-        "rev": "b46ef262c52d1b1381206f3fd2c30829ef3622c5",
+        "rev": "cfce936c866beda78cb042cb94d9b05b0bed9699",
         "type": "github"
       },
       "original": {
@@ -10952,11 +10952,11 @@
         "tnesh-stack": "tnesh-stack_8"
       },
       "locked": {
-        "lastModified": 1739534312,
-        "narHash": "sha256-hiP4hAIeKh3l0+oAN3fVRUOogr9CUftPNh0neDtEO0Y=",
+        "lastModified": 1739559224,
+        "narHash": "sha256-1N9H55Kq6tQ9gA0XIbHkessyBzGmdOgwv/iCWYXZ0Vc=",
         "owner": "darksoil-studio",
         "repo": "linked-devices-zome",
-        "rev": "75efce06804b842860a6e83b68a91e6e43188206",
+        "rev": "23d64f1ce59822d7e1849d75c2d978cb6a0d62c8",
         "type": "github"
       },
       "original": {
@@ -10986,11 +10986,11 @@
         "tnesh-stack": "tnesh-stack_12"
       },
       "locked": {
-        "lastModified": 1739534312,
-        "narHash": "sha256-hiP4hAIeKh3l0+oAN3fVRUOogr9CUftPNh0neDtEO0Y=",
+        "lastModified": 1739559224,
+        "narHash": "sha256-1N9H55Kq6tQ9gA0XIbHkessyBzGmdOgwv/iCWYXZ0Vc=",
         "owner": "darksoil-studio",
         "repo": "linked-devices-zome",
-        "rev": "75efce06804b842860a6e83b68a91e6e43188206",
+        "rev": "23d64f1ce59822d7e1849d75c2d978cb6a0d62c8",
         "type": "github"
       },
       "original": {
@@ -11022,11 +11022,11 @@
         "tnesh-stack": "tnesh-stack_19"
       },
       "locked": {
-        "lastModified": 1739534312,
-        "narHash": "sha256-hiP4hAIeKh3l0+oAN3fVRUOogr9CUftPNh0neDtEO0Y=",
+        "lastModified": 1739559224,
+        "narHash": "sha256-1N9H55Kq6tQ9gA0XIbHkessyBzGmdOgwv/iCWYXZ0Vc=",
         "owner": "darksoil-studio",
         "repo": "linked-devices-zome",
-        "rev": "75efce06804b842860a6e83b68a91e6e43188206",
+        "rev": "23d64f1ce59822d7e1849d75c2d978cb6a0d62c8",
         "type": "github"
       },
       "original": {
@@ -11056,11 +11056,11 @@
         "tnesh-stack": "tnesh-stack_31"
       },
       "locked": {
-        "lastModified": 1739534312,
-        "narHash": "sha256-hiP4hAIeKh3l0+oAN3fVRUOogr9CUftPNh0neDtEO0Y=",
+        "lastModified": 1739559224,
+        "narHash": "sha256-1N9H55Kq6tQ9gA0XIbHkessyBzGmdOgwv/iCWYXZ0Vc=",
         "owner": "darksoil-studio",
         "repo": "linked-devices-zome",
-        "rev": "75efce06804b842860a6e83b68a91e6e43188206",
+        "rev": "23d64f1ce59822d7e1849d75c2d978cb6a0d62c8",
         "type": "github"
       },
       "original": {
@@ -13389,11 +13389,11 @@
         "tnesh-stack": "tnesh-stack_24"
       },
       "locked": {
-        "lastModified": 1739536751,
-        "narHash": "sha256-GlV3bQeJvNEv/qo8U2YAyt/UnhAZKro9E/FfjxiQ174=",
+        "lastModified": 1739633777,
+        "narHash": "sha256-6E/NVleymJiOsiuX0JTRGGkl2/4apqUh8UaGfncayoE=",
         "owner": "darksoil-studio",
         "repo": "notifications-zome",
-        "rev": "8b87877180923190e2b0395d0e69caf2e4453ba8",
+        "rev": "63011f80235fe42c5e31130ca72f8560c2d8c7b7",
         "type": "github"
       },
       "original": {
@@ -13521,11 +13521,11 @@
         "tnesh-stack": "tnesh-stack_20"
       },
       "locked": {
-        "lastModified": 1739532456,
-        "narHash": "sha256-4PpFtSQUL3KtW6Dv7Y28JcTu/ZrwLvGEsF0s7vDoDJM=",
+        "lastModified": 1739557989,
+        "narHash": "sha256-cB+zgGmjjBcflZaE3AFZRZ6ZUYhNuXI3UN7C9cH+X0c=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "42f6723a6c2cf50d9ab4feba9b1170a1a4fc22ed",
+        "rev": "4dcee389afaef19e4ff9fa4169748bce1817ee7a",
         "type": "github"
       },
       "original": {
@@ -13604,11 +13604,11 @@
         "tnesh-stack": "tnesh-stack_25"
       },
       "locked": {
-        "lastModified": 1739532456,
-        "narHash": "sha256-4PpFtSQUL3KtW6Dv7Y28JcTu/ZrwLvGEsF0s7vDoDJM=",
+        "lastModified": 1739557989,
+        "narHash": "sha256-cB+zgGmjjBcflZaE3AFZRZ6ZUYhNuXI3UN7C9cH+X0c=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "42f6723a6c2cf50d9ab4feba9b1170a1a4fc22ed",
+        "rev": "4dcee389afaef19e4ff9fa4169748bce1817ee7a",
         "type": "github"
       },
       "original": {
@@ -13773,11 +13773,11 @@
         "tnesh-stack": "tnesh-stack_32"
       },
       "locked": {
-        "lastModified": 1739532456,
-        "narHash": "sha256-4PpFtSQUL3KtW6Dv7Y28JcTu/ZrwLvGEsF0s7vDoDJM=",
+        "lastModified": 1739557989,
+        "narHash": "sha256-cB+zgGmjjBcflZaE3AFZRZ6ZUYhNuXI3UN7C9cH+X0c=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "42f6723a6c2cf50d9ab4feba9b1170a1a4fc22ed",
+        "rev": "4dcee389afaef19e4ff9fa4169748bce1817ee7a",
         "type": "github"
       },
       "original": {
@@ -14071,11 +14071,11 @@
         "tnesh-stack": "tnesh-stack_13"
       },
       "locked": {
-        "lastModified": 1739532456,
-        "narHash": "sha256-4PpFtSQUL3KtW6Dv7Y28JcTu/ZrwLvGEsF0s7vDoDJM=",
+        "lastModified": 1739557989,
+        "narHash": "sha256-cB+zgGmjjBcflZaE3AFZRZ6ZUYhNuXI3UN7C9cH+X0c=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "42f6723a6c2cf50d9ab4feba9b1170a1a4fc22ed",
+        "rev": "4dcee389afaef19e4ff9fa4169748bce1817ee7a",
         "type": "github"
       },
       "original": {
@@ -14436,11 +14436,11 @@
         "tnesh-stack": "tnesh-stack_23"
       },
       "locked": {
-        "lastModified": 1739534696,
-        "narHash": "sha256-3oRRpys5K/7+BQBV/I4nYDc9pnPBBjwRbnLOv20SaqU=",
+        "lastModified": 1739631074,
+        "narHash": "sha256-9mTK/ITm2XT3o/HmrNmx/U3AXHD1apvHDEqBpZivPoM=",
         "owner": "darksoil-studio",
         "repo": "profiles-zome",
-        "rev": "a195fcc45e2e196e316ed4cec98df051a324e23c",
+        "rev": "cca82532f957ff1656da8cf2be3d7d6a9c9d4c68",
         "type": "github"
       },
       "original": {
@@ -14464,11 +14464,11 @@
         "tnesh-stack": "tnesh-stack_35"
       },
       "locked": {
-        "lastModified": 1739534696,
-        "narHash": "sha256-3oRRpys5K/7+BQBV/I4nYDc9pnPBBjwRbnLOv20SaqU=",
+        "lastModified": 1739631074,
+        "narHash": "sha256-9mTK/ITm2XT3o/HmrNmx/U3AXHD1apvHDEqBpZivPoM=",
         "owner": "darksoil-studio",
         "repo": "profiles-zome",
-        "rev": "a195fcc45e2e196e316ed4cec98df051a324e23c",
+        "rev": "cca82532f957ff1656da8cf2be3d7d6a9c9d4c68",
         "type": "github"
       },
       "original": {
@@ -16957,11 +16957,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1739532367,
-        "narHash": "sha256-O91S6wxwIHTeiWKEEt3F2EyozIJRhM8YRhPWiLw6sAA=",
+        "lastModified": 1739556804,
+        "narHash": "sha256-NVkep9t+GzqbuplnhbtzP4/pHnxzTQzdvzeuzuY+mms=",
         "owner": "darksoil-studio",
         "repo": "tnesh-stack",
-        "rev": "5d92ca0cf82dc56c0fe954ce1de5f1621642b5f8",
+        "rev": "82dfe960f5f266603b7f831d785b1e8687823a0a",
         "type": "github"
       },
       "original": {
@@ -17310,11 +17310,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1739532367,
-        "narHash": "sha256-O91S6wxwIHTeiWKEEt3F2EyozIJRhM8YRhPWiLw6sAA=",
+        "lastModified": 1739556804,
+        "narHash": "sha256-NVkep9t+GzqbuplnhbtzP4/pHnxzTQzdvzeuzuY+mms=",
         "owner": "darksoil-studio",
         "repo": "tnesh-stack",
-        "rev": "5d92ca0cf82dc56c0fe954ce1de5f1621642b5f8",
+        "rev": "82dfe960f5f266603b7f831d785b1e8687823a0a",
         "type": "github"
       },
       "original": {
@@ -17439,11 +17439,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1739533576,
-        "narHash": "sha256-qvEADPLV8UcRxg62siyMnV5BebQib9gAbc8D90CHgiU=",
+        "lastModified": 1739556804,
+        "narHash": "sha256-NVkep9t+GzqbuplnhbtzP4/pHnxzTQzdvzeuzuY+mms=",
         "owner": "darksoil-studio",
         "repo": "tnesh-stack",
-        "rev": "145b6a7600d8b0771251ba63d4362c0b749de3b7",
+        "rev": "82dfe960f5f266603b7f831d785b1e8687823a0a",
         "type": "github"
       },
       "original": {
@@ -17476,11 +17476,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1739533576,
-        "narHash": "sha256-qvEADPLV8UcRxg62siyMnV5BebQib9gAbc8D90CHgiU=",
+        "lastModified": 1739631491,
+        "narHash": "sha256-9VPTOHNqoIZX7IrgtFPkQ9ola5uSQufqTGyb1kLZmjk=",
         "owner": "darksoil-studio",
         "repo": "tnesh-stack",
-        "rev": "145b6a7600d8b0771251ba63d4362c0b749de3b7",
+        "rev": "639c423b0602bf9359113db5a1ec511e132c4acb",
         "type": "github"
       },
       "original": {
@@ -17513,11 +17513,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1739532367,
-        "narHash": "sha256-O91S6wxwIHTeiWKEEt3F2EyozIJRhM8YRhPWiLw6sAA=",
+        "lastModified": 1739556804,
+        "narHash": "sha256-NVkep9t+GzqbuplnhbtzP4/pHnxzTQzdvzeuzuY+mms=",
         "owner": "darksoil-studio",
         "repo": "tnesh-stack",
-        "rev": "5d92ca0cf82dc56c0fe954ce1de5f1621642b5f8",
+        "rev": "82dfe960f5f266603b7f831d785b1e8687823a0a",
         "type": "github"
       },
       "original": {
@@ -17842,11 +17842,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1739532367,
-        "narHash": "sha256-O91S6wxwIHTeiWKEEt3F2EyozIJRhM8YRhPWiLw6sAA=",
+        "lastModified": 1739556804,
+        "narHash": "sha256-NVkep9t+GzqbuplnhbtzP4/pHnxzTQzdvzeuzuY+mms=",
         "owner": "darksoil-studio",
         "repo": "tnesh-stack",
-        "rev": "5d92ca0cf82dc56c0fe954ce1de5f1621642b5f8",
+        "rev": "82dfe960f5f266603b7f831d785b1e8687823a0a",
         "type": "github"
       },
       "original": {
@@ -17962,11 +17962,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1739533576,
-        "narHash": "sha256-qvEADPLV8UcRxg62siyMnV5BebQib9gAbc8D90CHgiU=",
+        "lastModified": 1739556804,
+        "narHash": "sha256-NVkep9t+GzqbuplnhbtzP4/pHnxzTQzdvzeuzuY+mms=",
         "owner": "darksoil-studio",
         "repo": "tnesh-stack",
-        "rev": "145b6a7600d8b0771251ba63d4362c0b749de3b7",
+        "rev": "82dfe960f5f266603b7f831d785b1e8687823a0a",
         "type": "github"
       },
       "original": {
@@ -17996,11 +17996,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1739539155,
-        "narHash": "sha256-PH42o9p80vIBuGfFmdyED2dnyr6qjCua0l9epgXOkQ8=",
+        "lastModified": 1739659100,
+        "narHash": "sha256-JihNcQR57awOTqHndwh83Kzr7frJXKk0qcXVmKL2m7M=",
         "owner": "darksoil-studio",
         "repo": "tnesh-stack",
-        "rev": "861d114cee02838415f901ad1b40639958b97c6f",
+        "rev": "a34c9bd91bb08e6e47d56e304789b758694e1dec",
         "type": "github"
       },
       "original": {
