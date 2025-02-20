@@ -2,27 +2,10 @@ import {
 	LinkedDevicesClient,
 	LinkedDevicesStore,
 } from '@darksoil-studio/linked-devices-zome';
-import {
-	ActionHash,
-	AgentPubKey,
-	AppBundleSource,
-	AppCallZomeRequest,
-	AppWebsocket,
-	EntryHash,
-	HoloHash,
-	HoloHashB64,
-	NewEntryAction,
-	Record,
-	encodeHashToBase64,
-	fakeActionHash,
-	fakeAgentPubKey,
-	fakeDnaHash,
-	fakeEntryHash,
-} from '@holochain/client';
+import { HoloHashB64 } from '@holochain/client';
 import { Player, Scenario, pause } from '@holochain/tryorama';
 import { encode } from '@msgpack/msgpack';
 import { Signal, joinAsync } from '@tnesh-stack/signals';
-import { EntryRecord } from '@tnesh-stack/utils';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -62,20 +45,20 @@ async function setupStore(player: Player) {
 	};
 }
 
-export async function setup(scenario: Scenario, playerNum = 2) {
-	scenario.dpkiNetworkSeed = undefined;
-
+export async function setup(scenario: Scenario, numPlayers = 2) {
 	const testHappUrl =
 		dirname(fileURLToPath(import.meta.url)) +
 		'/../../workdir/messenger_test.happ';
 
-	// Add 2 players with the test hApp to the Scenario. The returned players
-	// can be destructured.
 	const players = await scenario.addPlayersWithApps(
-		new Array(playerNum).fill({ appBundleSource: { path: testHappUrl } }),
+		Array.from(new Array(numPlayers)).fill({
+			appBundleSource: { path: testHappUrl },
+		}),
 	);
-
-	const playersAndStores = await Promise.all(players.map(setupStore));
+	const playersAndStores = [];
+	for (const player of players) {
+		playersAndStores.push(await setupStore(player));
+	}
 
 	// Shortcut peer discovery through gossip and register all agents in every
 	// conductor of the scenario.
