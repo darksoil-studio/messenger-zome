@@ -45,6 +45,18 @@ async function setupStore(player: Player) {
 	};
 }
 
+export async function promiseAllSequential<T>(
+	promises: Array<Promise<T>>,
+): Promise<Array<T>> {
+	const results: Array<T> = [];
+
+	for (const promise of promises) {
+		results.push(await promise);
+	}
+
+	return results;
+}
+
 export async function setup(scenario: Scenario, numPlayers = 2) {
 	const testHappUrl =
 		dirname(fileURLToPath(import.meta.url)) +
@@ -55,10 +67,7 @@ export async function setup(scenario: Scenario, numPlayers = 2) {
 			appBundleSource: { path: testHappUrl },
 		}),
 	);
-	const playersAndStores = [];
-	for (const player of players) {
-		playersAndStores.push(await setupStore(player));
-	}
+	const playersAndStores = await promiseAllSequential(players.map(setupStore));
 
 	// Shortcut peer discovery through gossip and register all agents in every
 	// conductor of the scenario.
