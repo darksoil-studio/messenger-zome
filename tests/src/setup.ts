@@ -45,15 +45,13 @@ async function setupStore(player: Player) {
 	};
 }
 
-export async function promiseAllSequential<T>(
+async function promiseAllSequential<T>(
 	promises: Array<Promise<T>>,
 ): Promise<Array<T>> {
 	const results: Array<T> = [];
-
 	for (const promise of promises) {
 		results.push(await promise);
 	}
-
 	return results;
 }
 
