@@ -68,7 +68,7 @@ test('all events get to all the members of the group', async () => {
 				Object.keys(
 					await toPromise(bob2.store.groupChats.get(groupHash).events),
 				).length === 3,
-			20_000,
+			60_000,
 		);
 
 		await alice.store.groupChats

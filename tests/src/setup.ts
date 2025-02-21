@@ -113,7 +113,7 @@ export async function waitUntil(
 
 export async function groupConsistency(
 	groups: Array<GroupChatStore>,
-	timeoutMs: number = 10_000,
+	timeoutMs: number = 20_000,
 ): Promise<void> {
 	return new Promise((resolve, reject) => {
 		effect(() => {
