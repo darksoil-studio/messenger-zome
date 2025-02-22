@@ -3,8 +3,7 @@ import {
 	LinkedDevicesStore,
 } from '@darksoil-studio/linked-devices-zome';
 import { HoloHashB64 } from '@holochain/client';
-import { Player, Scenario, pause } from '@holochain/tryorama';
-import { encode } from '@msgpack/msgpack';
+import { Scenario, dhtSync, pause } from '@holochain/tryorama';
 import { Signal, joinAsync } from '@tnesh-stack/signals';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -13,7 +12,12 @@ import { GroupChatStore } from '../../ui/src/group-chat-store.js';
 import { MessengerClient } from '../../ui/src/messenger-client.js';
 import { MessengerStore } from '../../ui/src/messenger-store.js';
 
-async function setupStore(player: Player) {
+const testHappUrl =
+	dirname(fileURLToPath(import.meta.url)) +
+	'/../../workdir/messenger_test.happ';
+
+async function addPlayer(scenario: Scenario) {
+	const player = await scenario.addPlayerWithApp({ path: testHappUrl });
 	await player.conductor
 		.adminWs()
 		.authorizeSigningCredentials(player.cells[0].cell_id);
@@ -26,6 +30,7 @@ async function setupStore(player: Player) {
 		linkedDevicesStore,
 	);
 	await store.client.queryPrivateMessengerEntries();
+
 	return {
 		store,
 		player,
@@ -46,32 +51,32 @@ async function setupStore(player: Player) {
 }
 
 async function promiseAllSequential<T>(
-	promises: Array<Promise<T>>,
+	fns: Array<() => Promise<T>>,
 ): Promise<Array<T>> {
 	const results: Array<T> = [];
-	for (const promise of promises) {
-		results.push(await promise);
+	for (const fn of fns) {
+		results.push(await fn());
 	}
 	return results;
 }
 
 export async function setup(scenario: Scenario, numPlayers = 2) {
-	const testHappUrl =
-		dirname(fileURLToPath(import.meta.url)) +
-		'/../../workdir/messenger_test.happ';
-
-	const players = await scenario.addPlayersWithApps(
-		Array.from(new Array(numPlayers)).fill({
-			appBundleSource: { path: testHappUrl },
-		}),
+	const players = await promiseAllSequential(
+		Array.from(new Array(numPlayers)).map(() => () => addPlayer(scenario)),
 	);
-	const playersAndStores = await promiseAllSequential(players.map(setupStore));
 
 	// Shortcut peer discovery through gossip and register all agents in every
 	// conductor of the scenario.
 	await scenario.shareAllAgents();
 
-	return playersAndStores;
+	await dhtSync(
+		players.map(p => p.player),
+		players[0].player.cells[0].cell_id[0],
+	);
+
+	console.log('Setup completed!');
+
+	return players;
 }
 
 export async function linkDevices(

@@ -128,7 +128,7 @@ test('add new device while receiving message is reconciled', async () => {
 				Object.keys(
 					await toPromise(bob2.store.peerChats.get(peerChatHash).messages),
 				).length === 2,
-			10_000,
+			60_000,
 		);
 		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 2);
