@@ -15,8 +15,7 @@
     profiles-zome.url = "github:darksoil-studio/profiles-zome/main-0.4";
     notifications-zome.url =
       "github:darksoil-studio/notifications-zome/main-0.4";
-    linked-devices-zome.url =
-      "github:darksoil-studio/linked-devices-zome/main-0.4";
+    linked-devices-zome.follows = "profiles-zome/linked-devices-zome";
   };
 
   nixConfig = {
