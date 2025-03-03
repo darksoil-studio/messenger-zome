@@ -30,7 +30,6 @@ pub enum EntryTypes {
     PrivateMessengerEntry(PrivateMessengerEntry),
     #[entry_type(visibility = "private")]
     AwaitingDepsEntry(PrivateMessengerEntry),
-    #[entry_type(visibility = "private")]
     EncryptedMessage(EncryptedMessage),
 }
 
