@@ -24,9 +24,9 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 	private async createGroupChat(fields: any) {
 		try {
 			const members: AgentPubKey[][] = Array.isArray(fields.members)
-				? fields.members
+				? [fields.members]
 				: fields.members
-					? [fields.members]
+					? [[fields.members]]
 					: [];
 			const groupChatHash = await this.store.client.createGroupChat(
 				members.map(a => a[0]),
