@@ -2,11 +2,6 @@ import {
 	LinkedDevicesStore,
 	linkedDevicesStoreContext,
 } from '@darksoil-studio/linked-devices-zome';
-import {
-	Profile,
-	ProfilesStore,
-	profilesStoreContext,
-} from '@darksoil-studio/profiles-zome';
 import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item.js';
 import {
 	AgentPubKey,
@@ -63,9 +58,6 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 
 	@consume({ context: linkedDevicesStoreContext, subscribe: true })
 	linkedDevicesStore: LinkedDevicesStore | undefined;
-
-	@consume({ context: profilesStoreContext, subscribe: true })
-	profilesStore!: ProfilesStore;
 
 	async firstUpdated() {
 		if (!this.peer && !this.peerChatHash)

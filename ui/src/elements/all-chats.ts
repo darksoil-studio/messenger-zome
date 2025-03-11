@@ -1,10 +1,10 @@
 import '@darksoil-studio/file-storage-zome/dist/elements/show-avatar-image.js';
 import {
 	Profile,
-	ProfilesStore,
-	profilesStoreContext,
-} from '@darksoil-studio/profiles-zome';
-import '@darksoil-studio/profiles-zome/dist/elements/agent-avatar.js';
+	ProfilesProvider,
+	profilesProviderContext,
+} from '@darksoil-studio/profiles-provider';
+import '@darksoil-studio/profiles-provider/dist/elements/agent-avatar.js';
 import {
 	AgentPubKey,
 	EntryHash,
@@ -23,7 +23,7 @@ import { wrapPathInSvg } from '@tnesh-stack/elements';
 import { AsyncResult, SignalWatcher } from '@tnesh-stack/signals';
 import { EntryRecord } from '@tnesh-stack/utils';
 import { LitElement, css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { join } from 'lit/directives/join.js';
 
 import { messengerStoreContext } from '../context.js';
@@ -47,8 +47,12 @@ export class AllChats extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
-	@consume({ context: profilesStoreContext, subscribe: true })
-	profilesStore!: ProfilesStore;
+	/**
+	 * Profiles provider
+	 */
+	@consume({ context: profilesProviderContext, subscribe: true })
+	@property()
+	profilesProvider!: ProfilesProvider;
 
 	private renderPeerChat(chat: PeerChatSummary) {
 		const lastActivityContent = chat.lastActivity.signed_content.content;
@@ -171,16 +175,13 @@ export class AllChats extends SignalWatcher(LitElement) {
 	) {
 		if (messengerProfile)
 			return html`<span>${messengerProfile.nickname}</span>`;
-		const profile = this.profilesStore.profileForAgent.get(agent).get();
+		const profile = this.profilesProvider.currentProfileForAgent
+			.get(agent)
+			.get();
 		if (profile.status !== 'completed') return html`${msg('Loading...')}`;
 		if (!profile.value) return html`${msg('Profile not found')}`;
-		const latestValue = profile.value.latestVersion.get() as AsyncResult<
-			EntryRecord<Profile> | undefined
-		>;
-		if (latestValue.status !== 'completed')
-			return html`${msg('Profile not found')}`;
 
-		return html`<span>${latestValue.value?.entry.nickname}</span>`;
+		return html`<span>${profile.value?.name}</span>`;
 	}
 
 	renderGroupEventLastActivity(

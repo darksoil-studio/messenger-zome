@@ -1,10 +1,6 @@
 import '@darksoil-studio/file-storage-zome/dist/elements/upload-avatar.js';
-import {
-	ProfilesStore,
-	profilesStoreContext,
-} from '@darksoil-studio/profiles-zome';
-import '@darksoil-studio/profiles-zome/dist/elements/search-profiles.js';
-import { ActionHash } from '@holochain/client';
+import '@darksoil-studio/profiles-provider/dist/elements/search-users.js';
+import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import '@shoelace-style/shoelace/dist/components/input/input.js';
@@ -24,24 +20,16 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
-	@consume({ context: profilesStoreContext, subscribe: true })
-	profilesStore!: ProfilesStore;
-
 	// eslint-disable-next-line
 	private async createGroupChat(fields: any) {
 		try {
-			const profileHashes: ActionHash[] = Array.isArray(fields.members)
+			const members: AgentPubKey[][] = Array.isArray(fields.members)
 				? fields.members
 				: fields.members
 					? [fields.members]
 					: [];
-			const otherAgents = await Promise.all(
-				profileHashes.map(h =>
-					toPromise(this.profilesStore.agentsForProfile.get(h)),
-				),
-			);
 			const groupChatHash = await this.store.client.createGroupChat(
-				otherAgents.map(a => a[0]),
+				members.map(a => a[0]),
 				{
 					avatar_hash: fields.avatar,
 					description: '',
@@ -69,7 +57,6 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 	}
 
 	render() {
-		const myProfile = this.profilesStore.myProfile.get();
 		return html`
 			<form
 				class="column"
@@ -86,14 +73,12 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 					></sl-input>
 				</div>
 
-				<search-profiles
-					.fieldLabel=${msg('Add Members')}
+				<search-users
+					.label=${msg('Add Members')}
 					name="members"
-					.excludedProfiles=${myProfile.status === 'completed'
-						? [myProfile.value?.profileHash]
-						: []}
+					.excludedUsers=${[this.store.client.client.myPubKey]}
 				>
-				</search-profiles>
+				</search-users>
 
 				<div style="flex: 1"></div>
 

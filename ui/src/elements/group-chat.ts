@@ -1,11 +1,11 @@
 import '@darksoil-studio/file-storage-zome/dist/elements/show-avatar-image.js';
 import {
 	Profile,
-	ProfilesStore,
-	profilesStoreContext,
-} from '@darksoil-studio/profiles-zome';
-import '@darksoil-studio/profiles-zome/dist/elements/agent-avatar.js';
-import { SearchProfiles } from '@darksoil-studio/profiles-zome/dist/elements/search-profiles.js';
+	ProfilesProvider,
+	profilesProviderContext,
+} from '@darksoil-studio/profiles-provider';
+import '@darksoil-studio/profiles-provider/dist/elements/agent-avatar.js';
+import { SearchUsers } from '@darksoil-studio/profiles-provider/dist/elements/search-users.js';
 import {
 	AgentPubKey,
 	AgentPubKeyB64,
@@ -82,11 +82,15 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
-	@consume({ context: profilesStoreContext, subscribe: true })
-	profilesStore!: ProfilesStore;
-
 	@state()
 	view: 'chat' | 'details' | 'add-members' | 'edit-info' = 'chat';
+
+	/**
+	 * Profiles provider
+	 */
+	@consume({ context: profilesProviderContext, subscribe: true })
+	@property()
+	profilesProvider!: ProfilesProvider;
 
 	private renderEvent(event: SignedEntry<GroupChatEvent>) {
 		switch (event.signed_content.content.event.type) {
@@ -424,19 +428,16 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	}
 
 	renderAgentNickname(agent: AgentPubKey) {
-		const profile = this.profilesStore.profileForAgent.get(agent).get();
+		const profile = this.profilesProvider.currentProfileForAgent
+			.get(agent)
+			.get();
 		if (profile.status !== 'completed' || !profile.value)
-			return html`${msg('Profile not found')}`;
-		const latestValue = profile.value.latestVersion.get() as AsyncResult<
-			EntryRecord<Profile> | undefined
-		>;
-		if (latestValue.status !== 'completed')
-			return html`${msg('Profile not found')}`;
+			return html`${msg('Profile not found.')}`;
 
 		return html`
 			<span
 				style=${styleMap({
-					color: colorHash.hex(encodeHashToBase64(profile.value.profileHash)),
+					color: colorHash.hex(encodeHashToBase64(agent)),
 					'font-weight': 'bold',
 				})}
 				@click=${() => {
@@ -450,7 +451,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						}),
 					);
 				}}
-				>${latestValue.value?.entry.nickname}</span
+				>${profile.value?.name}</span
 			>
 		`;
 	}
@@ -567,24 +568,20 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		}
 	}
 
-	get profilesToBeAdded() {
-		const searchProfiles = this.shadowRoot?.getElementById(
-			'profiles',
-		) as SearchProfiles;
-		if (!searchProfiles) return undefined;
-		return searchProfiles.value;
+	get usersToBeAdded() {
+		const searchUsers = this.shadowRoot?.getElementById('users') as SearchUsers;
+		if (!searchUsers) return undefined;
+		return searchUsers.value;
 	}
 
 	async addMembers() {
 		try {
-			const profilesToBeAdded = this.profilesToBeAdded!;
+			const usersToBeAdded = this.usersToBeAdded!;
 
-			for (const profileToBeAdded of profilesToBeAdded) {
-				const agents = await toPromise(
-					this.profilesStore.agentsForProfile.get(profileToBeAdded),
-				);
-
-				await this.store.groupChats.get(this.groupChatHash).addMember(agents);
+			for (const userToBeAdded of usersToBeAdded) {
+				await this.store.groupChats
+					.get(this.groupChatHash)
+					.addMember(userToBeAdded);
 			}
 
 			this.view = 'details';
@@ -592,19 +589,6 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			console.log(e);
 			notifyError(msg('Error adding members.'));
 		}
-	}
-
-	profileHashesForAgents(agents: AgentPubKey[]) {
-		const result = joinAsyncMap(
-			mapValues(slice(this.profilesStore.profileForAgent, agents), v =>
-				v.get(),
-			),
-		);
-		if (result.status !== 'completed') return [];
-		const profileHashes = Array.from(result.value.values())
-			.filter(p => !!p)
-			.map(p => p!.profileHash);
-		return profileHashes;
 	}
 
 	private renderAddMembers(groupChat: GroupChat) {
@@ -629,18 +613,16 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						<div class="flex-scrollable-parent">
 							<div class="flex-scrollable-container">
 								<div class="flex-scrollable-y">
-									<search-profiles
+									<search-users
 										id="profiles"
-										.excludedProfiles=${this.profileHashesForAgents(
-											groupChat.members
-												.filter(m => !m.removed)
-												.map(m => m.agents[0]),
-										)}
-										@profile-selected=${(e: CustomEvent) => {
+										.excludedUsers=${groupChat.members
+											.filter(m => !m.removed)
+											.map(m => m.agents)}
+										@user-selected=${(e: CustomEvent) => {
 											this.requestUpdate();
 										}}
 									>
-									</search-profiles>
+									</search-users>
 								</div>
 							</div>
 						</div>
@@ -649,8 +631,8 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 						<sl-button
 							variant="primary"
-							.disabled=${this.profilesToBeAdded &&
-							this.profilesToBeAdded.length === 0}
+							.disabled=${this.usersToBeAdded &&
+							this.usersToBeAdded.length === 0}
 							@click=${() => {
 								this.addMembers();
 							}}

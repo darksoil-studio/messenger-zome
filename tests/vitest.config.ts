@@ -4,9 +4,13 @@ export default defineConfig({
 	test: {
 		dangerouslyIgnoreUnhandledErrors: true,
 		poolOptions: {
-			threads: {
-				singleThread: true,
+			forks: {
+				maxForks: 4,
+				// singleFork: true,
 			},
+			// threads: {
+			// 	singleThread: true,
+			// },
 		},
 		testTimeout: 60 * 1000 * 20, // 20  mins
 	},

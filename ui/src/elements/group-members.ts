@@ -1,5 +1,5 @@
-import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item-skeleton.js';
-import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item.js';
+import '@darksoil-studio/profiles-provider/dist/elements/profile-list-item-skeleton.js';
+import '@darksoil-studio/profiles-provider/dist/elements/profile-list-item.js';
 import { EntryHash, encodeHashToBase64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
