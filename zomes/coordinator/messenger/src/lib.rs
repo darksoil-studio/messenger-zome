@@ -1,67 +1,155 @@
 use std::collections::BTreeMap;
 
 use hdk::prelude::*;
-use linked_devices::query_my_linked_devices;
-use messenger_integrity::*;
-use private_messenger_entries::{
-    receive_private_messenger_entries, receive_private_messenger_entry,
-};
 
-mod agent_encrypted_message;
-mod awaiting_deps;
-mod linked_devices;
 mod private_messenger_entries;
-mod signed;
-mod synchronize;
-mod utils;
 
 mod create_peer;
 mod group_chat;
+use group_chat::*;
 mod peer_chat;
+use peer_chat::*;
+mod profile;
 mod typing_indicator;
 
-#[hdk_extern]
-pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    let mut fns: BTreeSet<GrantedFunction> = BTreeSet::new();
-    fns.insert((zome_info()?.name, FunctionName::from("recv_remote_signal")));
-    let functions = GrantedFunctions::Listed(fns);
-    let cap_grant = ZomeCallCapGrant {
-        tag: String::from("receive_messages"),
-        access: CapAccess::Unrestricted,
-        functions,
-    };
-    create_cap_grant(cap_grant)?;
+use private_event_sourcing::*;
 
-    schedule("scheduled_synchronize_with_linked_devices")?;
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Message {
+    pub reply_to: Option<EntryHash>,
+    pub message: String,
+}
 
-    Ok(InitCallbackResult::Pass)
+#[private_event]
+#[serde(tag = "type")]
+pub enum MessengerEvent {
+    CreatePeerChat(CreatePeerChat),
+    PeerMessage(PeerMessage),
+    PeerChatEvent(PeerChatEvent),
+    ReadPeerMessages(ReadPeerMessages),
+    CreateGroupChat(CreateGroupChat),
+    GroupChatEvent(GroupChatEvent),
+    GroupMessage(GroupMessage),
+    ReadGroupMessages(ReadGroupMessages),
+}
+
+impl PrivateEvent for MessengerEvent {
+    fn validate(
+        &self,
+        _event_hash: EntryHash,
+        author: AgentPubKey,
+        _timestamp: Timestamp,
+    ) -> ExternResult<ValidateCallbackResult> {
+        match &self {
+            MessengerEvent::CreatePeerChat(peer_chat) => {
+                validate_create_peer_chat(&author, peer_chat)
+            }
+            MessengerEvent::PeerChatEvent(peer_chat_event) => {
+                validate_peer_chat_event(&author, peer_chat_event)
+            }
+            MessengerEvent::PeerMessage(peer_message) => {
+                validate_peer_message(&author, peer_message)
+            }
+            MessengerEvent::ReadPeerMessages(read_peer_messages) => {
+                validate_read_peer_messages(&author, read_peer_messages)
+            }
+            MessengerEvent::CreateGroupChat(create_group_chat) => {
+                validate_create_group_chat(&author, create_group_chat)
+            }
+            MessengerEvent::GroupChatEvent(group_chat_event) => {
+                validate_group_chat_event(&author, group_chat_event)
+            }
+            MessengerEvent::GroupMessage(group_message) => {
+                validate_group_message(&author, group_message)
+            }
+            MessengerEvent::ReadGroupMessages(read_group_messages) => {
+                validate_read_group_messages(&author, read_group_messages)
+            }
+        }
+    }
+
+    fn recipients(
+        &self,
+        event_hash: EntryHash,
+        author: AgentPubKey,
+        _timestamp: Timestamp,
+    ) -> ExternResult<Vec<AgentPubKey>> {
+        match self {
+            MessengerEvent::CreatePeerChat(create_peer_chat) => {
+                peer_chat_recipients(&author, &PeerChat::new(create_peer_chat.clone()))
+            }
+            MessengerEvent::PeerMessage(peer_message) => peer_chat_recipients_for_hash(
+                &author,
+                &peer_message.peer_chat_hash,
+                &peer_message.current_peer_chat_events_hashes,
+            ),
+            MessengerEvent::PeerChatEvent(peer_chat_events) => peer_chat_recipients_for_hash(
+                &author,
+                &peer_chat_events.peer_chat_hash,
+                &peer_chat_events.previous_peer_chat_events_hashes,
+            ),
+            MessengerEvent::ReadPeerMessages(read_peer_messages) => peer_chat_recipients_for_hash(
+                &author,
+                &read_peer_messages.peer_chat_hash,
+                &read_peer_messages.current_peer_chat_events_hashes,
+            ),
+            MessengerEvent::CreateGroupChat(group) => Ok(group_chat_recipients(
+                &author,
+                &GroupChat::new(group.clone()),
+            )),
+            MessengerEvent::GroupChatEvent(group_chat_event) => {
+                let mut recipients = group_chat_recipients_for_hash(
+                    &author,
+                    &group_chat_event.group_chat_hash,
+                    &vec![event_hash],
+                )?;
+
+                if let GroupEvent::RemoveMember { mut member_agents } =
+                    group_chat_event.event.clone()
+                {
+                    recipients.append(&mut member_agents);
+                }
+
+                Ok(recipients)
+            }
+            MessengerEvent::GroupMessage(group_message) => group_chat_recipients_for_hash(
+                &author,
+                &group_message.group_chat_hash,
+                &group_message.current_group_chat_events_hashes,
+            ),
+            MessengerEvent::ReadGroupMessages(read_group_messages) => {
+                group_chat_recipients_for_hash(
+                    &author,
+                    &read_group_messages.group_chat_hash,
+                    &read_group_messages.current_group_chat_events_hashes,
+                )
+            }
+        }
+    }
+}
+
+pub fn query_messenger_events() -> ExternResult<BTreeMap<EntryHashB64, SignedEvent<MessengerEvent>>>
+{
+    query_private_events()
+}
+
+pub fn query_messenger_event(
+    event_hash: EntryHash,
+) -> ExternResult<Option<SignedEvent<MessengerEvent>>> {
+    query_private_event::<MessengerEvent>(event_hash)
+}
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes)]
+pub enum MessengerRemoteSignal {
+    PeerChatTypingIndicator { peer_chat_hash: EntryHash },
+    GroupChatTypingIndicator { group_chat_hash: EntryHash },
+    // SynchronizeEntriesWithLinkedDevice(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
+    // SynchronizeGroupEntriesWithNewGroupMember(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Signal {
-    LinkCreated {
-        action: SignedActionHashed,
-        link_type: LinkTypes,
-    },
-    LinkDeleted {
-        action: SignedActionHashed,
-        create_link_action: SignedActionHashed,
-        link_type: LinkTypes,
-    },
-    EntryCreated {
-        action: SignedActionHashed,
-        app_entry: EntryTypes,
-    },
-    EntryUpdated {
-        action: SignedActionHashed,
-        app_entry: EntryTypes,
-        original_app_entry: EntryTypes,
-    },
-    EntryDeleted {
-        action: SignedActionHashed,
-        original_app_entry: EntryTypes,
-    },
     PeerChatTypingIndicator {
         peer_chat_hash: EntryHash,
         peer: AgentPubKey,
@@ -71,183 +159,53 @@ pub enum Signal {
         group_chat_hash: EntryHash,
     },
 }
+#[hdk_extern]
+pub fn recv_remote_signal(signal_bytes: SerializedBytes) -> ExternResult<()> {
+    if let Ok(messenger_remote_signal) = MessengerRemoteSignal::try_from(signal_bytes.clone()) {
+        match messenger_remote_signal {
+            MessengerRemoteSignal::PeerChatTypingIndicator { peer_chat_hash } => {
+                let call_info = call_info()?;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub enum MessengerRemoteSignal {
-    NewPrivateMessengerEntry(PrivateMessengerEntry),
-    PeerChatTypingIndicator { peer_chat_hash: EntryHash },
-    GroupChatTypingIndicator { group_chat_hash: EntryHash },
-    SynchronizeEntriesWithLinkedDevice(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
-    SynchronizeGroupEntriesWithNewGroupMember(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
+                let peer = call_info.provenance;
+
+                emit_signal(Signal::PeerChatTypingIndicator {
+                    peer_chat_hash,
+                    peer,
+                })?;
+            }
+            MessengerRemoteSignal::GroupChatTypingIndicator { group_chat_hash } => {
+                let call_info = call_info()?;
+
+                let peer = call_info.provenance;
+
+                emit_signal(Signal::GroupChatTypingIndicator {
+                    peer,
+                    group_chat_hash,
+                })?;
+            }
+        }
+    }
+    if let Ok(private_event_sourcing_remote_signal) =
+        PrivateEventSourcingRemoteSignal::try_from(signal_bytes)
+    {
+        recv_private_events_remote_signal::<MessengerEvent>(private_event_sourcing_remote_signal)
+    } else {
+        Ok(())
+    }
 }
 
 #[hdk_extern]
-pub fn recv_remote_signal(signal: MessengerRemoteSignal) -> ExternResult<()> {
-    // TODO: take into account whether the recipient is blocked
-    match signal {
-        MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry) => {
-            receive_private_messenger_entry(private_messenger_entry)
-        }
-        MessengerRemoteSignal::SynchronizeEntriesWithLinkedDevice(entries) => {
-            let call_info = call_info()?;
-            let my_devices = query_my_linked_devices()?;
+pub fn attempt_commit_awaiting_deps_entries() -> ExternResult<()> {
+    private_event_sourcing::attempt_commit_awaiting_deps_entries::<MessengerEvent>()?;
 
-            if !my_devices.contains_key(&call_info.provenance) {
-                return Err(wasm_error!("Agent {} tried to synchronize its entries with us but we have not linked devices", call_info.provenance));
-            }
-
-            receive_private_messenger_entries(entries)
-        }
-        MessengerRemoteSignal::SynchronizeGroupEntriesWithNewGroupMember(entries) => {
-            receive_private_messenger_entries(entries)
-        }
-        MessengerRemoteSignal::PeerChatTypingIndicator { peer_chat_hash } => {
-            let call_info = call_info()?;
-
-            let peer = call_info.provenance;
-
-            emit_signal(Signal::PeerChatTypingIndicator {
-                peer_chat_hash,
-                peer,
-            })?;
-            Ok(())
-        }
-        MessengerRemoteSignal::GroupChatTypingIndicator { group_chat_hash } => {
-            let call_info = call_info()?;
-
-            let peer = call_info.provenance;
-
-            emit_signal(Signal::GroupChatTypingIndicator {
-                peer,
-                group_chat_hash,
-            })?;
-            Ok(())
-        }
-    }
+    Ok(())
 }
 
 #[hdk_extern(infallible)]
-pub fn post_commit(committed_actions: Vec<SignedActionHashed>) {
-    for action in committed_actions {
-        if let Err(err) = signal_action(action) {
-            error!("Error signaling new action: {:?}", err);
-        }
+fn scheduled_tasks(_: Option<Schedule>) -> Option<Schedule> {
+    if let Err(err) = private_event_sourcing::scheduled_tasks::<MessengerEvent>() {
+        error!("Failed to perform scheduled tasks: {err:?}");
     }
-}
-fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
-    match action.hashed.content.clone() {
-        Action::CreateLink(create_link) => {
-            if let Ok(Some(link_type)) =
-                LinkTypes::from_type(create_link.zome_index, create_link.link_type)
-            {
-                emit_signal(Signal::LinkCreated {
-                    action: action.clone(),
-                    link_type,
-                })?;
-            }
-            Ok(())
-        }
-        Action::DeleteLink(delete_link) => {
-            let record = get(delete_link.link_add_address.clone(), GetOptions::default())?.ok_or(
-                wasm_error!(WasmErrorInner::Guest(
-                    "Failed to fetch CreateLink action".to_string()
-                )),
-            )?;
-            match record.action() {
-                Action::CreateLink(create_link) => {
-                    if let Ok(Some(link_type)) =
-                        LinkTypes::from_type(create_link.zome_index, create_link.link_type)
-                    {
-                        emit_signal(Signal::LinkDeleted {
-                            action,
-                            link_type,
-                            create_link_action: record.signed_action.clone(),
-                        })?;
-                    }
-                    Ok(())
-                }
-                _ => Err(wasm_error!(WasmErrorInner::Guest(
-                    "Create Link should exist".to_string()
-                ))),
-            }
-        }
-        Action::Create(_create) => {
-            if let Ok(Some(app_entry)) = get_entry_for_action(&action.hashed.hash) {
-                emit_signal(Signal::EntryCreated {
-                    action: action.clone(),
-                    app_entry: app_entry.clone(),
-                })?;
-                if let EntryTypes::PrivateMessengerEntry(entry) = app_entry {
-                    let agent_info = agent_info()?;
-                    if entry.0.provenance.eq(&agent_info.agent_latest_pubkey) {
-                        call_remote(
-                            agent_info.agent_latest_pubkey.clone(),
-                            zome_info()?.name,
-                            "notify_private_messenger_entry_recipients".into(),
-                            None,
-                            entry,
-                        )?;
-                    }
-                    call_remote(
-                        agent_info.agent_latest_pubkey,
-                        zome_info()?.name,
-                        "attempt_commit_awaiting_deps_entries".into(),
-                        None,
-                        (),
-                    )?;
-                }
-            }
-            Ok(())
-        }
-        Action::Update(update) => {
-            if let Ok(Some(app_entry)) = get_entry_for_action(&action.hashed.hash) {
-                if let Ok(Some(original_app_entry)) =
-                    get_entry_for_action(&update.original_action_address)
-                {
-                    emit_signal(Signal::EntryUpdated {
-                        action,
-                        app_entry,
-                        original_app_entry,
-                    })?;
-                }
-            }
-            Ok(())
-        }
-        Action::Delete(delete) => {
-            if let Ok(Some(original_app_entry)) = get_entry_for_action(&delete.deletes_address) {
-                emit_signal(Signal::EntryDeleted {
-                    action,
-                    original_app_entry,
-                })?;
-            }
-            Ok(())
-        }
-        _ => Ok(()),
-    }
-}
 
-fn get_entry_for_action(action_hash: &ActionHash) -> ExternResult<Option<EntryTypes>> {
-    let record = match get_details(action_hash.clone(), GetOptions::default())? {
-        Some(Details::Record(record_details)) => record_details.record,
-        _ => {
-            return Ok(None);
-        }
-    };
-    let entry = match record.entry().as_option() {
-        Some(entry) => entry,
-        None => {
-            return Ok(None);
-        }
-    };
-    let (zome_index, entry_index) = match record.action().entry_type() {
-        Some(EntryType::App(AppEntryDef {
-            zome_index,
-            entry_index,
-            ..
-        })) => (zome_index, entry_index),
-        _ => {
-            return Ok(None);
-        }
-    };
-    EntryTypes::deserialize_from_type(*zome_index, *entry_index, entry)
+    Some(Schedule::Persisted("*/30 * * * * * *".into())) // Every 30 seconds
 }

@@ -3,16 +3,350 @@ use std::collections::BTreeMap;
 use hdk::prelude::*;
 use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 use messenger_integrity::*;
+use private_event_sourcing::{create_private_event, SignedEvent};
 
 use crate::{
-    agent_encrypted_message::{create_encrypted_message, MessengerEncryptedMessage},
     create_peer::{build_create_peer_for_agent, build_my_create_peer},
-    private_messenger_entries::{
-        create_private_messenger_entry, create_relaxed_private_messenger_entry,
-        query_private_messenger_entries, query_private_messenger_entry,
-    },
-    MessengerRemoteSignal,
+    peer_chat::CreatePeer,
+    profile::{merge_profiles, MessengerProfile},
+    query_messenger_event, query_messenger_events, Message, MessengerEvent,
 };
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreateGroupChat {
+    pub me: CreatePeer,
+    pub others: Vec<CreatePeer>,
+    pub info: GroupInfo,
+    pub settings: GroupSettings,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GroupChat {
+    pub members: Vec<GroupMember>,
+    pub info: GroupInfo,
+    pub settings: GroupSettings,
+    pub deleted: bool,
+}
+
+impl GroupChat {
+    pub fn new(create_group_chat: CreateGroupChat) -> Self {
+        let mut members: Vec<GroupMember> = create_group_chat
+            .others
+            .into_iter()
+            .map(|peer| GroupMember {
+                agents: peer.agents.into_iter().collect(),
+                admin: false,
+                removed: false,
+                profile: peer.profile,
+            })
+            .collect();
+        members.push(GroupMember {
+            agents: create_group_chat.me.agents.into_iter().collect(),
+            admin: true,
+            removed: false,
+            profile: create_group_chat.me.profile,
+        });
+        Self {
+            settings: create_group_chat.settings,
+            info: create_group_chat.info,
+            members,
+            deleted: false,
+        }
+    }
+
+    pub fn apply(mut self, provenance: &AgentPubKey, event: &GroupEvent) -> ExternResult<Self> {
+        let author_member = self.members.iter().find(|m| m.agents.contains(&provenance));
+        let Some(author_member) = author_member else {
+            return Err(wasm_error!(
+                "Author of the GroupEvent is not a member of the group"
+            ));
+        };
+        let author_is_admin = author_member.admin;
+
+        if self.deleted {
+            return Err(wasm_error!("Group is deleted."));
+        }
+        match event {
+            GroupEvent::UpdateGroupInfo(info) => {
+                if self.settings.only_admins_can_edit_group_info && !author_is_admin {
+                    return Err(wasm_error!("Only admins can update the group's info"));
+                }
+                self.info = info.clone();
+            }
+            GroupEvent::UpdateGroupSettings(settings) => {
+                if !author_is_admin {
+                    return Err(wasm_error!("Only admins can update the group's settings"));
+                }
+                self.settings = settings.clone();
+            }
+            GroupEvent::AddMember { member_agents } => {
+                if self.settings.only_admins_can_add_members && !author_is_admin {
+                    return Err(wasm_error!("Only admins can add members"));
+                }
+                if author_member.removed {
+                    return Err(wasm_error!("Author is no longer part of the group"));
+                }
+
+                let existing_member_index = self.members.iter().position(|m| {
+                    member_agents
+                        .iter()
+                        .find(|m2| m.agents.contains(&m2))
+                        .is_some()
+                });
+
+                if let Some(existing_member_index) = existing_member_index {
+                    for agent in member_agents {
+                        self.members[existing_member_index]
+                            .agents
+                            .insert(agent.clone());
+                    }
+                    self.members[existing_member_index].removed = false;
+                } else {
+                    self.members.push(GroupMember {
+                        agents: member_agents.clone().into_iter().collect(),
+                        removed: false,
+                        admin: false,
+                        profile: None,
+                    });
+                }
+            }
+            GroupEvent::RemoveMember { member_agents } => {
+                if !author_is_admin {
+                    return Err(wasm_error!("Only admins can remove members"));
+                }
+
+                let pos = self.members.iter().position(|m| {
+                    m.agents
+                        .iter()
+                        .find(|d| member_agents.contains(d))
+                        .is_some()
+                });
+                let Some(p) = pos else {
+                    return Err(wasm_error!("Member not found"));
+                };
+                if self.members[p].removed {
+                    return Err(wasm_error!("Member was already removed"));
+                }
+                self.members[p].removed = true;
+                self.members[p].admin = false;
+            }
+            GroupEvent::NewAgentForMember {
+                new_agent,
+                linked_devices_proofs,
+            } => {
+                if author_member.removed {
+                    return Err(wasm_error!("Author is no longer part of the group"));
+                }
+                let pos = self
+                    .members
+                    .iter()
+                    .position(|m| m.agents.contains(&provenance));
+                let Some(p) = pos else {
+                    return Err(wasm_error!("Member for the given provenance not found"));
+                };
+                let linked = are_agents_linked(&provenance, &new_agent, &linked_devices_proofs);
+                if !linked {
+                    return Err(wasm_error!("Invalid proof"));
+                }
+                self.members[p].agents.insert(new_agent.clone());
+            }
+            GroupEvent::PromoteMemberToAdmin { member_agents } => {
+                if !author_is_admin {
+                    return Err(wasm_error!("Only admins can promote members to admins"));
+                }
+                let pos = self.members.iter().position(|m| {
+                    m.agents
+                        .iter()
+                        .find(|d| member_agents.contains(d))
+                        .is_some()
+                });
+                let Some(p) = pos else {
+                    return Err(wasm_error!("Member not found"));
+                };
+                self.members[p].admin = true;
+            }
+            GroupEvent::DemoteMemberFromAdmin { member_agents } => {
+                if !author_is_admin {
+                    return Err(wasm_error!("Only admins can promote members to admins"));
+                }
+                let pos = self.members.iter().position(|m| {
+                    m.agents
+                        .iter()
+                        .find(|d| member_agents.contains(d))
+                        .is_some()
+                });
+                let Some(p) = pos else {
+                    return Err(wasm_error!("Member not found"));
+                };
+                self.members[p].admin = false;
+            }
+            GroupEvent::DeleteGroup => {
+                if !author_is_admin {
+                    return Err(wasm_error!("Only admins can delete groups"));
+                }
+                self.deleted = true;
+            }
+            GroupEvent::LeaveGroup => {
+                if author_member.removed {
+                    return Err(wasm_error!("Author is no longer part of the group"));
+                }
+                let author_member_index = self
+                    .members
+                    .iter()
+                    .position(|m| m.agents.contains(&provenance));
+                let Some(i) = author_member_index else {
+                    return Err(wasm_error!("Unreachable: member position not found?"));
+                };
+                self.members[i].removed = true;
+                self.members[i].admin = false;
+            }
+        };
+
+        Ok(self)
+    }
+
+    pub fn merge(group_1: GroupChat, group_2: GroupChat) -> GroupChat {
+        let settings = GroupSettings {
+            only_admins_can_edit_group_info: group_1.settings.only_admins_can_edit_group_info
+                || group_2.settings.only_admins_can_edit_group_info,
+            only_admins_can_add_members: group_1.settings.only_admins_can_add_members
+                || group_2.settings.only_admins_can_add_members,
+            sync_message_history_with_new_members: group_1
+                .settings
+                .sync_message_history_with_new_members
+                && group_2.settings.sync_message_history_with_new_members,
+        };
+        let name = if group_1.info.name < group_2.info.name {
+            group_2.info.name
+        } else {
+            group_1.info.name
+        };
+        let description = if group_1.info.description < group_2.info.description {
+            group_2.info.description
+        } else {
+            group_1.info.description
+        };
+        let avatar_hash = match (group_1.info.avatar_hash, group_2.info.avatar_hash) {
+            (Some(hash_1), Some(hash_2)) => Some(if hash_1 < hash_2 { hash_2 } else { hash_1 }),
+            (Some(hash_1), None) => Some(hash_1),
+            (None, Some(hash_2)) => Some(hash_2),
+            (None, None) => None,
+        };
+        let info = GroupInfo {
+            name,
+            description,
+            avatar_hash,
+        };
+
+        let mut group_1_members = group_1.members.clone();
+
+        for group_2_member in group_2.members {
+            let existing_in_group_1 = group_1_members.iter().position(|m1| {
+                group_2_member
+                    .agents
+                    .iter()
+                    .find(|a2| m1.agents.contains(&a2))
+                    .is_some()
+            });
+            if let Some(group_1_member_index) = existing_in_group_1 {
+                let group_1_member = group_1_members[group_1_member_index].clone();
+                for agent in group_2_member.agents {
+                    group_1_members[group_1_member_index]
+                        .agents
+                        .insert(agent.clone());
+                }
+                group_1_members[group_1_member_index].removed =
+                    group_1_member.removed || group_2_member.removed;
+                group_1_members[group_1_member_index].admin =
+                    group_1_member.admin && group_2_member.admin;
+
+                let profile = merge_profiles(group_1_member.profile, group_2_member.profile);
+                group_1_members[group_1_member_index].profile = profile;
+            } else {
+                group_1_members.push(group_2_member);
+            }
+        }
+
+        let deleted = group_1.deleted || group_2.deleted;
+
+        GroupChat {
+            members: group_1_members,
+            info,
+            settings,
+            deleted,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GroupInfo {
+    pub name: String,
+    pub description: String,
+    pub avatar_hash: Option<EntryHash>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GroupSettings {
+    pub only_admins_can_edit_group_info: bool,
+    pub only_admins_can_add_members: bool,
+    pub sync_message_history_with_new_members: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct GroupMember {
+    pub agents: BTreeSet<AgentPubKey>,
+    pub admin: bool,
+    pub removed: bool,
+    pub profile: Option<MessengerProfile>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "type")]
+pub enum GroupEvent {
+    UpdateGroupInfo(GroupInfo),
+    UpdateGroupSettings(GroupSettings),
+    AddMember {
+        member_agents: Vec<AgentPubKey>,
+    },
+    RemoveMember {
+        member_agents: Vec<AgentPubKey>,
+    },
+    NewAgentForMember {
+        new_agent: AgentPubKey,
+        linked_devices_proofs: Vec<LinkedDevicesProof>,
+    },
+    PromoteMemberToAdmin {
+        member_agents: Vec<AgentPubKey>,
+    },
+    DemoteMemberFromAdmin {
+        member_agents: Vec<AgentPubKey>,
+    },
+    LeaveGroup,
+    DeleteGroup,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GroupChatEvent {
+    pub group_chat_hash: EntryHash,
+    pub previous_group_chat_events_hashes: Vec<EntryHash>,
+
+    pub event: GroupEvent,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GroupMessage {
+    pub group_chat_hash: EntryHash,
+    pub current_group_chat_events_hashes: Vec<EntryHash>,
+
+    pub message: Message,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReadGroupMessages {
+    pub group_chat_hash: EntryHash,
+    pub current_group_chat_events_hashes: Vec<EntryHash>,
+    pub read_messages_hashes: Vec<EntryHash>,
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateGroupChatInput {
@@ -37,8 +371,8 @@ pub fn create_group_chat(input: CreateGroupChatInput) -> ExternResult<EntryHash>
         settings: input.settings,
     };
 
-    let content = PrivateMessengerEntryContent::CreateGroupChat(group.clone());
-    create_private_messenger_entry(content)
+    let content = MessengerEvent::CreateGroupChat(group.clone());
+    create_private_event(content)
 }
 
 pub fn are_all_agents_linked(agents: &Vec<AgentPubKey>, proofs: &Vec<LinkedDevicesProof>) -> bool {
@@ -89,19 +423,18 @@ pub fn validate_create_group_chat(
 
 #[hdk_extern]
 pub fn create_group_chat_event(group_chat_event: GroupChatEvent) -> ExternResult<EntryHash> {
-    let content = PrivateMessengerEntryContent::GroupChatEvent(group_chat_event);
-    create_relaxed_private_messenger_entry(content)
+    let content = MessengerEvent::GroupChatEvent(group_chat_event);
+    create_private_event(content)
 }
 
 pub fn query_create_group_chat(
     group_chat_hash: &EntryHash,
 ) -> ExternResult<Option<CreateGroupChat>> {
-    let Some(entry) = query_private_messenger_entry(group_chat_hash)? else {
+    let Some(entry) = query_messenger_event(group_chat_hash.clone())? else {
         return Ok(None);
     };
 
-    let PrivateMessengerEntryContent::CreateGroupChat(group_chat) = entry.0.signed_content.content
-    else {
+    let MessengerEvent::CreateGroupChat(group_chat) = entry.event.content else {
         return Err(wasm_error!(
             "Given group_hash is not for a CreateGroupChat entry"
         ));
@@ -119,18 +452,16 @@ pub fn query_original_group_chat(group_chat_hash: &EntryHash) -> ExternResult<Op
 pub fn query_group_chat_event(
     group_chat_hash: &EntryHash,
 ) -> ExternResult<Option<(AgentPubKey, GroupChatEvent)>> {
-    let Some(entry) = query_private_messenger_entry(group_chat_hash)? else {
+    let Some(entry) = query_messenger_event(group_chat_hash.clone())? else {
         return Ok(None);
     };
 
-    let PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) =
-        entry.0.signed_content.content
-    else {
+    let MessengerEvent::GroupChatEvent(group_chat_event) = entry.event.content else {
         return Err(wasm_error!(
             "Given group_hash is not for a GroupChatEvent entry"
         ));
     };
-    Ok(Some((entry.0.provenance, group_chat_event)))
+    Ok(Some((entry.author, group_chat_event)))
 }
 
 pub fn query_current_group_chat(
@@ -225,8 +556,8 @@ pub fn validate_group_chat_event(
 
 #[hdk_extern]
 pub fn send_group_message(group_message: GroupMessage) -> ExternResult<EntryHash> {
-    let content = PrivateMessengerEntryContent::GroupMessage(group_message.clone());
-    create_relaxed_private_messenger_entry(content)
+    let content = MessengerEvent::GroupMessage(group_message.clone());
+    create_private_event(content)
 }
 
 pub fn validate_group_message(
@@ -257,8 +588,8 @@ pub fn validate_group_message(
 
 #[hdk_extern]
 pub fn mark_group_messages_as_read(read_group_messages: ReadGroupMessages) -> ExternResult<()> {
-    let content = PrivateMessengerEntryContent::ReadGroupMessages(read_group_messages);
-    create_relaxed_private_messenger_entry(content)?;
+    let content = MessengerEvent::ReadGroupMessages(read_group_messages);
+    create_private_event(content)?;
 
     Ok(())
 }
@@ -292,128 +623,40 @@ pub fn validate_read_group_messages(
     return Ok(ValidateCallbackResult::Valid);
 }
 
-// pub fn query_current_group(
-//     original_group_hash: &EntryHash,
-//     current_group_hash: &EntryHash,
-// ) -> ExternResult<Option<Group>> {
-//     let Some(group_crud) = query_crud_entries_for_group(&original_group_hash)? else {
-//         return Ok(None);
-//     };
-
-//     let original_and_current_hashes_are_for_the_same_group =
-//         if original_group_hash.eq(&current_group_hash) {
-//             true
-//         } else {
-//             group_crud.updates.contains_key(&current_group_hash.clone())
-//         };
-
-//     if !original_and_current_hashes_are_for_the_same_group {
-//         return Err(wasm_error!(
-//             "Original and current group hash are not for the same group"
-//         ));
-//     }
-
-//     let current_group = if original_group_hash.eq(&current_group_hash) {
-//         group_crud.create_group
-//     } else {
-//         let Some(update) = group_crud.updates.get(&current_group_hash.clone()) else {
-//             return Err(wasm_error!(
-//                 "current_group_hash does not correspond to an update or create for this group"
-//             ));
-//         };
-//         update.group.clone()
-//     };
-//     Ok(Some(current_group))
-// }
-
-// pub struct CrudEntriesForGroup {
-//     pub group_hash: EntryHash,
-//     pub create_group: Group,
-//     pub updates: BTreeMap<EntryHash, UpdateGroupChat>,
-//     pub update_chain: Vec<Vec<EntryHash>>,
-//     pub deletes: BTreeMap<EntryHash, DeleteGroupChat>,
-// }
-
-// pub fn query_crud_entries_for_group(
-//     group_hash: &EntryHash,
-// ) -> ExternResult<Option<CrudEntriesForGroup>> {
-//     let private_messenger_entries = query_private_messenger_entries(())?.entries;
-
-//     let Some(group_entry) = private_messenger_entries.get(&EntryHashB64::from(group_hash.clone()))
-//     else {
-//         return Ok(None);
-//     };
-//     let PrivateMessengerEntryContent::CreateGroupChat(group) =
-//         &group_entry.0.signed_content.content
-//     else {
-//         return Err(wasm_error!(
-//             "Given group_hash does not correspond to a group"
-//         ));
-//     };
-
-//     let mut crud = CrudEntriesForGroup {
-//         group_hash: group_hash.clone(),
-//         create_group: group.clone(),
-//         update_chain: vec![vec![group_hash.clone()]],
-//         updates: BTreeMap::new(),
-//         deletes: BTreeMap::new(),
-//     };
-
-//     for (entry_hash, entry) in private_messenger_entries {
-//         match entry.0.signed_content.content {
-//             PrivateMessengerEntryContent::UpdateGroupChat(update_group_chat) => {
-//                 if update_group_chat.original_group_hash.eq(group_hash) {
-//                     crud.updates
-//                         .insert(entry_hash.into(), update_group_chat.clone());
-//                 }
-//             }
-//             PrivateMessengerEntryContent::DeleteGroupChat(delete_group_chat) => {
-//                 if delete_group_chat.original_group_hash.eq(group_hash) {
-//                     crud.deletes
-//                         .insert(entry_hash.into(), delete_group_chat.clone());
-//                 }
-//             }
-//             _ => {}
-//         }
-//     }
-
-//     Ok(Some(crud))
-// }
-
 pub fn query_entries_for_group(
     group_hash: &EntryHash,
     include_messages: bool,
-) -> ExternResult<Option<BTreeMap<EntryHashB64, PrivateMessengerEntry>>> {
-    let private_messenger_entries = query_private_messenger_entries(())?;
+) -> ExternResult<Option<BTreeMap<EntryHashB64, SignedEvent<MessengerEvent>>>> {
+    let private_messenger_entries = query_messenger_events()?;
 
     let Some(group_entry) = private_messenger_entries.get(&EntryHashB64::from(group_hash.clone()))
     else {
         return Ok(None);
     };
-    let PrivateMessengerEntryContent::CreateGroupChat(_) = group_entry.0.signed_content.content
-    else {
+    let MessengerEvent::CreateGroupChat(_) = group_entry.event.content else {
         return Err(wasm_error!(
             "Given hash does not correspond to a CreateGroupChat entry"
         ));
     };
 
-    let mut entries_for_group: BTreeMap<EntryHashB64, PrivateMessengerEntry> = BTreeMap::new();
+    let mut entries_for_group: BTreeMap<EntryHashB64, SignedEvent<MessengerEvent>> =
+        BTreeMap::new();
 
     entries_for_group.insert(group_hash.clone().into(), group_entry.clone());
 
     for (entry_hash, entry) in private_messenger_entries {
-        match &entry.0.signed_content.content {
-            PrivateMessengerEntryContent::GroupChatEvent(group_chat_event) => {
+        match &entry.event.content {
+            MessengerEvent::GroupChatEvent(group_chat_event) => {
                 if group_chat_event.group_chat_hash.eq(group_hash) {
                     entries_for_group.insert(entry_hash, entry);
                 }
             }
-            PrivateMessengerEntryContent::GroupMessage(group_message) => {
+            MessengerEvent::GroupMessage(group_message) => {
                 if include_messages && group_message.group_chat_hash.eq(group_hash) {
                     entries_for_group.insert(entry_hash, entry);
                 }
             }
-            PrivateMessengerEntryContent::ReadGroupMessages(read_group_messages) => {
+            MessengerEvent::ReadGroupMessages(read_group_messages) => {
                 if include_messages && read_group_messages.group_chat_hash.eq(group_hash) {
                     entries_for_group.insert(entry_hash, entry);
                 }
@@ -460,7 +703,7 @@ pub fn query_entries_for_group(
 // }
 
 pub fn post_receive_group_chat_entry(
-    private_messenger_entry: PrivateMessengerEntry,
+    private_messenger_entry: MessengerEvent,
     group_chat_hash: &EntryHash,
     current_group_chat_events_hashes: &Vec<EntryHash>,
 ) -> ExternResult<()> {
@@ -542,4 +785,28 @@ pub fn query_missed_group_chat_events(
         .filter(|(hash, _event)| !all_ascendents.contains(hash))
         .collect();
     Ok(missing_group_events)
+}
+
+pub fn group_chat_recipients(provenance: &AgentPubKey, group_chat: &GroupChat) -> Vec<AgentPubKey> {
+    let members: Vec<AgentPubKey> = group_chat
+        .members
+        .iter()
+        .filter(|m| !m.removed && !m.agents.contains(&provenance))
+        .map(|m| m.agents.clone())
+        .flatten()
+        .collect();
+    members
+}
+
+pub fn group_chat_recipients_for_hash(
+    provenance: &AgentPubKey,
+    group_chat_hash: &EntryHash,
+    current_group_events_hashes: &Vec<EntryHash>,
+) -> ExternResult<Vec<AgentPubKey>> {
+    let Some(group_chat) = query_current_group_chat(&group_chat_hash, current_group_events_hashes)?
+    else {
+        return Err(wasm_error!("GroupChat not found"));
+    };
+
+    Ok(group_chat_recipients(provenance, &group_chat))
 }
