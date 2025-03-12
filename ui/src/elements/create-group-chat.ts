@@ -10,9 +10,9 @@ import { SignalWatcher, toPromise } from '@tnesh-stack/signals';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import { messengerStoreContext } from '../context';
-import { MessengerStore } from '../messenger-store';
-import { messengerStyles } from '../styles';
+import { messengerStoreContext } from '../context.js';
+import { MessengerStore } from '../messenger-store.js';
+import { messengerStyles } from '../styles.js';
 
 @localized()
 @customElement('create-group-chat')

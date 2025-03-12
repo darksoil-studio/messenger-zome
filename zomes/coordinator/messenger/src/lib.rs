@@ -2,8 +2,6 @@ use std::collections::BTreeMap;
 
 use hdk::prelude::*;
 
-mod private_messenger_entries;
-
 mod create_peer;
 mod group_chat;
 use group_chat::*;
@@ -71,58 +69,89 @@ impl PrivateEvent for MessengerEvent {
     fn recipients(
         &self,
         event_hash: EntryHash,
-        author: AgentPubKey,
+        _author: AgentPubKey,
         _timestamp: Timestamp,
-    ) -> ExternResult<Vec<AgentPubKey>> {
+    ) -> ExternResult<BTreeSet<AgentPubKey>> {
         match self {
-            MessengerEvent::CreatePeerChat(create_peer_chat) => {
-                peer_chat_recipients(&author, &PeerChat::new(create_peer_chat.clone()))
+            MessengerEvent::CreatePeerChat(_create_peer_chat) => {
+                peer_chat_current_recipients(&event_hash)
             }
-            MessengerEvent::PeerMessage(peer_message) => peer_chat_recipients_for_hash(
-                &author,
-                &peer_message.peer_chat_hash,
-                &peer_message.current_peer_chat_events_hashes,
-            ),
-            MessengerEvent::PeerChatEvent(peer_chat_events) => peer_chat_recipients_for_hash(
-                &author,
-                &peer_chat_events.peer_chat_hash,
-                &peer_chat_events.previous_peer_chat_events_hashes,
-            ),
-            MessengerEvent::ReadPeerMessages(read_peer_messages) => peer_chat_recipients_for_hash(
-                &author,
-                &read_peer_messages.peer_chat_hash,
-                &read_peer_messages.current_peer_chat_events_hashes,
-            ),
-            MessengerEvent::CreateGroupChat(group) => Ok(group_chat_recipients(
-                &author,
-                &GroupChat::new(group.clone()),
-            )),
+            MessengerEvent::PeerMessage(peer_message) => {
+                peer_chat_current_recipients(&peer_message.peer_chat_hash)
+            }
+            MessengerEvent::PeerChatEvent(peer_chat_events) => {
+                peer_chat_current_recipients(&peer_chat_events.peer_chat_hash)
+            }
+            MessengerEvent::ReadPeerMessages(read_peer_messages) => {
+                peer_chat_current_recipients(&read_peer_messages.peer_chat_hash)
+            }
+            MessengerEvent::CreateGroupChat(group) => {
+                let mut recipients = group_chat_recipients(&GroupChat::new(group.clone()))?;
+                let mut current_recipients = group_chat_current_recipients(&event_hash)?;
+                recipients.append(&mut current_recipients);
+                Ok(recipients)
+            }
             MessengerEvent::GroupChatEvent(group_chat_event) => {
-                let mut recipients = group_chat_recipients_for_hash(
-                    &author,
+                let mut recipients_at_event = group_chat_recipients_at_events(
                     &group_chat_event.group_chat_hash,
-                    &vec![event_hash],
+                    &vec![event_hash].into_iter().collect(),
                 )?;
+                let mut current_recipients =
+                    group_chat_current_recipients(&group_chat_event.group_chat_hash)?;
+
+                recipients_at_event.append(&mut current_recipients);
 
                 if let GroupEvent::RemoveMember { mut member_agents } =
                     group_chat_event.event.clone()
                 {
-                    recipients.append(&mut member_agents);
+                    recipients_at_event.append(&mut member_agents);
+                }
+
+                Ok(recipients_at_event)
+            }
+            MessengerEvent::GroupMessage(group_message) => {
+                let mut recipients = group_chat_recipients_at_events(
+                    &group_message.group_chat_hash,
+                    &group_message.current_group_chat_events_hashes,
+                )?;
+                let Some(current_group_chat) =
+                    query_current_group_chat(&group_message.group_chat_hash)?
+                else {
+                    return Err(wasm_error!("GroupChat not found."));
+                };
+
+                if current_group_chat
+                    .settings
+                    .sync_message_history_with_new_members
+                {
+                    let mut current_recipients =
+                        group_chat_current_recipients(&group_message.group_chat_hash)?;
+                    recipients.append(&mut current_recipients);
                 }
 
                 Ok(recipients)
             }
-            MessengerEvent::GroupMessage(group_message) => group_chat_recipients_for_hash(
-                &author,
-                &group_message.group_chat_hash,
-                &group_message.current_group_chat_events_hashes,
-            ),
             MessengerEvent::ReadGroupMessages(read_group_messages) => {
-                group_chat_recipients_for_hash(
-                    &author,
+                let mut recipients = group_chat_recipients_at_events(
                     &read_group_messages.group_chat_hash,
                     &read_group_messages.current_group_chat_events_hashes,
-                )
+                )?;
+                let Some(current_group_chat) =
+                    query_current_group_chat(&read_group_messages.group_chat_hash)?
+                else {
+                    return Err(wasm_error!("GroupChat not found."));
+                };
+
+                if current_group_chat
+                    .settings
+                    .sync_message_history_with_new_members
+                {
+                    let mut current_recipients =
+                        group_chat_current_recipients(&read_group_messages.group_chat_hash)?;
+                    recipients.append(&mut current_recipients);
+                }
+
+                Ok(recipients)
             }
         }
     }
@@ -143,7 +172,6 @@ pub fn query_messenger_event(
 pub enum MessengerRemoteSignal {
     PeerChatTypingIndicator { peer_chat_hash: EntryHash },
     GroupChatTypingIndicator { group_chat_hash: EntryHash },
-    // SynchronizeEntriesWithLinkedDevice(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
     // SynchronizeGroupEntriesWithNewGroupMember(BTreeMap<EntryHashB64, PrivateMessengerEntry>),
 }
 

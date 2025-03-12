@@ -21,31 +21,7 @@ export type MessengerSignal =
 			group_chat_hash: EntryHash;
 	  };
 
-export type EntryTypes =
-	| ({
-			type: 'PrivateMessengerEntry';
-	  } & PrivateMessengerEntry)
-	| ({
-			type: 'MessengerHistory';
-	  } & MessengerHistory);
-
-export interface MessengerHistory {
-	my_profile: MessengerProfile | undefined;
-	entries: Record<EntryHashB64, PrivateMessengerEntry>;
-}
-
 export type LinkTypes = string;
-
-export interface SignedContent<T> {
-	content: T;
-	timestamp: Timestamp;
-}
-
-export interface SignedEntry<T> {
-	signed_content: SignedContent<T>;
-	provenance: AgentPubKey;
-	signature: Signature;
-}
 
 export interface Message {
 	reply_to: EntryHash | undefined;
@@ -53,6 +29,11 @@ export interface Message {
 }
 
 export interface CreatePeer {
+	agents: AgentPubKey[];
+	proofs: LinkedDevicesProof[];
+}
+
+export interface CreateGroupPeer {
 	agents: AgentPubKey[];
 	proofs: LinkedDevicesProof[];
 	profile: MessengerProfile | undefined;
@@ -90,13 +71,9 @@ export interface PeerChat {
 	peer_2: Peer;
 }
 
-export type PeerEvent =
-	| ({
-			type: 'NewPeerAgent';
-	  } & NewPeerAgent)
-	| ({
-			type: 'UpdateProfile';
-	  } & MessengerProfile);
+export type PeerEvent = {
+	type: 'NewPeerAgent';
+} & NewPeerAgent;
 
 export interface PeerChatEvent {
 	peer_chat_hash: EntryHash;
@@ -172,24 +149,13 @@ export interface ReadGroupMessages {
 }
 
 export interface CreateGroupChat {
-	me: CreatePeer;
-	others: Array<CreatePeer>;
+	me: CreateGroupPeer;
+	others: Array<CreateGroupPeer>;
 	info: GroupInfo;
 	settings: GroupSettings;
 }
 
-export type PrivateMessengerEntry = PeerChatEntry | GroupChatEntry;
-
-export type PeerChatEntry = SignedEntry<
-	| ({ type: 'CreatePeerChat' } & CreatePeerChat)
-	| ({ type: 'PeerChatEvent' } & PeerChatEvent)
-	| ({ type: 'PeerMessage' } & PeerMessage)
-	| ({ type: 'ReadPeerMessages' } & ReadPeerMessages)
->;
-
-export type GroupChatEntry = SignedEntry<
-	| ({ type: 'CreateGroupChat' } & CreateGroupChat)
-	| ({ type: 'GroupChatEvent' } & GroupChatEvent)
-	| ({ type: 'GroupMessage' } & GroupMessage)
-	| ({ type: 'ReadGroupMessages' } & ReadGroupMessages)
->;
+export interface AgentWithProfile {
+	profile: MessengerProfile | undefined;
+	agent: AgentPubKey;
+}

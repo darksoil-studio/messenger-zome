@@ -757,7 +757,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 [[package]]
 name = "private_event_proc_macro"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=develop#2cf38a942f269a6220a16a345e803c4ad05c1c77"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=develop#3a984bb72506b8b6dd250a55048c84954acefec9"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -769,7 +769,7 @@ dependencies = [
 [[package]]
 name = "private_event_sourcing"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=develop#2cf38a942f269a6220a16a345e803c4ad05c1c77"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=develop#3a984bb72506b8b6dd250a55048c84954acefec9"
 dependencies = [
  "hdk",
  "linked_devices_types",
@@ -782,7 +782,7 @@ dependencies = [
 [[package]]
 name = "private_event_sourcing_integrity"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=develop#2cf38a942f269a6220a16a345e803c4ad05c1c77"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=develop#3a984bb72506b8b6dd250a55048c84954acefec9"
 dependencies = [
  "hdi",
  "serde",

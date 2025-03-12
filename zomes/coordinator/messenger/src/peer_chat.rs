@@ -5,15 +5,14 @@ use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
 use private_event_sourcing::{create_private_event, query_my_linked_devices_with_proof};
 
 use crate::{
+    are_all_agents_linked,
     create_peer::{build_create_peer_for_agent, build_my_create_peer},
-    group_chat::are_all_agents_linked,
-    profile::{merge_profiles, MessengerProfile},
-    query_messenger_event, Message, MessengerEvent,
+    query_messenger_event, query_messenger_events, Message, MessengerEvent,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreatePeer {
-    pub agents: Vec<AgentPubKey>,
+    pub agents: BTreeSet<AgentPubKey>,
     pub proofs: Vec<LinkedDevicesProof>,
 }
 
@@ -137,10 +136,10 @@ pub fn create_peer_chat(peer: AgentPubKey) -> ExternResult<EntryHash> {
 }
 
 pub fn validate_create_peer_chat(
-    provenance: &AgentPubKey,
+    author: &AgentPubKey,
     create_peer_chat: &CreatePeerChat,
 ) -> ExternResult<ValidateCallbackResult> {
-    if !create_peer_chat.peer_1.agents.contains(&provenance) {
+    if !create_peer_chat.peer_1.agents.contains(&author) {
         return Ok(ValidateCallbackResult::Invalid(format!(
             "PeerChats must contain the author's public key in the peer_1 agent list"
         )));
@@ -174,10 +173,10 @@ pub fn create_peer_chat_event(peer_chat_event: PeerChatEvent) -> ExternResult<En
 }
 
 pub fn validate_peer_chat_event(
-    provenance: &AgentPubKey,
+    author: &AgentPubKey,
     peer_chat_event: &PeerChatEvent,
 ) -> ExternResult<ValidateCallbackResult> {
-    let Some(peer_chat) = query_current_peer_chat(
+    let Some(peer_chat) = query_peer_chat_at_events(
         &peer_chat_event.peer_chat_hash,
         &peer_chat_event.previous_peer_chat_events_hashes,
     )?
@@ -187,7 +186,7 @@ pub fn validate_peer_chat_event(
         ));
     };
 
-    let result = peer_chat.apply(provenance, &peer_chat_event.event);
+    let result = peer_chat.apply(author, &peer_chat_event.event);
 
     if let Err(err) = result {
         return Ok(ValidateCallbackResult::Invalid(format!(
@@ -203,10 +202,10 @@ pub fn send_peer_message(message_content: PeerMessage) -> ExternResult<EntryHash
     create_private_event(MessengerEvent::PeerMessage(message_content))
 }
 pub fn validate_peer_message(
-    provenance: &AgentPubKey,
+    author: &AgentPubKey,
     peer_message: &PeerMessage,
 ) -> ExternResult<ValidateCallbackResult> {
-    let Some(peer_chat) = query_current_peer_chat(
+    let Some(peer_chat) = query_peer_chat_at_events(
         &peer_message.peer_chat_hash,
         &peer_message.current_peer_chat_events_hashes,
     )?
@@ -216,9 +215,7 @@ pub fn validate_peer_message(
         ));
     };
 
-    if !peer_chat.peer_1.agents.contains(&provenance)
-        && !peer_chat.peer_2.agents.contains(&provenance)
-    {
+    if !peer_chat.peer_1.agents.contains(&author) && !peer_chat.peer_2.agents.contains(&author) {
         return Ok(ValidateCallbackResult::Invalid(format!(
             "Author of a PeerMessage must be listed in the devices of its PeerChat"
         )));
@@ -257,7 +254,7 @@ pub fn query_peer_chat_event(
     Ok(Some((entry.author, peer_chat_event)))
 }
 
-pub fn query_current_peer_chat(
+pub fn query_peer_chat_at_events(
     peer_chat_hash: &EntryHash,
     current_peer_chat_events: &Vec<EntryHash>,
 ) -> ExternResult<Option<PeerChat>> {
@@ -321,39 +318,38 @@ pub fn query_current_peer_chat(
     Ok(Some(peer_chat))
 }
 
-// pub fn query_latest_peer_chat(peer_chat_hash: &EntryHash) -> ExternResult<Option<PeerChat>> {
-//     let entries = query_private_messenger_entries(())?;
+pub fn query_current_peer_chat(peer_chat_hash: &EntryHash) -> ExternResult<Option<PeerChat>> {
+    let entries = query_messenger_events()?;
 
-//     let Some(mut peer_chat) = query_original_peer_chat(peer_chat_hash)? else {
-//         return Ok(None);
-//     };
+    let Some(mut peer_chat) = query_original_peer_chat(peer_chat_hash)? else {
+        return Ok(None);
+    };
 
-//     for entry_hash in entries.entry_hashes {
-//         let Some(entry) = entries.entries.get(&entry_hash) else {
-//             return Err(wasm_error!("Unreachable: QueriedPrivateMessengerEntries entries did not contain one of its entry hashes."));
-//         };
+    for (_entry_hash, entry) in entries {
+        let MessengerEvent::PeerChatEvent(peer_chat_event) = &entry.event.content else {
+            continue;
+        };
 
-//         let PrivateMessengerEntryContent::NewPeerAgent(new_peer_device) =
-//             &entry.0.signed_content.content
-//         else {
-//             continue;
-//         };
+        if peer_chat_event.peer_chat_hash.ne(peer_chat_hash) {
+            continue;
+        }
+        let PeerEvent::NewPeerAgent(new_peer_device) = &peer_chat_event.event;
 
-//         if new_peer_device.peer_chat_hash.ne(peer_chat_hash) {
-//             continue;
-//         }
+        if peer_chat.peer_1.agents.contains(&entry.author) {
+            peer_chat
+                .peer_1
+                .agents
+                .insert(new_peer_device.new_agent.clone());
+        } else if peer_chat.peer_2.agents.contains(&entry.author) {
+            peer_chat
+                .peer_2
+                .agents
+                .insert(new_peer_device.new_agent.clone());
+        }
+    }
 
-//         if peer_chat.my_agents.contains(&entry.0.provenance) {
-//             peer_chat.my_agents.push(new_peer_device.new_agent.clone());
-//         } else if peer_chat.peer_agents.contains(&entry.0.provenance) {
-//             peer_chat
-//                 .peer_agents
-//                 .push(new_peer_device.new_agent.clone());
-//         }
-//     }
-
-//     Ok(Some(peer_chat))
-// }
+    Ok(Some(peer_chat))
+}
 
 #[hdk_extern]
 pub fn mark_peer_messages_as_read(read_peer_messages: ReadPeerMessages) -> ExternResult<()> {
@@ -363,10 +359,10 @@ pub fn mark_peer_messages_as_read(read_peer_messages: ReadPeerMessages) -> Exter
 }
 
 pub fn validate_read_peer_messages(
-    provenance: &AgentPubKey,
+    author: &AgentPubKey,
     read_peer_messages: &ReadPeerMessages,
 ) -> ExternResult<ValidateCallbackResult> {
-    let Some(peer_chat) = query_current_peer_chat(
+    let Some(peer_chat) = query_peer_chat_at_events(
         &read_peer_messages.peer_chat_hash,
         &read_peer_messages.current_peer_chat_events_hashes,
     )?
@@ -376,9 +372,7 @@ pub fn validate_read_peer_messages(
         ));
     };
 
-    if !peer_chat.peer_1.agents.contains(&provenance)
-        && !peer_chat.peer_2.agents.contains(&provenance)
-    {
+    if !peer_chat.peer_1.agents.contains(&author) && !peer_chat.peer_2.agents.contains(&author) {
         return Ok(ValidateCallbackResult::Invalid(format!(
             "Author of a ReadPeerMessages must be listed in the devices of its PeerChat"
         )));
@@ -423,106 +417,114 @@ pub fn post_receive_create_peer_chat(
     Ok(())
 }
 
-pub fn post_receive_peer_chat_entry(
-    private_messenger_entry: PrivateMessengerEntry,
-    peer_chat_hash: &EntryHash,
-    current_peer_chat_events_hashes: &Vec<EntryHash>,
-) -> ExternResult<()> {
-    // If we have linked a device at the same time that a peer sent us a message
-    // we need to re-propagate this message to our newly linked device
-    let missed_events =
-        query_missed_peer_chat_events(&peer_chat_hash, &current_peer_chat_events_hashes)?;
+// pub fn post_receive_peer_chat_entry(
+//     private_messenger_entry: PrivateMessengerEntry,
+//     peer_chat_hash: &EntryHash,
+//     current_peer_chat_events_hashes: &Vec<EntryHash>,
+// ) -> ExternResult<()> {
+//     // If we have linked a device at the same time that a peer sent us a message
+//     // we need to re-propagate this message to our newly linked device
+//     let missed_events =
+//         query_missed_peer_chat_events(&peer_chat_hash, &current_peer_chat_events_hashes)?;
 
-    for (_event_hash, peer_chat_event) in missed_events {
-        let PeerEvent::NewPeerAgent(new_peer_agent) = peer_chat_event.event else {
-            continue;
-        };
+//     for (_event_hash, peer_chat_event) in missed_events {
+//         let PeerEvent::NewPeerAgent(new_peer_agent) = peer_chat_event.event else {
+//             continue;
+//         };
 
-        send_remote_signal(
-            MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry.clone()),
-            vec![new_peer_agent.new_agent.clone()],
-        )?;
+//         send_remote_signal(
+//             MessengerRemoteSignal::NewPrivateMessengerEntry(private_messenger_entry.clone()),
+//             vec![new_peer_agent.new_agent.clone()],
+//         )?;
 
-        create_encrypted_message(
-            new_peer_agent.new_agent.clone(),
-            MessengerEncryptedMessage(private_messenger_entry.clone()),
-        )?;
-    }
-    Ok(())
-}
+//         create_encrypted_message(
+//             new_peer_agent.new_agent.clone(),
+//             MessengerEncryptedMessage(private_messenger_entry.clone()),
+//         )?;
+//     }
+//     Ok(())
+// }
 
-pub fn query_missed_peer_chat_events(
-    peer_chat_hash: &EntryHash,
-    current_peer_chat_events_hashes: &Vec<EntryHash>,
-) -> ExternResult<BTreeMap<EntryHash, PeerChatEvent>> {
-    let existing_entries = query_private_messenger_entries(())?;
+// pub fn query_missed_peer_chat_events(
+//     peer_chat_hash: &EntryHash,
+//     current_peer_chat_events_hashes: &Vec<EntryHash>,
+// ) -> ExternResult<BTreeMap<EntryHash, PeerChatEvent>> {
+//     let existing_entries = query_private_messenger_entries(())?;
 
-    // Filter events for this peer_chat_hash
-    let mut peer_chat_events: BTreeMap<EntryHash, PeerChatEvent> = BTreeMap::new();
+//     // Filter events for this peer_chat_hash
+//     let mut peer_chat_events: BTreeMap<EntryHash, PeerChatEvent> = BTreeMap::new();
 
-    for (entry_hash, entry) in existing_entries {
-        let PrivateMessengerEntryContent::PeerChatEvent(event) = &entry.0.signed_content.content
-        else {
-            continue;
-        };
+//     for (entry_hash, entry) in existing_entries {
+//         let PrivateMessengerEntryContent::PeerChatEvent(event) = &entry.0.signed_content.content
+//         else {
+//             continue;
+//         };
 
-        if event.peer_chat_hash.ne(&peer_chat_hash) {
-            continue;
-        }
-        peer_chat_events.insert(entry_hash.clone().into(), event.clone());
-    }
+//         if event.peer_chat_hash.ne(&peer_chat_hash) {
+//             continue;
+//         }
+//         peer_chat_events.insert(entry_hash.clone().into(), event.clone());
+//     }
 
-    // Get all ascendents for current events hashes
-    let mut all_ascendents: BTreeSet<EntryHash> = current_peer_chat_events_hashes
-        .clone()
-        .into_iter()
-        .collect();
-    let mut current_event_hashes: Vec<EntryHash> = current_peer_chat_events_hashes.clone();
+//     // Get all ascendents for current events hashes
+//     let mut all_ascendents: BTreeSet<EntryHash> = current_peer_chat_events_hashes
+//         .clone()
+//         .into_iter()
+//         .collect();
+//     let mut current_event_hashes: Vec<EntryHash> = current_peer_chat_events_hashes.clone();
 
-    while let Some(current_event_hash) = current_event_hashes.pop() {
-        let Some(current_event) = peer_chat_events.get(&current_event_hash) else {
-            return Err(wasm_error!(
-                "Previous peer event was not found: {:?}",
-                current_event_hash
-            ));
-        };
+//     while let Some(current_event_hash) = current_event_hashes.pop() {
+//         let Some(current_event) = peer_chat_events.get(&current_event_hash) else {
+//             return Err(wasm_error!(
+//                 "Previous peer event was not found: {:?}",
+//                 current_event_hash
+//             ));
+//         };
 
-        for previous_event_hash in &current_event.previous_peer_chat_events_hashes {
-            if !all_ascendents.contains(previous_event_hash) {
-                all_ascendents.insert(previous_event_hash.clone());
-                current_event_hashes.push(previous_event_hash.clone());
-            }
-        }
-    }
+//         for previous_event_hash in &current_event.previous_peer_chat_events_hashes {
+//             if !all_ascendents.contains(previous_event_hash) {
+//                 all_ascendents.insert(previous_event_hash.clone());
+//                 current_event_hashes.push(previous_event_hash.clone());
+//             }
+//         }
+//     }
 
-    // Filter all existing with ascendents
-    let missing_peer_events: BTreeMap<EntryHash, PeerChatEvent> = peer_chat_events
-        .into_iter()
-        .filter(|(hash, _event)| !all_ascendents.contains(hash))
-        .collect();
-    Ok(missing_peer_events)
-}
+//     // Filter all existing with ascendents
+//     let missing_peer_events: BTreeMap<EntryHash, PeerChatEvent> = peer_chat_events
+//         .into_iter()
+//         .filter(|(hash, _event)| !all_ascendents.contains(hash))
+//         .collect();
+//     Ok(missing_peer_events)
+// }
 
-pub fn peer_chat_recipients(
-    provenance: &AgentPubKey,
-    peer_chat: &PeerChat,
-) -> ExternResult<Vec<AgentPubKey>> {
-    if peer_chat.peer_1.agents.contains(&provenance) {
+pub fn peer_chat_recipients(peer_chat: &PeerChat) -> ExternResult<BTreeSet<AgentPubKey>> {
+    let my_pub_key = agent_info()?.agent_latest_pubkey;
+    if peer_chat.peer_1.agents.contains(&my_pub_key) {
         Ok(peer_chat.peer_2.agents.clone().into_iter().collect())
     } else {
         Ok(peer_chat.peer_1.agents.clone().into_iter().collect())
     }
 }
 
-pub fn peer_chat_recipients_for_hash(
-    provenance: &AgentPubKey,
+pub fn peer_chat_recipients_at_events(
     peer_chat_hash: &EntryHash,
     current_peer_chat_events_hashes: &Vec<EntryHash>,
-) -> ExternResult<Vec<AgentPubKey>> {
-    let Some(peer_chat) = query_current_peer_chat(peer_chat_hash, current_peer_chat_events_hashes)?
+) -> ExternResult<BTreeSet<AgentPubKey>> {
+    let Some(peer_chat) =
+        query_peer_chat_at_events(peer_chat_hash, current_peer_chat_events_hashes)?
     else {
         return Err(wasm_error!("PeerChat not found"));
     };
 
-    peer_chat_recipients(provenance, &peer_chat)
+    peer_chat_recipients(&peer_chat)
+}
+
+pub fn peer_chat_current_recipients(
+    peer_chat_hash: &EntryHash,
+) -> ExternResult<BTreeSet<AgentPubKey>> {
+    let Some(peer_chat) = query_current_peer_chat(peer_chat_hash)? else {
+        return Err(wasm_error!("PeerChat not found"));
+    };
+
+    peer_chat_recipients(&peer_chat)
 }
