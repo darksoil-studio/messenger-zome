@@ -515,9 +515,9 @@ pub fn query_original_group_chat(group_chat_hash: &EntryHash) -> ExternResult<Op
 }
 
 pub fn query_group_chat_event(
-    group_chat_hash: &EntryHash,
+    group_chat_event_hash: &EntryHash,
 ) -> ExternResult<Option<(AgentPubKey, GroupChatEvent)>> {
-    let Some(entry) = query_messenger_event(group_chat_hash.clone())? else {
+    let Some(entry) = query_messenger_event(group_chat_event_hash.clone())? else {
         return Ok(None);
     };
 
