@@ -19,7 +19,7 @@ test('create a group chat, send message and read it', async () => {
 			],
 			{
 				name: 'mygroup',
-				avatar_hash: undefined,
+				avatar: undefined,
 				description: 'mydescription',
 			},
 			{
@@ -88,7 +88,7 @@ test('concurrent updates of groups get reconciled', async () => {
 
 		const info = {
 			name: 'mygroup',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		};
 
@@ -112,13 +112,13 @@ test('concurrent updates of groups get reconciled', async () => {
 
 		await alice.store.groupChats.get(groupHash).updateGroupChatInfo({
 			name: 'alicename',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		});
 
 		await bob.store.groupChats.get(groupHash).updateGroupChatInfo({
 			name: 'bobname',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		});
 
@@ -142,7 +142,7 @@ test('members removed from the group cannot send messages anymore', async () => 
 
 		const info = {
 			name: 'mygroup',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		};
 

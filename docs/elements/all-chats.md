@@ -58,7 +58,7 @@ onMounted(async () => {
     {
       name: 'Demo group',
       description: 'Demo group',
-      avatar_hash: undefined
+      avatar: undefined
     },
     {
       only_admins_can_add_members: false,

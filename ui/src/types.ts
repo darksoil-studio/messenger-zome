@@ -82,7 +82,7 @@ export interface PeerChatEvent {
 export interface GroupInfo {
 	name: string;
 	description: string;
-	avatar_hash: EntryHash | undefined;
+	avatar: string | undefined;
 }
 export interface GroupSettings {
 	only_admins_can_edit_group_info: boolean;

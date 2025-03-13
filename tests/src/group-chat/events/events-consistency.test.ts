@@ -16,7 +16,7 @@ test('all events get to all the members of the group', async () => {
 
 		const info = {
 			name: 'mygroup',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		};
 
@@ -38,6 +38,7 @@ test('all events get to all the members of the group', async () => {
 
 		await groupConsistency(
 			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
+			80_000,
 		);
 
 		const eventHash1 = await bob.store.groupChats

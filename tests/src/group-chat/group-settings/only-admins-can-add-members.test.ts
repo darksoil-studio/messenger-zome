@@ -11,7 +11,7 @@ test('only_admins_can_add_members works appropriately', async () => {
 
 		const info = {
 			name: 'mygroup',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		};
 		const settings = {

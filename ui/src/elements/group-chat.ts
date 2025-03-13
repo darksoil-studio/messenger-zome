@@ -150,7 +150,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						this.view = 'details';
 					}}
 				>
-					<show-avatar-image .imageHash=${groupChat.info.avatar_hash}>
+					<show-avatar-image .imageHash=${groupChat.info.avatar}>
 					</show-avatar-image>
 					<span>${groupChat.info.name} </span>
 				</div>
@@ -555,7 +555,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	async updateGroupInfo(fields: Record<string, any>) {
 		try {
 			await this.store.groupChats.get(this.groupChatHash).updateGroupChatInfo({
-				avatar_hash: fields.avatar === 'null' ? undefined : fields.avatar,
+				avatar: fields.avatar === 'null' ? undefined : fields.avatar,
 				name: fields.name,
 				description: fields.description,
 			});
@@ -665,10 +665,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 				<div class="row" style="justify-content: center; flex: 1; margin: 8px">
 					<div class="column" style="gap: 8px; flex-basis: 500px">
-						<upload-avatar
-							name="avatar"
-							.value=${info.avatar_hash}
-						></upload-avatar>
+						<upload-avatar name="avatar" .value=${info.avatar}></upload-avatar>
 						<sl-input
 							required
 							.label=${msg('Name')}

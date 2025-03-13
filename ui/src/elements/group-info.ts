@@ -37,9 +37,9 @@ export class GroupInfoEl extends SignalWatcher(LitElement) {
 	private renderInfo(info: GroupInfo) {
 		return html`
 			<div class="column" style="gap: 8px;">
-				${info.avatar_hash
+				${info.avatar
 					? html`<show-image
-							.imageHash=${info.avatar_hash}
+							.imageHash=${info.avatar}
 							style="height: 150px"
 						></show-image>`
 					: html`<sl-icon

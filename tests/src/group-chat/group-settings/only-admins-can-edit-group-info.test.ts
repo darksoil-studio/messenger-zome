@@ -11,7 +11,7 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 
 		const info = {
 			name: 'mygroup',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		};
 		const settings = {

@@ -35,6 +35,7 @@ import {
 import {
 	TYPING_INDICATOR_TTL_MS,
 	mergeMaybeHashes,
+	mergeMaybeStrings,
 	mergeStrings,
 } from './utils.js';
 
@@ -575,7 +576,7 @@ function apply(
 	switch (groupEvent.type) {
 		case 'UpdateGroupInfo':
 			groupChat.info = {
-				avatar_hash: groupEvent.avatar_hash,
+				avatar: groupEvent.avatar,
 				description: groupEvent.description,
 				name: groupEvent.name,
 			};
@@ -691,7 +692,7 @@ function mergeInfo(info1: GroupInfo, info2: GroupInfo): GroupInfo {
 	return {
 		name: mergeStrings(info1.name, info2.name),
 		description: mergeStrings(info1.description, info2.description),
-		avatar_hash: mergeMaybeHashes(info1.avatar_hash, info2.avatar_hash),
+		avatar: mergeMaybeStrings(info1.avatar, info2.avatar),
 	};
 }
 

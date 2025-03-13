@@ -1,18 +1,18 @@
 {
-  "name": "tests",
-  "private": true,
-  "scripts": {
-    "test": "vitest run"
-  },
-  "dependencies": {
-    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.3771839e56d9f93f7d5c3f4cb2171b305e98d4f5",
-    "@msgpack/msgpack": "^2.8.0",
-    "@holochain/client": "^0.18.0",
-    "@holochain/tryorama": "^0.17.0",
-    "@tnesh-stack/signals": "^0.400.0",
-    "@tnesh-stack/utils": "^0.400.0",
-    "typescript": "^5.4.5",
-    "vitest": "^1.4.0"
-  },
-  "type": "module"
+	"name": "tests",
+	"private": true,
+	"scripts": {
+		"test": "WASM_LOG=debug vitest run"
+	},
+	"dependencies": {
+		"@darksoil-studio/linked-devices-zome": "0.400.0-rev.3771839e56d9f93f7d5c3f4cb2171b305e98d4f5",
+		"@msgpack/msgpack": "^2.8.0",
+		"@holochain/client": "^0.18.0",
+		"@holochain/tryorama": "^0.17.0",
+		"@tnesh-stack/signals": "^0.400.0",
+		"@tnesh-stack/utils": "^0.400.0",
+		"typescript": "^5.4.5",
+		"vitest": "^1.4.0"
+	},
+	"type": "module"
 }

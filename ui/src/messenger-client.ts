@@ -12,6 +12,9 @@ import {
 	PeerChatEvent,
 } from './types.js';
 
+const sleep = (ms: number) =>
+	new Promise(resolve => setTimeout(() => resolve(undefined), ms));
+
 export class MessengerClient extends PrivateEventSourcingClient<MessengerSignal> {
 	constructor(
 		public client: AppClient,

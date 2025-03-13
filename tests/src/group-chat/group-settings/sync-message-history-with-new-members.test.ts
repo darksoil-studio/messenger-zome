@@ -11,7 +11,7 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 
 		const info = {
 			name: 'mygroup',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		};
 		const settings = {

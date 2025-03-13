@@ -1,4 +1,3 @@
-import '@darksoil-studio/file-storage-zome/dist/elements/upload-avatar.js';
 import {
 	ProfilesProvider,
 	profilesProviderContext,
@@ -62,7 +61,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 				myProfile,
 				membersWithProfile,
 				{
-					avatar_hash: fields.avatar,
+					avatar: fields.avatar,
 					description: '',
 					name: fields.name,
 				},
@@ -95,7 +94,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 				style="gap: 24px; flex: 1"
 			>
 				<div class="row" style="gap: 8px; align-items: center">
-					<upload-avatar label="" name="avatar"> </upload-avatar>
+					<select-avatar label="" name="avatar"> </select-avatar>
 					<sl-input
 						style="flex: 1"
 						required

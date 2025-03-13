@@ -81,10 +81,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 		}, 2000);
 		setTimeout(() => {
 			this.client.commitMyPendingEncryptedMessages();
-		}, 10000);
-		setTimeout(() => {
-			this.client.commitMyPendingEncryptedMessages();
-		}, 20000);
+		}, 4000);
 		if (this.linkedDevicesStore) {
 			this.linkedDevicesStore.client.onSignal(signal => {
 				if (
@@ -99,7 +96,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 
 				// Wait for the whole processing to finish
 				setTimeout(async () => {
-					// this.client.synchronizeWithLinkedDevice(linkedDevice);
+					this.client.synchronizeWithLinkedDevice(linkedDevice);
 
 					// Send to everyone that we have a new peer
 					const entries = await toPromise(this.messengerEntries);

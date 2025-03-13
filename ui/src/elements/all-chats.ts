@@ -281,7 +281,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 				);
 			}}
 		>
-			${!info.avatar_hash
+			${!info.avatar
 				? html`
 						<sl-avatar
 							style="align-self: center; --size: 32px"
@@ -291,7 +291,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 				: html`
 						<show-avatar-image
 							.initials=${info.name.slice(0, 2)}
-							.imageHash=${info.avatar_hash}
+							.imageHash=${info.avatar}
 							style="--size: 32px; align-self: center"
 						>
 						</show-avatar-image>

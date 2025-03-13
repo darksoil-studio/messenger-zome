@@ -237,16 +237,20 @@ impl GroupChat {
         } else {
             group_1.info.description
         };
-        let avatar_hash = match (group_1.info.avatar_hash, group_2.info.avatar_hash) {
-            (Some(hash_1), Some(hash_2)) => Some(if hash_1 < hash_2 { hash_2 } else { hash_1 }),
-            (Some(hash_1), None) => Some(hash_1),
-            (None, Some(hash_2)) => Some(hash_2),
+        let avatar = match (group_1.info.avatar, group_2.info.avatar) {
+            (Some(avatar_1), Some(avatar_2)) => Some(if avatar_1 < avatar_2 {
+                avatar_2
+            } else {
+                avatar_1
+            }),
+            (Some(avatar_1), None) => Some(avatar_1),
+            (None, Some(avatar_2)) => Some(avatar_2),
             (None, None) => None,
         };
         let info = GroupInfo {
             name,
             description,
-            avatar_hash,
+            avatar,
         };
 
         let mut group_1_members = group_1.members.clone();
@@ -293,7 +297,7 @@ impl GroupChat {
 pub struct GroupInfo {
     pub name: String,
     pub description: String,
-    pub avatar_hash: Option<EntryHash>,
+    pub avatar: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -586,6 +590,7 @@ pub fn validate_group_chat_event(
         &group_chat_event.previous_group_chat_events_hashes,
     )?
     else {
+        warn!("Unresolved: {}", group_chat_event.group_chat_hash);
         return Ok(ValidateCallbackResult::UnresolvedDependencies(
             UnresolvedDependencies::Hashes(vec![group_chat_event.group_chat_hash.clone().into()]),
         ));
