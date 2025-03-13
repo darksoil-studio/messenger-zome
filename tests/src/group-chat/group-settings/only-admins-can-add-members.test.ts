@@ -21,7 +21,13 @@ test('only_admins_can_add_members works appropriately', async () => {
 		};
 
 		const groupHash = await alice.store.client.createGroupChat(
-			[bob.player.agentPubKey],
+			undefined,
+			[
+				{
+					agent: bob.player.agentPubKey,
+					profile: undefined,
+				},
+			],
 			info,
 			settings,
 		);

@@ -21,7 +21,13 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 		};
 
 		const groupHash = await alice.store.client.createGroupChat(
-			[bob.player.agentPubKey],
+			undefined,
+			[
+				{
+					agent: bob.player.agentPubKey,
+					profile: undefined,
+				},
+			],
 			info,
 			settings,
 		);

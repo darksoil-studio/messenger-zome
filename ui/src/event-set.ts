@@ -1,10 +1,9 @@
+import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	AgentPubKey,
 	EntryHashB64,
 	encodeHashToBase64,
 } from '@holochain/client';
-
-import { SignedEntry } from './types';
 
 export const MESSAGE_SET_TIMEFRAME_INTERVAL = 60 * 1000 * 1000; // 1 minute
 
@@ -13,19 +12,19 @@ export interface EventSetsInDay<T> {
 	eventsSets: Array<EventSet<T>>;
 }
 
-export type EventSet<T> = Array<[EntryHashB64, SignedEntry<T>]>;
+export type EventSet<T> = Array<[EntryHashB64, SignedEvent<T>]>;
 
 export function orderInEventSets<T>(
-	events: Record<EntryHashB64, SignedEntry<T>>,
+	events: Record<EntryHashB64, SignedEvent<T>>,
 	agentSets: Array<Array<AgentPubKey>>,
 ): Array<EventSetsInDay<T>> {
 	const eventsSetsInDay: EventSetsInDay<T>[] = [];
 	const orderedDescendingEvents = Object.entries(events).sort(
-		(m1, m2) => m2[1].signed_content.timestamp - m1[1].signed_content.timestamp,
+		(m1, m2) => m2[1].event.timestamp - m1[1].event.timestamp,
 	);
 	for (const [eventHash, event] of orderedDescendingEvents) {
 		if (eventsSetsInDay.length === 0) {
-			const date = new Date(event.signed_content.timestamp / 1000);
+			const date = new Date(event.event.timestamp / 1000);
 			date.setHours(0);
 			date.setMinutes(0);
 			date.setSeconds(0);
@@ -44,29 +43,28 @@ export function orderInEventSets<T>(
 			const lastMessageAgentSet = agentSets.find(agents =>
 				agents.find(
 					agent =>
-						encodeHashToBase64(agent) ===
-						encodeHashToBase64(lastEvent.provenance),
+						encodeHashToBase64(agent) === encodeHashToBase64(lastEvent.author),
 				),
 			);
 
 			const currentMessageAgentSet = agentSets.find(agents =>
 				agents.find(
 					agent =>
-						encodeHashToBase64(agent) === encodeHashToBase64(event.provenance),
+						encodeHashToBase64(agent) === encodeHashToBase64(event.author),
 				),
 			);
 
 			const sameProvenance = lastMessageAgentSet === currentMessageAgentSet;
 			const sameTimeframe =
-				lastEvent.signed_content.timestamp - event.signed_content.timestamp <
+				lastEvent.event.timestamp - event.event.timestamp <
 				MESSAGE_SET_TIMEFRAME_INTERVAL;
 			const sameType =
 				// eslint-disable-next-line
-				(event.signed_content.content as any).type ===
+				(event.event.content as any).type ===
 				// eslint-disable-next-line
-				(lastEvent.signed_content.content as any).type;
+				(lastEvent.event.content as any).type;
 
-			const date = new Date(event.signed_content.timestamp / 1000);
+			const date = new Date(event.event.timestamp / 1000);
 			date.setHours(0);
 			date.setMinutes(0);
 			date.setSeconds(0);

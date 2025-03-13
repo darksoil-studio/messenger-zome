@@ -1,4 +1,5 @@
 import { LinkedDevicesProof } from '@darksoil-studio/linked-devices-zome';
+import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	AgentPubKey,
 	AgentPubKeyB64,
@@ -8,6 +9,7 @@ import {
 	encodeHashToBase64,
 } from '@holochain/client';
 import { msg } from '@lit/localize';
+import { decode } from '@msgpack/msgpack';
 import {
 	AsyncComputed,
 	AsyncResult,
@@ -28,6 +30,7 @@ import {
 	GroupInfo,
 	GroupSettings,
 	Message,
+	MessengerEvent,
 } from './types.js';
 import {
 	TYPING_INDICATOR_TTL_MS,
@@ -73,20 +76,20 @@ export class GroupChatStore {
 				}
 			} else if (
 				signal.type === 'EntryCreated' &&
-				signal.app_entry.type === 'PrivateMessengerEntry' &&
-				signal.app_entry.signed_content.content.type === 'GroupMessage'
+				signal.app_entry.type === 'PrivateEvent'
 			) {
+				const event = decode(signal.app_entry.event.content) as MessengerEvent;
 				if (
-					encodeHashToBase64(
-						signal.app_entry.signed_content.content.group_chat_hash,
-					) === encodeHashToBase64(this.groupChatHash)
+					event.type === 'GroupMessage' &&
+					encodeHashToBase64(event.group_chat_hash) ===
+						encodeHashToBase64(this.groupChatHash)
 				) {
-					const provenance = signal.app_entry.provenance;
+					const author = signal.app_entry.author;
 					this.typingPeers.set(
 						this.typingPeers
 							.get()
 							.filter(
-								a => encodeHashToBase64(a) !== encodeHashToBase64(provenance),
+								a => encodeHashToBase64(a) !== encodeHashToBase64(author),
 							),
 					);
 				}
@@ -96,7 +99,7 @@ export class GroupChatStore {
 
 	private groupChatEntries = new AsyncComputed(() => {
 		const privateMessengerEntriesResult =
-			this.messengerStore.privateMessengerEntries.get();
+			this.messengerStore.messengerEntries.get();
 		if (privateMessengerEntriesResult.status !== 'completed')
 			return privateMessengerEntriesResult;
 
@@ -118,7 +121,7 @@ export class GroupChatStore {
 			groupChatEntries.events,
 		)) {
 			const previousEventsHashes =
-				groupChatEvent.signed_content.content.previous_group_chat_events_hashes;
+				groupChatEvent.event.content.previous_group_chat_events_hashes;
 			if (previousEventsHashes.length === 0) {
 				initialEventsHashes.push(entryHash);
 			} else {
@@ -165,16 +168,16 @@ export class GroupChatStore {
 				}
 
 				const previousEventsHashes =
-					event.signed_content.content.previous_group_chat_events_hashes;
+					event.event.content.previous_group_chat_events_hashes;
 
 				if (previousEventsHashes.length === 0) {
 					const originalGroupChat: GroupChat = initialGroupChat(
-						entries.value.createGroupChat.signed_content.content,
+						entries.value.createGroupChat.event.content,
 					);
 					const groupChat = apply(
 						originalGroupChat,
-						event.provenance,
-						event.signed_content.content.event,
+						event.author,
+						event.event.content.event,
 					);
 					return {
 						status: 'completed',
@@ -203,8 +206,8 @@ export class GroupChatStore {
 
 				currentGroupChat = apply(
 					currentGroupChat,
-					event.provenance,
-					event.signed_content.content.event,
+					event.author,
+					event.event.content.event,
 				);
 
 				return {
@@ -227,9 +230,7 @@ export class GroupChatStore {
 		if (entries.value.currentEventsHashes.length === 0) {
 			return {
 				status: 'completed' as const,
-				value: initialGroupChat(
-					entries.value.createGroupChat.signed_content.content,
-				),
+				value: initialGroupChat(entries.value.createGroupChat.event.content),
 			};
 		}
 
@@ -275,25 +276,24 @@ export class GroupChatStore {
 			if (
 				me.agents.find(
 					a =>
-						encodeHashToBase64(a) ===
-						encodeHashToBase64(readMessages.provenance),
+						encodeHashToBase64(a) === encodeHashToBase64(readMessages.author),
 				)
 			) {
 				myReadMessages = [
 					...myReadMessages,
-					...readMessages.signed_content.content.read_messages_hashes.map(
+					...readMessages.event.content.read_messages_hashes.map(
 						encodeHashToBase64,
 					),
 				];
 			} else {
-				const provenance = encodeHashToBase64(readMessages.provenance);
-				if (!theirReadMessages[provenance]) {
-					theirReadMessages[provenance] = [];
+				const author = encodeHashToBase64(readMessages.author);
+				if (!theirReadMessages[author]) {
+					theirReadMessages[author] = [];
 				}
-				theirReadMessages[provenance] = Array.from(
+				theirReadMessages[author] = Array.from(
 					new Set([
-						...theirReadMessages[provenance],
-						...readMessages.signed_content.content.read_messages_hashes.map(
+						...theirReadMessages[author],
+						...readMessages.event.content.read_messages_hashes.map(
 							encodeHashToBase64,
 						),
 					]),
@@ -356,35 +356,34 @@ export class GroupChatStore {
 				([messageHash, message]) =>
 					!readMessages.value.myReadMessages.includes(messageHash) &&
 					!me.agents.find(
-						a =>
-							encodeHashToBase64(a) === encodeHashToBase64(message.provenance),
+						a => encodeHashToBase64(a) === encodeHashToBase64(message.author),
 					),
 			)
 			.map(([hash, _]) => hash);
 
-		const allActivity: GroupChatEntry[] = [
+		const allActivity: Array<SignedEvent<GroupChatEntry>> = [
 			...Object.values(entries.value.messages).map(m => ({
 				...m,
-				signed_content: {
+				event: {
 					content: {
-						...m.signed_content.content,
+						...m.event.content,
 					},
-					timestamp: m.signed_content.timestamp,
+					timestamp: m.event.timestamp,
 				},
 			})),
 			{
 				...entries.value.createGroupChat,
-				signed_content: {
+				event: {
 					content: {
 						type: 'CreateGroupChat' as const,
-						...entries.value.createGroupChat.signed_content.content,
+						...entries.value.createGroupChat.event.content,
 					},
-					timestamp: entries.value.createGroupChat.signed_content.timestamp,
+					timestamp: entries.value.createGroupChat.event.timestamp,
 				},
 			},
 			...Object.values(entries.value.events)
 				.filter(e => {
-					const type = e.signed_content.content.event.type;
+					const type = e.event.content.event.type;
 					return (
 						type === 'AddMember' ||
 						type === 'RemoveMember' ||
@@ -395,17 +394,17 @@ export class GroupChatStore {
 				})
 				.map(e => ({
 					...e,
-					signed_content: {
+					event: {
 						content: {
-							...e.signed_content.content,
+							...e.event.content,
 						},
-						timestamp: e.signed_content.timestamp,
+						timestamp: e.event.timestamp,
 					},
 				})),
 		];
 
 		const lastActivity = allActivity.sort(
-			(m1, m2) => m2.signed_content.timestamp - m1.signed_content.timestamp,
+			(m1, m2) => m2.event.timestamp - m1.event.timestamp,
 		)[0];
 
 		return {
@@ -563,14 +562,14 @@ export class GroupChatStore {
 
 export interface GroupChatSummary {
 	groupChatHash: EntryHash;
-	lastActivity: GroupChatEntry;
+	lastActivity: SignedEvent<GroupChatEntry>;
 	currentGroup: GroupChat;
 	myUnreadMessages: Array<EntryHashB64>;
 }
 
 function apply(
 	groupChat: GroupChat,
-	provenance: AgentPubKey,
+	author: AgentPubKey,
 	groupEvent: GroupEvent,
 ): GroupChat {
 	switch (groupEvent.type) {
@@ -627,7 +626,7 @@ function apply(
 		case 'NewAgentForMember':
 			const member2 = groupChat.members.find(m =>
 				m.agents.find(
-					a => encodeHashToBase64(a) === encodeHashToBase64(provenance),
+					a => encodeHashToBase64(a) === encodeHashToBase64(author),
 				),
 			);
 			if (!member2) throw new Error('Member not found');
@@ -658,7 +657,7 @@ function apply(
 		case 'LeaveGroup':
 			const member5 = groupChat.members.find(m =>
 				m.agents.find(
-					a => encodeHashToBase64(a) === encodeHashToBase64(provenance),
+					a => encodeHashToBase64(a) === encodeHashToBase64(author),
 				),
 			);
 			if (!member5) throw new Error('Member not found');

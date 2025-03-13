@@ -21,7 +21,13 @@ test('all events get to all the members of the group', async () => {
 		};
 
 		const groupHash = await alice.store.client.createGroupChat(
-			[bob.player.agentPubKey],
+			undefined,
+			[
+				{
+					agent: bob.player.agentPubKey,
+					profile: undefined,
+				},
+			],
 			info,
 			{
 				only_admins_can_add_members: false,

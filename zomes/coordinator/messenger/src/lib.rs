@@ -221,19 +221,3 @@ pub fn recv_remote_signal(signal_bytes: SerializedBytes) -> ExternResult<()> {
         Ok(())
     }
 }
-
-#[hdk_extern]
-pub fn attempt_commit_awaiting_deps_entries() -> ExternResult<()> {
-    private_event_sourcing::attempt_commit_awaiting_deps_entries::<MessengerEvent>()?;
-
-    Ok(())
-}
-
-#[hdk_extern(infallible)]
-fn scheduled_tasks(_: Option<Schedule>) -> Option<Schedule> {
-    if let Err(err) = private_event_sourcing::scheduled_tasks::<MessengerEvent>() {
-        error!("Failed to perform scheduled tasks: {err:?}");
-    }
-
-    Some(Schedule::Persisted("*/30 * * * * * *".into())) // Every 30 seconds
-}

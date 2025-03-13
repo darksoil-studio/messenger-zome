@@ -29,7 +29,7 @@ async function addPlayer(scenario: Scenario) {
 		new MessengerClient(player.appWs as any, 'messenger_test'),
 		linkedDevicesStore,
 	);
-	await store.client.queryPrivateMessengerEntries();
+	await store.client.queryPrivateEventEntries();
 
 	return {
 		store,

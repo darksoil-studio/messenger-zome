@@ -6,10 +6,8 @@ import {
 	Signature,
 	Timestamp,
 } from '@holochain/client';
-import { ActionCommittedSignal } from '@tnesh-stack/utils';
 
 export type MessengerSignal =
-	| ActionCommittedSignal<EntryTypes, LinkTypes>
 	| {
 			type: 'PeerChatTypingIndicator';
 			peer: AgentPubKey;
@@ -53,7 +51,6 @@ export interface ReadPeerMessages {
 
 export interface Peer {
 	agents: Array<AgentPubKey>;
-	profile: MessengerProfile | undefined;
 }
 
 export interface NewPeerAgent {
@@ -132,8 +129,9 @@ export interface GroupChatEvent {
 }
 
 export interface MessengerProfile {
-	nickname: string;
-	avatar_src: string | undefined;
+	name: string;
+	avatar: string | undefined;
+	fields: Record<string, string>;
 }
 
 export interface GroupMessage {
@@ -159,3 +157,17 @@ export interface AgentWithProfile {
 	profile: MessengerProfile | undefined;
 	agent: AgentPubKey;
 }
+
+export type MessengerEvent = PeerChatEntry | GroupChatEntry;
+
+export type PeerChatEntry =
+	| ({ type: 'CreatePeerChat' } & CreatePeerChat)
+	| ({ type: 'PeerChatEvent' } & PeerChatEvent)
+	| ({ type: 'PeerMessage' } & PeerMessage)
+	| ({ type: 'ReadPeerMessages' } & ReadPeerMessages);
+
+export type GroupChatEntry =
+	| ({ type: 'CreateGroupChat' } & CreateGroupChat)
+	| ({ type: 'GroupChatEvent' } & GroupChatEvent)
+	| ({ type: 'GroupMessage' } & GroupMessage)
+	| ({ type: 'ReadGroupMessages' } & ReadGroupMessages);

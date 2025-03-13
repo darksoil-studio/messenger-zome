@@ -1,4 +1,8 @@
 import '@darksoil-studio/file-storage-zome/dist/elements/upload-avatar.js';
+import {
+	ProfilesProvider,
+	profilesProviderContext,
+} from '@darksoil-studio/profiles-provider';
 import '@darksoil-studio/profiles-provider/dist/elements/search-users.js';
 import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit/context';
@@ -13,12 +17,17 @@ import { customElement, property } from 'lit/decorators.js';
 import { messengerStoreContext } from '../context.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
+import { AgentWithProfile, MessengerProfile } from '../types.js';
 
 @localized()
 @customElement('create-group-chat')
 export class CreateGroupChat extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
+
+	@consume({ context: profilesProviderContext, subscribe: true })
+	@property()
+	profilesProvider!: ProfilesProvider;
 
 	// eslint-disable-next-line
 	private async createGroupChat(fields: any) {
@@ -28,8 +37,30 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 				: fields.members
 					? [[fields.members]]
 					: [];
+			let myProfile: MessengerProfile | undefined = undefined;
+			let membersWithProfile: Array<AgentWithProfile> = members.map(a => ({
+				agent: a[0],
+				profile: undefined,
+			}));
+			if (!this.profilesProvider.profilesArePublic) {
+				myProfile = await toPromise(
+					this.profilesProvider.currentProfileForAgent.get(
+						this.store.client.client.myPubKey,
+					),
+				);
+				membersWithProfile = await Promise.all(
+					membersWithProfile.map(async member => {
+						const profile = await toPromise(
+							this.profilesProvider.currentProfileForAgent.get(member.agent),
+						);
+						return { profile, agent: member.agent };
+					}),
+				);
+			}
+
 			const groupChatHash = await this.store.client.createGroupChat(
-				members.map(a => a[0]),
+				myProfile,
+				membersWithProfile,
 				{
 					avatar_hash: fields.avatar,
 					description: '',

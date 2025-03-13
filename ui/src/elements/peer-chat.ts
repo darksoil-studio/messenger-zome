@@ -2,6 +2,7 @@ import {
 	LinkedDevicesStore,
 	linkedDevicesStoreContext,
 } from '@darksoil-studio/linked-devices-zome';
+import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item.js';
 import {
 	AgentPubKey,
@@ -40,7 +41,6 @@ import {
 	MessengerProfile,
 	PeerChat,
 	PeerMessage,
-	SignedEntry,
 } from '../types.js';
 import './message-input.js';
 
@@ -94,16 +94,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 				style="align-items: center; gap: 8px"
 			>
 				<slot name="top-bar-left-action"></slot>
-				${peer.profile
-					? html`
-							<div class="row" style="align-items: center; gap: 8px">
-								<sl-avatar .image=${peer.profile.avatar_src}></sl-avatar>
-							</div>
-						`
-					: html`
-							<profile-list-item .agentPubKey=${peer.agents[0]}>
-							</profile-list-item>
-						`}
+				<profile-list-item .agentPubKey=${peer.agents[0]}> </profile-list-item>
 			</div>
 		`;
 	}
@@ -120,7 +111,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 
 	private renderChat(
 		peerChat: PeerChat,
-		messages: Record<EntryHashB64, SignedEntry<PeerMessage>>,
+		messages: Record<EntryHashB64, SignedEvent<PeerMessage>>,
 		myReadMessages: Array<EntryHashB64>,
 	) {
 		const peerIsTyping = this.store.peerChats
@@ -154,7 +145,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 									.filter(
 										set =>
 											!myAgentsB64.includes(
-												encodeHashToBase64(set[0][1].provenance),
+												encodeHashToBase64(set[0][1].author),
 											),
 									);
 
@@ -230,17 +221,18 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 			</div>
 		`;
 	}
+
 	private renderMessageSet(
 		messageSet: EventSet<PeerMessage>,
 		myAgentsB64: AgentPubKeyB64[],
 	) {
 		const lastMessage = messageSet[0];
-		const timestamp = lastMessage[1].signed_content.timestamp / 1000;
+		const timestamp = lastMessage[1].event.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
 		const fromMe = myAgentsB64.includes(
-			encodeHashToBase64(lastMessage[1].provenance),
+			encodeHashToBase64(lastMessage[1].author),
 		);
 		return html`
 			<div
@@ -257,7 +249,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 							style="align-items: end; flex-wrap: wrap; gap: 16px;"
 						>
 							<span style="flex: 1; word-break: break-all"
-								>${message.signed_content.content.message.message}</span
+								>${message.event.content.message.message}</span
 							>
 							${i === 0
 								? html`

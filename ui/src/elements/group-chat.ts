@@ -1,4 +1,5 @@
 import '@darksoil-studio/file-storage-zome/dist/elements/show-avatar-image.js';
+import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	Profile,
 	ProfilesProvider,
@@ -64,7 +65,6 @@ import {
 	GroupMessage,
 	Message,
 	PeerMessage,
-	SignedEntry,
 } from '../types.js';
 import './group-info.js';
 import './group-members.js';
@@ -92,12 +92,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	@property()
 	profilesProvider!: ProfilesProvider;
 
-	private renderEvent(event: SignedEntry<GroupChatEvent>) {
-		switch (event.signed_content.content.event.type) {
+	private renderEvent(event: SignedEvent<GroupChatEvent>) {
+		switch (event.event.content.event.type) {
 			case 'UpdateGroupInfo':
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
-						${this.renderAgentNickname(event.provenance)}
+						${this.renderAgentNickname(event.author)}
 						&nbsp;${msg(str`updated the group's info.`)}
 					</sl-tag>
 				`;
@@ -105,30 +105,30 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
 						${this.renderAgentNickname(
-							event.signed_content.content.event.member_agents[0],
+							event.event.content.event.member_agents[0],
 						)}&nbsp;${msg(str`was added to the group.`)}
 					</sl-tag>
 				`;
 			case 'RemoveMember':
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
-						${this.renderAgentNickname(event.provenance)}
+						${this.renderAgentNickname(event.author)}
 						&nbsp;${msg('removed')}&nbsp;${this.renderAgentNickname(
-							event.signed_content.content.event.member_agents[0],
+							event.event.content.event.member_agents[0],
 						)}&nbsp;${msg('from the group.')}
 					</sl-tag>
 				`;
 			case 'LeaveGroup':
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
-						${this.renderAgentNickname(event.provenance)}
+						${this.renderAgentNickname(event.author)}
 						&nbsp;${msg(str`left the group.`)}
 					</sl-tag>
 				`;
 			case 'DeleteGroup':
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
-						${this.renderAgentNickname(event.provenance)}
+						${this.renderAgentNickname(event.author)}
 						&nbsp;${msg(str`deleted the group.`)}
 					</sl-tag>
 				`;
@@ -159,15 +159,15 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	}
 
 	private renderChat(
-		createGroupChat: SignedEntry<CreateGroupChat>,
+		createGroupChat: SignedEvent<CreateGroupChat>,
 		currentGroup: GroupChat,
 		messages: Record<
 			EntryHashB64,
-			SignedEntry<{ type: 'GroupMessage' } & GroupMessage>
+			SignedEvent<{ type: 'GroupMessage' } & GroupMessage>
 		>,
 		events: Record<
 			EntryHashB64,
-			SignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>
+			SignedEvent<{ type: 'GroupChatEvent' } & GroupChatEvent>
 		>,
 		myReadMessages: EntryHashB64[],
 	) {
@@ -192,7 +192,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 		const relevantEvents = Object.entries(events)
 			.filter(e => {
-				const type = e[1].signed_content.content.event.type;
+				const type = e[1].event.content.event.type;
 				return (
 					type === 'UpdateGroupInfo' ||
 					type === 'AddMember' ||
@@ -239,7 +239,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 									.filter(
 										eventSet =>
 											!myAgentsB64.includes(
-												encodeHashToBase64(eventSet[0][1].provenance),
+												encodeHashToBase64(eventSet[0][1].author),
 											),
 									);
 
@@ -272,7 +272,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							<div class="row" style="justify-content: center">
 								<sl-tag style="align-self: center; margin: 8px">
 									${msg(str`Group was created by`)}&nbsp;
-									${this.renderAgentNickname(createGroupChat.provenance)}
+									${this.renderAgentNickname(createGroupChat.author)}
 								</sl-tag>
 							</div>
 						</div>
@@ -309,13 +309,11 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		return html`
 			<div class="column" style="gap: 8px; flex-direction: column-reverse">
 				${eventsSets.map(eventSet =>
-					eventSet[0][1].signed_content.content.type === 'GroupMessage'
-						? myAgentsB64.includes(
-								encodeHashToBase64(eventSet[0][1].provenance),
-							)
+					eventSet[0][1].event.content.type === 'GroupMessage'
+						? myAgentsB64.includes(encodeHashToBase64(eventSet[0][1].author))
 							? this.renderMessageSetFromMe(eventSet as EventSet<GroupMessage>)
 							: this.renderMessageSetToMe(eventSet as EventSet<GroupMessage>)
-						: this.renderEvent(eventSet[0][1] as SignedEntry<GroupChatEvent>),
+						: this.renderEvent(eventSet[0][1] as SignedEvent<GroupChatEvent>),
 				)}
 				<div style="align-self: center">
 					<sl-tag>
@@ -375,7 +373,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 	private renderMessageSetFromMe(messageSet: EventSet<GroupMessage>) {
 		const lastMessage = messageSet[0][1];
-		const timestamp = lastMessage.signed_content.timestamp / 1000;
+		const timestamp = lastMessage.event.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
@@ -388,7 +386,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							style="align-items: end; flex-wrap: wrap; gap: 16px;"
 						>
 							<span style="flex: 1; word-break: break-all"
-								>${message.signed_content.content.message.message}</span
+								>${message.event.content.message.message}</span
 							>
 							${i === 0
 								? html`
@@ -458,12 +456,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 	private renderMessageSetToMe(messageSet: EventSet<GroupMessage>) {
 		const lastMessage = messageSet[0][1];
-		const timestamp = lastMessage.signed_content.timestamp / 1000;
+		const timestamp = lastMessage.event.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
 		return html` <div class="row" style="gap: 8px; align-items: end">
-			<agent-avatar .agentPubKey=${lastMessage.provenance}></agent-avatar>
+			<agent-avatar .agentPubKey=${lastMessage.author}></agent-avatar>
 
 			<div
 				class="column"
@@ -475,7 +473,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						<div class="colum message" style="gap:8px">
 							${
 								i === messageSet.length - 1
-									? this.renderAgentNickname(message.provenance)
+									? this.renderAgentNickname(message.author)
 									: html``
 							}
 							<div
@@ -483,7 +481,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 								style="gap: 16px; align-items: end; flex-wrap: wrap; "
 							>
 								<span style="flex: 1; word-break: break-all"
-									>${message.signed_content.content.message.message}</span
+									>${message.event.content.message.message}</span
 								>
 								${
 									i === 0
@@ -858,15 +856,15 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	}
 
 	renderView(
-		createGroupChat: SignedEntry<CreateGroupChat>,
+		createGroupChat: SignedEvent<CreateGroupChat>,
 		currentGroup: GroupChat,
 		messages: Record<
 			EntryHashB64,
-			SignedEntry<{ type: 'GroupMessage' } & GroupMessage>
+			SignedEvent<{ type: 'GroupMessage' } & GroupMessage>
 		>,
 		events: Record<
 			EntryHashB64,
-			SignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>
+			SignedEvent<{ type: 'GroupChatEvent' } & GroupChatEvent>
 		>,
 		myReadMessages: EntryHashB64[],
 	) {

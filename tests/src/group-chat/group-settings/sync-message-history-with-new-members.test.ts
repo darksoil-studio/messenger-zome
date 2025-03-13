@@ -21,7 +21,13 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 		};
 
 		const groupHash = await alice.store.client.createGroupChat(
-			[bob.player.agentPubKey],
+			undefined,
+			[
+				{
+					agent: bob.player.agentPubKey,
+					profile: undefined,
+				},
+			],
 			info,
 			settings,
 		);

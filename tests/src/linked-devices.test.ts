@@ -42,14 +42,14 @@ test('messages get to all devices', async () => {
 		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(messages)[0].signed_content.content.message.message,
+			Object.values(messages)[0].event.content.message.message,
 			'hey!',
 		);
 
 		messages = await toPromise(bob2.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(messages)[0].signed_content.content.message.message,
+			Object.values(messages)[0].event.content.message.message,
 			'hey!',
 		);
 
@@ -162,7 +162,7 @@ test('messages get synchronized even when offline', async () => {
 		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(messages)[0].signed_content.content.message.message,
+			Object.values(messages)[0].event.content.message.message,
 			'hey!',
 		);
 

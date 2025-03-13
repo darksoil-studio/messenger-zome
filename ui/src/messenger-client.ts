@@ -1,15 +1,8 @@
-import {
-	AgentPubKey,
-	AppClient,
-	EntryHash,
-	EntryHashB64,
-	encodeHashToBase64,
-} from '@holochain/client';
-import { ZomeClient } from '@tnesh-stack/utils';
+import { PrivateEventSourcingClient } from '@darksoil-studio/private-event-sourcing-zome';
+import { AgentPubKey, AppClient, EntryHash } from '@holochain/client';
 
 import {
 	AgentWithProfile,
-	CreateGroupChatPeer,
 	GroupChatEvent,
 	GroupInfo,
 	GroupSettings,
@@ -17,26 +10,15 @@ import {
 	MessengerProfile,
 	MessengerSignal,
 	PeerChatEvent,
-	PrivateMessengerEntry,
 } from './types.js';
 
-export class MessengerClient extends ZomeClient<MessengerSignal> {
+export class MessengerClient extends PrivateEventSourcingClient<MessengerSignal> {
 	constructor(
 		public client: AppClient,
 		public roleName: string,
 		public zomeName = 'messenger',
 	) {
 		super(client, roleName, zomeName);
-	}
-
-	async queryPrivateMessengerEntries(): Promise<
-		Record<EntryHashB64, PrivateMessengerEntry>
-	> {
-		return this.callZome('query_private_messenger_entries', undefined);
-	}
-
-	async commitMyPendingEncryptedMessages(): Promise<void> {
-		return this.callZome('commit_my_pending_encrypted_messages', undefined);
 	}
 
 	/** Peer Chat */

@@ -1,4 +1,5 @@
 import '@darksoil-studio/file-storage-zome/dist/elements/show-avatar-image.js';
+import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	Profile,
 	ProfilesProvider,
@@ -38,7 +39,6 @@ import {
 	GroupEvent,
 	MessengerProfile,
 	PeerMessage,
-	SignedEntry,
 } from '../types.js';
 
 @localized()
@@ -55,7 +55,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 	profilesProvider!: ProfilesProvider;
 
 	private renderPeerChat(chat: PeerChatSummary) {
-		const lastActivityContent = chat.lastActivity.signed_content.content;
+		const lastActivityContent = chat.lastActivity.event.content;
 		return html`<div
 			class="row"
 			style="gap: 8px; cursor: pointer;"
@@ -72,15 +72,10 @@ export class AllChats extends SignalWatcher(LitElement) {
 			}}
 		>
 			<div style="align-self: center">
-				${this.renderAvatar(chat.peer.agents[0], chat.peer.profile)}
+				${this.renderAvatar(chat.peer.agents[0], undefined)}
 			</div>
 			<div class="column" style="gap: 4px; flex: 1; overflow: hidden">
-				<span
-					>${this.renderAgentNickname(
-						chat.peer.agents[0],
-						chat.peer.profile,
-					)}</span
-				>
+				<span>${this.renderAgentNickname(chat.peer.agents[0], undefined)}</span>
 				<span class="placeholder last-activity"
 					>${lastActivityContent.type === 'PeerMessage'
 						? lastActivityContent.message.message
@@ -90,7 +85,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 			<div class="column" style="gap: 2px; justify-content: end">
 				<div class="placeholder time" style="display: contents">
-					${this.renderTime(chat.lastActivity.signed_content.timestamp)}
+					${this.renderTime(chat.lastActivity.event.timestamp)}
 				</div>
 				<div style="flex: 1">
 					${chat.myUnreadMessages.length !== 0
@@ -163,9 +158,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 		messengerProfile: MessengerProfile | undefined,
 	) {
 		if (messengerProfile)
-			return html`<sl-avatar
-				.image=${messengerProfile.avatar_src}
-			></sl-avatar>`;
+			return html`<sl-avatar .image=${messengerProfile.avatar}></sl-avatar>`;
 		return html` <agent-avatar .agentPubKey=${agent}></agent-avatar> `;
 	}
 
@@ -173,8 +166,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 		agent: AgentPubKey,
 		messengerProfile: MessengerProfile | undefined,
 	) {
-		if (messengerProfile)
-			return html`<span>${messengerProfile.nickname}</span>`;
+		if (messengerProfile) return html`<span>${messengerProfile.name}</span>`;
 		const profile = this.profilesProvider.currentProfileForAgent
 			.get(agent)
 			.get();
@@ -186,19 +178,17 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 	renderGroupEventLastActivity(
 		groupChat: GroupChat,
-		provenance: AgentPubKey,
+		author: AgentPubKey,
 		event: GroupEvent,
 	) {
 		const memberProfile = groupChat.members.find(m =>
-			m.agents.find(
-				a => encodeHashToBase64(a) === encodeHashToBase64(provenance),
-			),
+			m.agents.find(a => encodeHashToBase64(a) === encodeHashToBase64(author)),
 		)!.profile;
 		switch (event.type) {
 			case 'UpdateGroupInfo':
 				return html`
 					<span>
-						${this.renderAgentNickname(provenance, memberProfile)}
+						${this.renderAgentNickname(author, memberProfile)}
 						${msg(str`updated the group's info.`)}
 					</span>
 				`;
@@ -214,7 +204,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 			case 'RemoveMember':
 				return html`
 					<span>
-						${this.renderAgentNickname(provenance, memberProfile)}
+						${this.renderAgentNickname(author, memberProfile)}
 						${msg('removed')}&nbsp;${this.renderAgentNickname(
 							event.member_agents[0],
 							memberProfile,
@@ -224,14 +214,14 @@ export class AllChats extends SignalWatcher(LitElement) {
 			case 'LeaveGroup':
 				return html`
 					<span>
-						${this.renderAgentNickname(provenance, memberProfile)}
+						${this.renderAgentNickname(author, memberProfile)}
 						${msg(str`left the group.`)}
 					</span>
 				`;
 			case 'DeleteGroup':
 				return html`
 					<span>
-						${this.renderAgentNickname(provenance, memberProfile)}
+						${this.renderAgentNickname(author, memberProfile)}
 						${msg(str`deleted the group.`)}
 					</span>
 				`;
@@ -240,40 +230,36 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 	renderGroupLastActivity(
 		groupChat: GroupChat,
-		groupMessengerEntry: GroupChatEntry,
+		groupMessengerEntry: SignedEvent<GroupChatEntry>,
 	) {
 		const author = groupChat.members.find(
 			m =>
 				!!m.agents.find(
 					a =>
 						encodeHashToBase64(a) ===
-						encodeHashToBase64(groupMessengerEntry.provenance),
+						encodeHashToBase64(groupMessengerEntry.author),
 				),
 		)!;
-		if (groupMessengerEntry.signed_content.content.type === 'CreateGroupChat') {
+		if (groupMessengerEntry.event.content.type === 'CreateGroupChat') {
 			return html`<span
 				>${this.renderAgentNickname(
-					groupMessengerEntry.provenance,
+					groupMessengerEntry.author,
 					author.profile,
 				)}&nbsp;${msg('created the group.')}
 			</span>`;
-		} else if (
-			groupMessengerEntry.signed_content.content.type === 'GroupMessage'
-		) {
+		} else if (groupMessengerEntry.event.content.type === 'GroupMessage') {
 			return html`<span
 				>${this.renderAgentNickname(
-					groupMessengerEntry.provenance,
+					groupMessengerEntry.author,
 					author.profile,
 				)}:
-				${groupMessengerEntry.signed_content.content.message.message}</span
+				${groupMessengerEntry.event.content.message.message}</span
 			>`;
-		} else if (
-			groupMessengerEntry.signed_content.content.type === 'GroupChatEvent'
-		) {
+		} else if (groupMessengerEntry.event.content.type === 'GroupChatEvent') {
 			return this.renderGroupEventLastActivity(
 				groupChat,
-				groupMessengerEntry.provenance,
-				groupMessengerEntry.signed_content.content.event,
+				groupMessengerEntry.author,
+				groupMessengerEntry.event.content.event,
 			);
 		}
 	}
@@ -322,9 +308,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 			<div class="column" style="gap: 2px; align-items: end">
 				<div class="placeholder time" style="display: contents">
-					${this.renderTime(
-						groupChatSummary.lastActivity.signed_content.timestamp,
-					)}
+					${this.renderTime(groupChatSummary.lastActivity.event.timestamp)}
 				</div>
 				<div style="flex: 1"></div>
 				${groupChatSummary.myUnreadMessages.length !== 0
