@@ -1,0 +1,1 @@
+import{_ as i,c as a,o as n,ag as h}from"./chunks/framework.Do02_DaK.js";const d=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"design.md","filePath":"design.md"}'),p={name:"design.md"};function k(l,s,t,e,E,r){return n(),a("div",null,s[0]||(s[0]=[h("",1)]))}const y=i(p,[["render",k]]);export{d as __pageData,y as default};
