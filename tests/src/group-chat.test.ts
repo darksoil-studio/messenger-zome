@@ -10,10 +10,16 @@ test('create a group chat, send message and read it', async () => {
 		const [alice, bob] = await setup(scenario);
 
 		const groupHash = await alice.store.client.createGroupChat(
-			[bob.player.agentPubKey],
+			undefined,
+			[
+				{
+					agent: bob.player.agentPubKey,
+					profile: undefined,
+				},
+			],
 			{
 				name: 'mygroup',
-				avatar_hash: undefined,
+				avatar: undefined,
 				description: 'mydescription',
 			},
 			{
@@ -44,7 +50,7 @@ test('create a group chat, send message and read it', async () => {
 		);
 		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(messages)[0].signed_content.content.message.message,
+			Object.values(messages)[0].event.content.message.message,
 			'hey!',
 		);
 
@@ -82,12 +88,18 @@ test('concurrent updates of groups get reconciled', async () => {
 
 		const info = {
 			name: 'mygroup',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		};
 
 		const groupHash = await alice.store.client.createGroupChat(
-			[bob.player.agentPubKey],
+			undefined,
+			[
+				{
+					agent: bob.player.agentPubKey,
+					profile: undefined,
+				},
+			],
 			info,
 			{
 				only_admins_can_add_members: false,
@@ -100,13 +112,13 @@ test('concurrent updates of groups get reconciled', async () => {
 
 		await alice.store.groupChats.get(groupHash).updateGroupChatInfo({
 			name: 'alicename',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		});
 
 		await bob.store.groupChats.get(groupHash).updateGroupChatInfo({
 			name: 'bobname',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		});
 
@@ -130,12 +142,18 @@ test('members removed from the group cannot send messages anymore', async () => 
 
 		const info = {
 			name: 'mygroup',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		};
 
 		const groupHash = await alice.store.client.createGroupChat(
-			[bob.player.agentPubKey],
+			undefined,
+			[
+				{
+					agent: bob.player.agentPubKey,
+					profile: undefined,
+				},
+			],
 			info,
 			{
 				only_admins_can_add_members: false,

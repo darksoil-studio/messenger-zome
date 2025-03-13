@@ -1,4 +1,5 @@
 import { LinkedDevicesProof } from '@darksoil-studio/linked-devices-zome';
+import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	AgentPubKey,
 	EntryHash,
@@ -7,6 +8,7 @@ import {
 	encodeHashToBase64,
 } from '@holochain/client';
 import { msg } from '@lit/localize';
+import { decode } from '@msgpack/msgpack';
 import {
 	AsyncComputed,
 	AsyncResult,
@@ -22,6 +24,7 @@ import { MessengerStore } from './messenger-store.js';
 import {
 	CreatePeerChat,
 	Message,
+	MessengerEvent,
 	Peer,
 	PeerChat,
 	PeerChatEntry,
@@ -51,13 +54,13 @@ export class PeerChatStore {
 				}
 			} else if (
 				signal.type === 'EntryCreated' &&
-				signal.app_entry.type === 'PrivateMessengerEntry' &&
-				signal.app_entry.signed_content.content.type === 'PeerMessage'
+				signal.app_entry.type === 'PrivateEvent'
 			) {
+				const event = decode(signal.app_entry.event.content) as MessengerEvent;
 				if (
-					encodeHashToBase64(
-						signal.app_entry.signed_content.content.peer_chat_hash,
-					) === encodeHashToBase64(peerChatHash)
+					event.type === 'PeerMessage' &&
+					encodeHashToBase64(event.peer_chat_hash) ===
+						encodeHashToBase64(peerChatHash)
 				) {
 					this.peerIsTyping.set(false);
 					if (timeout) clearTimeout(timeout);
@@ -68,7 +71,7 @@ export class PeerChatStore {
 
 	private peerChatEntries = new AsyncComputed(() => {
 		const privateMessengerEntriesResult =
-			this.messengerStore.privateMessengerEntries.get();
+			this.messengerStore.messengerEntries.get();
 		if (privateMessengerEntriesResult.status !== 'completed')
 			return privateMessengerEntriesResult;
 
@@ -88,7 +91,7 @@ export class PeerChatStore {
 			peerChatEntries.events,
 		)) {
 			const previousEventsHashes =
-				peerChatEvent.signed_content.content.previous_peer_chat_events_hashes;
+				peerChatEvent.event.content.previous_peer_chat_events_hashes;
 			if (previousEventsHashes.length === 0) {
 				initialEventsHashes.push(entryHash);
 			} else {
@@ -135,15 +138,13 @@ export class PeerChatStore {
 				const event = entries.value.events[eventHashB64];
 
 				const previousEventsHashes =
-					event.signed_content.content.previous_peer_chat_events_hashes;
+					event.event.content.previous_peer_chat_events_hashes;
 
 				if (previousEventsHashes.length === 0) {
 					const peerChat = apply(
-						initialPeerChat(
-							entries.value.createPeerChat.signed_content.content,
-						),
-						event.provenance,
-						event.signed_content.content.event,
+						initialPeerChat(entries.value.createPeerChat.event.content),
+						event.author,
+						event.event.content.event,
 					);
 					return {
 						status: 'completed',
@@ -168,8 +169,8 @@ export class PeerChatStore {
 
 				currentPeerChat = apply(
 					currentPeerChat,
-					event.provenance,
-					event.signed_content.content.event,
+					event.author,
+					event.event.content.event,
 				);
 
 				return {
@@ -192,7 +193,7 @@ export class PeerChatStore {
 		if (entries.value.currentEventsHashes.length === 0) {
 			return {
 				status: 'completed',
-				value: entries.value.createPeerChat.signed_content.content,
+				value: entries.value.createPeerChat.event.content,
 			};
 		}
 
@@ -243,20 +244,19 @@ export class PeerChatStore {
 			if (
 				me.agents.find(
 					a =>
-						encodeHashToBase64(a) ===
-						encodeHashToBase64(readMessages.provenance),
+						encodeHashToBase64(a) === encodeHashToBase64(readMessages.author),
 				)
 			) {
 				myReadMessages = [
 					...myReadMessages,
-					...readMessages.signed_content.content.read_messages_hashes.map(
+					...readMessages.event.content.read_messages_hashes.map(
 						encodeHashToBase64,
 					),
 				];
 			} else {
 				theirReadMessages = [
 					...theirReadMessages,
-					...readMessages.signed_content.content.read_messages_hashes.map(
+					...readMessages.event.content.read_messages_hashes.map(
 						encodeHashToBase64,
 					),
 				];
@@ -303,47 +303,46 @@ export class PeerChatStore {
 				([messageHash, message]) =>
 					!readMessages.value.myReadMessages.includes(messageHash) &&
 					!me.agents.find(
-						a =>
-							encodeHashToBase64(a) === encodeHashToBase64(message.provenance),
+						a => encodeHashToBase64(a) === encodeHashToBase64(message.author),
 					),
 			)
 			.map(([hash, _]) => hash);
 
-		const allActivity: PeerChatEntry[] = [
+		const allActivity: Array<SignedEvent<PeerChatEntry>> = [
 			...Object.values(entries.value.messages).map(m => ({
 				...m,
-				signed_content: {
+				event: {
 					content: {
 						type: 'PeerMessage' as const,
-						...m.signed_content.content,
+						...m.event.content,
 					},
-					timestamp: m.signed_content.timestamp,
+					timestamp: m.event.timestamp,
 				},
 			})),
 			{
 				...entries.value.createPeerChat,
-				signed_content: {
+				event: {
 					content: {
 						type: 'CreatePeerChat' as const,
-						...entries.value.createPeerChat.signed_content.content,
+						...entries.value.createPeerChat.event.content,
 					},
-					timestamp: entries.value.createPeerChat.signed_content.timestamp,
+					timestamp: entries.value.createPeerChat.event.timestamp,
 				},
 			},
 			// ...Object.values(entries.value.events).map(e => ({
 			// 	...e,
-			// 	signed_content: {
+			// 	event: {
 			// 		content: {
 			// 			type: 'PeerChatEvent' as const,
-			// 			...e.signed_content.content,
+			// 			...e.event.content,
 			// 		},
-			// 		timestamp: e.signed_content.timestamp,
+			// 		timestamp: e.event.timestamp,
 			// 	},
 			// })),
 		];
 
 		const lastActivity = allActivity.sort(
-			(m1, m2) => m2.signed_content.timestamp - m1.signed_content.timestamp,
+			(m1, m2) => m2.event.timestamp - m1.event.timestamp,
 		)[0];
 
 		return {
@@ -412,29 +411,20 @@ function apply(
 				peerChat.peer_2.agents.push(event.new_agent);
 			}
 			break;
-		case 'UpdateProfile':
-			if (isPeer1) {
-				peerChat.peer_1.profile = event;
-			} else {
-				peerChat.peer_2.profile = event;
-			}
+		// case 'UpdateProfile':
+		// 	if (isPeer1) {
+		// 		peerChat.peer_1.profile = event;
+		// 	} else {
+		// 		peerChat.peer_2.profile = event;
+		// 	}
 
-			break;
+		// 	break;
 	}
 
 	return peerChat;
 }
 
 function merge(peerChat1: PeerChat, peerChat2: PeerChat): PeerChat {
-	const profile1 = mergeProfiles(
-		peerChat1.peer_1.profile,
-		peerChat2.peer_1.profile,
-	);
-	const profile2 = mergeProfiles(
-		peerChat1.peer_2.profile,
-		peerChat2.peer_2.profile,
-	);
-
 	const agents1 = uniquify([
 		...peerChat1.peer_1.agents,
 		...peerChat2.peer_1.agents,
@@ -447,11 +437,9 @@ function merge(peerChat1: PeerChat, peerChat2: PeerChat): PeerChat {
 	return {
 		peer_1: {
 			agents: agents1,
-			profile: profile1,
 		},
 		peer_2: {
 			agents: agents2,
-			profile: profile2,
 		},
 	};
 }
@@ -460,11 +448,9 @@ function initialPeerChat(createPeerChat: CreatePeerChat): PeerChat {
 	return {
 		peer_1: {
 			agents: createPeerChat.peer_1.agents,
-			profile: createPeerChat.peer_1.profile,
 		},
 		peer_2: {
 			agents: createPeerChat.peer_2.agents,
-			profile: createPeerChat.peer_2.profile,
 		},
 	};
 }
@@ -475,6 +461,6 @@ export interface PeerChatSummary {
 	me: Peer;
 	peer: Peer;
 
-	lastActivity: PeerChatEntry;
+	lastActivity: SignedEvent<PeerChatEntry>;
 	myUnreadMessages: Array<EntryHashB64>;
 }

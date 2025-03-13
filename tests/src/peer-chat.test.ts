@@ -31,7 +31,7 @@ test('send message and read it', async () => {
 		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(messages)[0].signed_content.content.message.message,
+			Object.values(messages)[0].event.content.message.message,
 			'hey!',
 		);
 

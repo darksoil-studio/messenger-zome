@@ -1,9 +1,9 @@
 import { encodeHashToBase64 } from '@holochain/client';
 import { dhtSync, pause, runScenario } from '@holochain/tryorama';
-import { toPromise } from '@tnesh-stack/signals';
+import { toPromise, watch } from '@tnesh-stack/signals';
 import { assert, expect, test } from 'vitest';
 
-import { setup, waitUntil } from '../../setup.js';
+import { groupConsistency, setup, waitUntil } from '../../setup.js';
 
 test('only_admins_can_edit_group_info allows works correctly', async () => {
 	await runScenario(async scenario => {
@@ -11,7 +11,7 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 
 		const info = {
 			name: 'mygroup',
-			avatar_hash: undefined,
+			avatar: undefined,
 			description: 'mydescription',
 		};
 		const settings = {
@@ -21,14 +21,19 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 		};
 
 		const groupHash = await alice.store.client.createGroupChat(
-			[bob.player.agentPubKey],
+			undefined,
+			[
+				{
+					agent: bob.player.agentPubKey,
+					profile: undefined,
+				},
+			],
 			info,
 			settings,
 		);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		// Non-admins can update the group info here because of the only_admins_can_edit_group_info setting
@@ -42,9 +47,8 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 				sync_message_history_with_new_members: false,
 			});
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		const events = await toPromise(bob.store.groupChats.get(groupHash).events);
@@ -56,17 +60,18 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 			bob.store.groupChats.get(groupHash).updateGroupChatInfo(info),
 		).rejects.toThrow();
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
+
+		// watch(carol.store.messengerEntries, () => {});
 
 		await alice.store.groupChats
 			.get(groupHash)
 			.addMember([carol.player.agentPubKey]);
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+
+		await groupConsistency(
+			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await expect(() =>
@@ -77,9 +82,8 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 			.get(groupHash)
 			.promoteMemberToAdmin([carol.player.agentPubKey]);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await carol.store.groupChats.get(groupHash).updateGroupChatInfo(info);
@@ -88,9 +92,8 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 			.get(groupHash)
 			.removeMember([bob.player.agentPubKey]);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await expect(async () =>
@@ -102,17 +105,14 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 
 		// Carol deletes the group at the same time as Alice updates it
 		// Should result in the group being deleted
-
 		await carol.store.groupChats.get(groupHash).deleteGroupChat();
-
 		await alice.store.groupChats.get(groupHash).updateGroupChatInfo({
 			...info,
 			name: 'anothername',
 		});
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		const group = await toPromise(

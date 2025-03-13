@@ -1,10 +1,11 @@
 import '@darksoil-studio/file-storage-zome/dist/elements/show-avatar-image.js';
+import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	Profile,
-	ProfilesStore,
-	profilesStoreContext,
-} from '@darksoil-studio/profiles-zome';
-import '@darksoil-studio/profiles-zome/dist/elements/agent-avatar.js';
+	ProfilesProvider,
+	profilesProviderContext,
+} from '@darksoil-studio/profiles-provider';
+import '@darksoil-studio/profiles-provider/dist/elements/agent-avatar.js';
 import {
 	AgentPubKey,
 	EntryHash,
@@ -23,7 +24,7 @@ import { wrapPathInSvg } from '@tnesh-stack/elements';
 import { AsyncResult, SignalWatcher } from '@tnesh-stack/signals';
 import { EntryRecord } from '@tnesh-stack/utils';
 import { LitElement, css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { join } from 'lit/directives/join.js';
 
 import { messengerStoreContext } from '../context.js';
@@ -38,7 +39,6 @@ import {
 	GroupEvent,
 	MessengerProfile,
 	PeerMessage,
-	SignedEntry,
 } from '../types.js';
 
 @localized()
@@ -47,11 +47,15 @@ export class AllChats extends SignalWatcher(LitElement) {
 	@consume({ context: messengerStoreContext, subscribe: true })
 	store!: MessengerStore;
 
-	@consume({ context: profilesStoreContext, subscribe: true })
-	profilesStore!: ProfilesStore;
+	/**
+	 * Profiles provider
+	 */
+	@consume({ context: profilesProviderContext, subscribe: true })
+	@property()
+	profilesProvider!: ProfilesProvider;
 
 	private renderPeerChat(chat: PeerChatSummary) {
-		const lastActivityContent = chat.lastActivity.signed_content.content;
+		const lastActivityContent = chat.lastActivity.event.content;
 		return html`<div
 			class="row"
 			style="gap: 8px; cursor: pointer;"
@@ -68,15 +72,10 @@ export class AllChats extends SignalWatcher(LitElement) {
 			}}
 		>
 			<div style="align-self: center">
-				${this.renderAvatar(chat.peer.agents[0], chat.peer.profile)}
+				${this.renderAvatar(chat.peer.agents[0], undefined)}
 			</div>
 			<div class="column" style="gap: 4px; flex: 1; overflow: hidden">
-				<span
-					>${this.renderAgentNickname(
-						chat.peer.agents[0],
-						chat.peer.profile,
-					)}</span
-				>
+				<span>${this.renderAgentNickname(chat.peer.agents[0], undefined)}</span>
 				<span class="placeholder last-activity"
 					>${lastActivityContent.type === 'PeerMessage'
 						? lastActivityContent.message.message
@@ -86,7 +85,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 			<div class="column" style="gap: 2px; justify-content: end">
 				<div class="placeholder time" style="display: contents">
-					${this.renderTime(chat.lastActivity.signed_content.timestamp)}
+					${this.renderTime(chat.lastActivity.event.timestamp)}
 				</div>
 				<div style="flex: 1">
 					${chat.myUnreadMessages.length !== 0
@@ -159,9 +158,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 		messengerProfile: MessengerProfile | undefined,
 	) {
 		if (messengerProfile)
-			return html`<sl-avatar
-				.image=${messengerProfile.avatar_src}
-			></sl-avatar>`;
+			return html`<sl-avatar .image=${messengerProfile.avatar}></sl-avatar>`;
 		return html` <agent-avatar .agentPubKey=${agent}></agent-avatar> `;
 	}
 
@@ -169,35 +166,29 @@ export class AllChats extends SignalWatcher(LitElement) {
 		agent: AgentPubKey,
 		messengerProfile: MessengerProfile | undefined,
 	) {
-		if (messengerProfile)
-			return html`<span>${messengerProfile.nickname}</span>`;
-		const profile = this.profilesStore.profileForAgent.get(agent).get();
+		if (messengerProfile) return html`<span>${messengerProfile.name}</span>`;
+		const profile = this.profilesProvider.currentProfileForAgent
+			.get(agent)
+			.get();
 		if (profile.status !== 'completed') return html`${msg('Loading...')}`;
 		if (!profile.value) return html`${msg('Profile not found')}`;
-		const latestValue = profile.value.latestVersion.get() as AsyncResult<
-			EntryRecord<Profile> | undefined
-		>;
-		if (latestValue.status !== 'completed')
-			return html`${msg('Profile not found')}`;
 
-		return html`<span>${latestValue.value?.entry.nickname}</span>`;
+		return html`<span>${profile.value?.name}</span>`;
 	}
 
 	renderGroupEventLastActivity(
 		groupChat: GroupChat,
-		provenance: AgentPubKey,
+		author: AgentPubKey,
 		event: GroupEvent,
 	) {
 		const memberProfile = groupChat.members.find(m =>
-			m.agents.find(
-				a => encodeHashToBase64(a) === encodeHashToBase64(provenance),
-			),
+			m.agents.find(a => encodeHashToBase64(a) === encodeHashToBase64(author)),
 		)!.profile;
 		switch (event.type) {
 			case 'UpdateGroupInfo':
 				return html`
 					<span>
-						${this.renderAgentNickname(provenance, memberProfile)}
+						${this.renderAgentNickname(author, memberProfile)}
 						${msg(str`updated the group's info.`)}
 					</span>
 				`;
@@ -213,7 +204,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 			case 'RemoveMember':
 				return html`
 					<span>
-						${this.renderAgentNickname(provenance, memberProfile)}
+						${this.renderAgentNickname(author, memberProfile)}
 						${msg('removed')}&nbsp;${this.renderAgentNickname(
 							event.member_agents[0],
 							memberProfile,
@@ -223,14 +214,14 @@ export class AllChats extends SignalWatcher(LitElement) {
 			case 'LeaveGroup':
 				return html`
 					<span>
-						${this.renderAgentNickname(provenance, memberProfile)}
+						${this.renderAgentNickname(author, memberProfile)}
 						${msg(str`left the group.`)}
 					</span>
 				`;
 			case 'DeleteGroup':
 				return html`
 					<span>
-						${this.renderAgentNickname(provenance, memberProfile)}
+						${this.renderAgentNickname(author, memberProfile)}
 						${msg(str`deleted the group.`)}
 					</span>
 				`;
@@ -239,40 +230,36 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 	renderGroupLastActivity(
 		groupChat: GroupChat,
-		groupMessengerEntry: GroupChatEntry,
+		groupMessengerEntry: SignedEvent<GroupChatEntry>,
 	) {
 		const author = groupChat.members.find(
 			m =>
 				!!m.agents.find(
 					a =>
 						encodeHashToBase64(a) ===
-						encodeHashToBase64(groupMessengerEntry.provenance),
+						encodeHashToBase64(groupMessengerEntry.author),
 				),
 		)!;
-		if (groupMessengerEntry.signed_content.content.type === 'CreateGroupChat') {
+		if (groupMessengerEntry.event.content.type === 'CreateGroupChat') {
 			return html`<span
 				>${this.renderAgentNickname(
-					groupMessengerEntry.provenance,
+					groupMessengerEntry.author,
 					author.profile,
 				)}&nbsp;${msg('created the group.')}
 			</span>`;
-		} else if (
-			groupMessengerEntry.signed_content.content.type === 'GroupMessage'
-		) {
+		} else if (groupMessengerEntry.event.content.type === 'GroupMessage') {
 			return html`<span
 				>${this.renderAgentNickname(
-					groupMessengerEntry.provenance,
+					groupMessengerEntry.author,
 					author.profile,
 				)}:
-				${groupMessengerEntry.signed_content.content.message.message}</span
+				${groupMessengerEntry.event.content.message.message}</span
 			>`;
-		} else if (
-			groupMessengerEntry.signed_content.content.type === 'GroupChatEvent'
-		) {
+		} else if (groupMessengerEntry.event.content.type === 'GroupChatEvent') {
 			return this.renderGroupEventLastActivity(
 				groupChat,
-				groupMessengerEntry.provenance,
-				groupMessengerEntry.signed_content.content.event,
+				groupMessengerEntry.author,
+				groupMessengerEntry.event.content.event,
 			);
 		}
 	}
@@ -294,7 +281,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 				);
 			}}
 		>
-			${!info.avatar_hash
+			${!info.avatar
 				? html`
 						<sl-avatar
 							style="align-self: center; --size: 32px"
@@ -304,7 +291,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 				: html`
 						<show-avatar-image
 							.initials=${info.name.slice(0, 2)}
-							.imageHash=${info.avatar_hash}
+							.imageHash=${info.avatar}
 							style="--size: 32px; align-self: center"
 						>
 						</show-avatar-image>
@@ -321,9 +308,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 			<div class="column" style="gap: 2px; align-items: end">
 				<div class="placeholder time" style="display: contents">
-					${this.renderTime(
-						groupChatSummary.lastActivity.signed_content.timestamp,
-					)}
+					${this.renderTime(groupChatSummary.lastActivity.event.timestamp)}
 				</div>
 				<div style="flex: 1"></div>
 				${groupChatSummary.myUnreadMessages.length !== 0
