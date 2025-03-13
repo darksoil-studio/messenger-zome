@@ -1,15 +1,14 @@
 {
   "name": "@darksoil-studio/messenger-zome",
-  "version": "0.1.0",
+  "version": "0.400.0",
   "scripts": {
     "start": "vite --clearScreen false --port $UI_PORT",
-    "build": "pnpm lint && tsc && pnpm analyze",
+    "build": "pnpm lint && tsc && pnpm localize:build && pnpm analyze",
     "lint": "eslint src && prettier \"src/**/*.ts\" --check --ignore-path .gitignore",
     "format": "eslint src --fix && prettier \"src/**/*.ts\" --write --ignore-path .gitignore",
     "localize:extract": "lit-localize extract",
     "localize:build": "lit-localize build",
-    "analyze": "cem analyze --litelement --exclude dist",
-    "prepare": "tsc && pnpm localize:build && pnpm analyze"
+    "analyze": "cem analyze --litelement --exclude dist"
   },
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -29,25 +28,25 @@
     "./locales/*": "./locales/*"
   },
   "dependencies": {
-    "@darksoil-studio/file-storage-zome": "github:darksoil-studio/file-storage#40908026f903164dc522b149b43b4c61a624155d&path:ui",
-    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#c8b08f5da81d030e846dcb7afa8e244d3c0a6d50&path:ui",
-    "@darksoil-studio/notifications-zome": "github:darksoil-studio/notifications-zome#8de61fcacf7ee278c285742525b26116ba5be2cf&path:ui",
-    "@darksoil-studio/profiles-zome": "github:darksoil-studio/profiles-zome#b39f276988280a56ec9e3ed6f01a1a9c245d35de&path:ui",
-    "@holochain/client": "^0.18.0-rc",
+    "@darksoil-studio/file-storage-zome": "0.400.0-rev.6c851601e203a8927d896b5026b558f61badfb77",
+    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23",
+    "@darksoil-studio/private-event-sourcing-zome": "0.400.0-rev.8a6d74f0ee4436bf956b480130fcbda442fe0a62",
+    "@darksoil-studio/profiles-provider": "^0.400.1",
+    "@holochain/client": "^0.18.0",
     "@lit/context": "^1.0.0",
     "@lit/localize": "^0.12.0",
     "@mdi/js": "^7.2.0",
     "@msgpack/msgpack": "^2.8.0",
     "@shoelace-style/shoelace": "^2.11.0",
-    "@tnesh-stack/elements": "^0.400.0-rc",
-    "@tnesh-stack/signals": "^0.400.0-rc",
-    "@tnesh-stack/utils": "^0.400.0-rc",
+    "@tnesh-stack/elements": "^0.400.0",
+    "@tnesh-stack/signals": "^0.400.0",
+    "@tnesh-stack/utils": "^0.400.0",
     "color-hash": "^2.0.2",
     "lit": "^3.0.0"
   },
   "devDependencies": {
+    "@darksoil-studio/profiles-zome": "0.400.0-rev.e9c520aec484bfb0575d0fd57e7193096ac45902",
     "@custom-elements-manifest/analyzer": "^0.10.3",
-    "@lit-labs/virtualizer": "^2.0.14",
     "@lit/localize-tools": "^0.6.3",
     "@types/color-hash": "^2.0.0",
     "@vaadin/virtual-list": "^24.5.3",

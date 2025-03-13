@@ -1,5 +1,5 @@
-import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item-skeleton.js';
-import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item.js';
+import '@darksoil-studio/profiles-provider/dist/elements/profile-list-item-skeleton.js';
+import '@darksoil-studio/profiles-provider/dist/elements/profile-list-item.js';
 import { EntryHash, encodeHashToBase64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
@@ -185,11 +185,11 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 					? html`
 							<div class="row" style="gap: 8px; flex: 1">
 								<sl-avatar
-									.image=${member.profile.avatar_src}
-									.initials=${member.profile.nickname.slice(0, 2)}
+									.image=${member.profile.avatar}
+									.initials=${member.profile.name.slice(0, 2)}
 								>
 								</sl-avatar>
-								<span>${member.profile.nickname} </span>
+								<span>${member.profile.name} </span>
 							</div>
 						`
 					: html`

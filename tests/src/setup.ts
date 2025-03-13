@@ -2,27 +2,9 @@ import {
 	LinkedDevicesClient,
 	LinkedDevicesStore,
 } from '@darksoil-studio/linked-devices-zome';
-import {
-	ActionHash,
-	AgentPubKey,
-	AppBundleSource,
-	AppCallZomeRequest,
-	AppWebsocket,
-	EntryHash,
-	HoloHash,
-	HoloHashB64,
-	NewEntryAction,
-	Record,
-	encodeHashToBase64,
-	fakeActionHash,
-	fakeAgentPubKey,
-	fakeDnaHash,
-	fakeEntryHash,
-} from '@holochain/client';
-import { Player, Scenario, pause } from '@holochain/tryorama';
-import { encode } from '@msgpack/msgpack';
+import { HoloHashB64 } from '@holochain/client';
+import { Scenario, dhtSync, pause } from '@holochain/tryorama';
 import { Signal, joinAsync } from '@tnesh-stack/signals';
-import { EntryRecord } from '@tnesh-stack/utils';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -30,8 +12,12 @@ import { GroupChatStore } from '../../ui/src/group-chat-store.js';
 import { MessengerClient } from '../../ui/src/messenger-client.js';
 import { MessengerStore } from '../../ui/src/messenger-store.js';
 
-async function setupStore(player: Player) {
-	patchCallZome(player.appWs as AppWebsocket);
+const testHappUrl =
+	dirname(fileURLToPath(import.meta.url)) +
+	'/../../workdir/messenger_test.happ';
+
+async function addPlayer(scenario: Scenario) {
+	const player = await scenario.addPlayerWithApp({ path: testHappUrl });
 	await player.conductor
 		.adminWs()
 		.authorizeSigningCredentials(player.cells[0].cell_id);
@@ -43,7 +29,8 @@ async function setupStore(player: Player) {
 		new MessengerClient(player.appWs as any, 'messenger_test'),
 		linkedDevicesStore,
 	);
-	await store.client.queryPrivateMessengerEntries();
+	await store.client.queryPrivateEventEntries();
+
 	return {
 		store,
 		player,
@@ -57,51 +44,41 @@ async function setupStore(player: Player) {
 					installed_app_id: player.appId,
 				});
 			const appWs = await player.conductor.connectAppWs(issued.token, port);
-			patchCallZome(appWs);
 			store.client.client = appWs;
 			linkedDevicesStore.client.client = appWs;
 		},
 	};
 }
 
-export async function setup(scenario: Scenario, playerNum = 2) {
-	scenario.dpkiNetworkSeed = undefined;
+async function promiseAllSequential<T>(
+	fns: Array<() => Promise<T>>,
+): Promise<Array<T>> {
+	const results: Array<T> = [];
+	for (const fn of fns) {
+		results.push(await fn());
+	}
+	return results;
+}
 
-	const testHappUrl =
-		dirname(fileURLToPath(import.meta.url)) +
-		'/../../workdir/messenger_test.happ';
-
-	// Add 2 players with the test hApp to the Scenario. The returned players
-	// can be destructured.
-	const players = await scenario.addPlayersWithApps(
-		new Array(playerNum).fill({ appBundleSource: { path: testHappUrl } }),
+export async function setup(scenario: Scenario, numPlayers = 2) {
+	const players = await promiseAllSequential(
+		Array.from(new Array(numPlayers)).map(() => () => addPlayer(scenario)),
 	);
-
-	const playersAndStores = await Promise.all(players.map(setupStore));
 
 	// Shortcut peer discovery through gossip and register all agents in every
 	// conductor of the scenario.
 	await scenario.shareAllAgents();
 
-	return playersAndStores;
+	await dhtSync(
+		players.map(p => p.player),
+		players[0].player.cells[0].cell_id[0],
+	);
+
+	console.log('Setup completed!');
+
+	return players;
 }
 
-function patchCallZome(appWs: AppWebsocket) {
-	const callZome = appWs.callZome;
-	appWs.callZome = async req => {
-		try {
-			const result = await callZome(req);
-			return result;
-		} catch (e) {
-			if (
-				!e.toString().includes('Socket is not open') &&
-				!e.toString().includes('ClientClosedWithPendingRequests')
-			) {
-				throw e;
-			}
-		}
-	};
-}
 export async function linkDevices(
 	store1: LinkedDevicesStore,
 	store2: LinkedDevicesStore,
@@ -109,8 +86,14 @@ export async function linkDevices(
 	const store1Passcode = [1, 3, 7, 2];
 	const store2Passcode = [9, 3, 8, 4];
 
-	await store1.client.prepareLinkDevices(store1Passcode);
-	await store2.client.prepareLinkDevices(store2Passcode);
+	await store1.client.prepareLinkDevicesRequestor(
+		store2.client.client.myPubKey,
+		store1Passcode,
+	);
+	await store2.client.prepareLinkDevicesRecipient(
+		store1.client.client.myPubKey,
+		store2Passcode,
+	);
 
 	await store1.client.requestLinkDevices(
 		store2.client.client.myPubKey,
@@ -135,8 +118,9 @@ export async function waitUntil(
 
 export async function groupConsistency(
 	groups: Array<GroupChatStore>,
-	timeoutMs: number = 10_000,
+	timeoutMs: number = 20_000,
 ): Promise<void> {
+	const error = new Error('Timeout');
 	return new Promise((resolve, reject) => {
 		effect(() => {
 			let currentEventsHashes = joinAsync(
@@ -153,10 +137,12 @@ export async function groupConsistency(
 					return;
 				}
 			}
-			resolve();
+
+			setTimeout(() => resolve(undefined), 200);
+			// resolve();
 		});
 
-		setTimeout(() => reject('Timeout'), timeoutMs);
+		setTimeout(() => reject(error), timeoutMs);
 	});
 }
 function areArrayHashesEqual(

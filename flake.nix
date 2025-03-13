@@ -17,6 +17,8 @@
       "github:darksoil-studio/notifications-zome/main-0.4";
     linked-devices-zome.url =
       "github:darksoil-studio/linked-devices-zome/main-0.4";
+    private-event-sourcing-zome.url =
+      "github:darksoil-studio/private-event-sourcing-zome/main-0.4";
   };
 
   nixConfig = {
@@ -50,14 +52,13 @@
           ];
 
           packages = [
-            (inputs'.holonix.packages.holochain.override {
-              cargoExtraArgs = " --features unstable-functions";
-            })
+            inputs'.tnesh-stack.packages.holochain
             inputs'.tnesh-stack.packages.hc-scaffold-zome
             inputs'.playground.packages.hc-playground
             inputs'.p2p-shipyard.packages.hc-pilot
           ];
         };
+        devShells.npm-ci = inputs'.tnesh-stack.devShells.synchronized-pnpm;
 
         packages.scaffold = pkgs.symlinkJoin {
           name = "scaffold-remote-zome";
@@ -65,12 +66,11 @@
           buildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
             wrapProgram $out/bin/scaffold-remote-zome \
-              --add-flags "messenger \
+              --add-flags "messenger-zome \
                 --integrity-zome-name messenger_integrity \
                 --coordinator-zome-name messenger \
                 --remote-zome-git-url github:darksoil-studio/messenger-zome \
                 --remote-npm-package-name @darksoil-studio/messenger-zome \
-                --remote-npm-package-path ui \
                 --remote-zome-git-branch main-0.4 \
                 --context-element messenger-context \
                 --context-element-import @darksoil-studio/messenger-zome/dist/elements/messenger-context.js" 

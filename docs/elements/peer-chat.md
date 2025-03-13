@@ -2,7 +2,7 @@
 
 ## Usage
 
-0. If you haven't already, [go through the setup for the module](/documentation/setup).
+0. If you haven't already, [go through the setup for the module](../setup.md).
 
 1. Import the `<peer-chat>` element somewhere in the javascript side of your web-app like this:
 
@@ -55,7 +55,6 @@ import { decodeHashFromBase64, encodeHashToBase64, fakeActionHash, fakeAgentPubK
 import { render } from "lit";
 import { html, unsafeStatic } from "lit/static-html.js";
 import { ProfilesClient, ProfilesStore } from '@darksoil-studio/profiles-zome';
-import  '@darksoil-studio/profiles-zome/dist/elements/profiles-context.js';
 import { ProfilesZomeMock, demoProfiles } from '@darksoil-studio/profiles-zome/dist/mocks.js';
 
 import { MessengerZomeMock } from "../../ui/src/mocks.ts";
@@ -67,6 +66,7 @@ onMounted(async () => {
   // Reference: https://vitepress.dev/guide/ssr-compat#importing-in-mounted-hook
   await import('@api-viewer/docs/lib/api-docs.js');
   await import('@api-viewer/demo/lib/api-demo.js');
+  await import('@darksoil-studio/profiles-zome/dist/elements/profiles-context.js');
   if (!customElements.get('messenger-context')) await import('../../ui/src/elements/messenger-context.ts');
   if (!customElements.get('peer-chat')) await import('../../ui/src/elements/peer-chat.ts');
 
@@ -76,7 +76,6 @@ onMounted(async () => {
   const client = new MessengerClient(mock, "messenger_test");
 
   const peerChatHash = await client.createPeerChat(keys[1]);
-  const profiles = await demoProfiles();
 
   const store = new MessengerStore(client);
 

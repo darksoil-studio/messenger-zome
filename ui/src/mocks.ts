@@ -1,38 +1,12 @@
+import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
-	ActionHash,
 	AgentPubKey,
 	AppClient,
-	Delete,
-	EntryHash,
 	EntryHashB64,
-	Link,
-	NewEntryAction,
-	SignedActionHashed,
-	decodeHashFromBase64,
 	encodeHashToBase64,
-	fakeActionHash,
-	fakeAgentPubKey,
-	fakeDnaHash,
-	fakeEntryHash,
 } from '@holochain/client';
-import { encode } from '@msgpack/msgpack';
-import {
-	AgentPubKeyMap,
-	HashType,
-	HoloHashMap,
-	ZomeMock,
-	decodeEntry,
-	fakeCreateAction,
-	fakeDeleteEntry,
-	fakeEntry,
-	fakeRecord,
-	fakeUpdateEntry,
-	hash,
-	hashEntry,
-	pickBy,
-} from '@tnesh-stack/utils';
+import { HashType, ZomeMock, fakeCreateAction, hash } from '@tnesh-stack/utils';
 
-import { MessengerClient } from './messenger-client.js';
 import {
 	CreateGroupChat,
 	CreatePeerChat,
@@ -40,19 +14,19 @@ import {
 	GroupInfo,
 	GroupMessage,
 	GroupSettings,
+	MessengerEvent,
 	PeerChatEvent,
 	PeerMessage,
-	PrivateMessengerEntry,
 	ReadGroupMessages,
 	ReadPeerMessages,
 } from './types.js';
 
 export class MessengerZomeMock extends ZomeMock implements AppClient {
 	constructor(myPubKey?: AgentPubKey) {
-		super('messenger_test', 'messenger', myPubKey);
+		super('messenger_test', 'messenger', 'messenger_test', myPubKey);
 	}
 
-	entries: Record<EntryHashB64, PrivateMessengerEntry> = {};
+	entries: Record<EntryHashB64, SignedEvent<MessengerEvent>> = {};
 
 	async query_private_messenger_entries() {
 		return this.entries;
@@ -69,10 +43,11 @@ export class MessengerZomeMock extends ZomeMock implements AppClient {
 			| ({ type: 'GroupMessage' } & GroupMessage)
 			| ({ type: 'ReadGroupMessages' } & ReadGroupMessages),
 	) {
-		const privateentry: PrivateMessengerEntry = {
-			provenance: this.myPubKey,
+		const privateentry: SignedEvent<MessengerEvent> = {
+			author: this.myPubKey,
 			signature: new Uint8Array(),
-			signed_content: {
+			event: {
+				// eslint-disable-next-line
 				content: entry as any,
 				timestamp: Date.now() * 1000,
 			},
@@ -153,12 +128,10 @@ export class MessengerZomeMock extends ZomeMock implements AppClient {
 		const entry: CreatePeerChat = {
 			peer_1: {
 				agents: [this.myPubKey],
-				profile: undefined,
 				proofs: [],
 			},
 			peer_2: {
 				agents: [peer],
-				profile: undefined,
 				proofs: [],
 			},
 		};

@@ -1,38 +1,27 @@
-import {
-	AgentPubKey,
-	AppClient,
-	EntryHash,
-	EntryHashB64,
-	encodeHashToBase64,
-} from '@holochain/client';
-import { ZomeClient } from '@tnesh-stack/utils';
+import { PrivateEventSourcingClient } from '@darksoil-studio/private-event-sourcing-zome';
+import { AgentPubKey, AppClient, EntryHash } from '@holochain/client';
 
 import {
-	CreateGroupChat,
-	CreatePeerChat,
+	AgentWithProfile,
 	GroupChatEvent,
 	GroupInfo,
 	GroupSettings,
 	Message,
+	MessengerProfile,
 	MessengerSignal,
-	PeerChat,
 	PeerChatEvent,
-	PrivateMessengerEntry,
 } from './types.js';
 
-export class MessengerClient extends ZomeClient<MessengerSignal> {
+const sleep = (ms: number) =>
+	new Promise(resolve => setTimeout(() => resolve(undefined), ms));
+
+export class MessengerClient extends PrivateEventSourcingClient<MessengerSignal> {
 	constructor(
 		public client: AppClient,
 		public roleName: string,
 		public zomeName = 'messenger',
 	) {
 		super(client, roleName, zomeName);
-	}
-
-	async queryPrivateMessengerEntries(): Promise<
-		Record<EntryHashB64, PrivateMessengerEntry>
-	> {
-		return this.callZome('query_private_messenger_entries', undefined);
 	}
 
 	/** Peer Chat */
@@ -46,26 +35,10 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		currentPeerChatEventsHashes: Array<EntryHash>,
 		message: Message,
 	): Promise<EntryHash> {
-		const entryHash: EntryHash = await this.callZome('send_peer_message', {
+		return this.callZome('send_peer_message', {
 			peer_chat_hash: peerChatHash,
 			current_peer_chat_events_hashes: currentPeerChatEventsHashes,
 			message,
-		});
-
-		return new Promise(resolve => {
-			this.onSignal(signal => {
-				if (
-					signal.type !== 'EntryCreated' ||
-					signal.app_entry.type !== 'PrivateMessengerEntry' ||
-					signal.app_entry.signed_content.content.type !== 'PeerMessage'
-				)
-					return;
-				if (
-					encodeHashToBase64(signal.action.hashed.content.entry_hash) ===
-					encodeHashToBase64(entryHash)
-				)
-					resolve(entryHash);
-			});
 		});
 	}
 
@@ -88,11 +61,13 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 	/** Group Chat */
 
 	async createGroupChat(
-		otherMembers: Array<AgentPubKey>,
+		myProfile: MessengerProfile | undefined,
+		otherMembers: Array<AgentWithProfile>,
 		info: GroupInfo,
 		settings: GroupSettings,
 	): Promise<EntryHash> {
 		return this.callZome('create_group_chat', {
+			my_profile: myProfile,
 			others: otherMembers,
 			info,
 			settings,
@@ -100,25 +75,7 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 	}
 
 	async createGroupChatEvent(groupChatEvent: GroupChatEvent) {
-		const entryHash: EntryHash = await this.callZome(
-			'create_group_chat_event',
-			groupChatEvent,
-		);
-		return new Promise<EntryHash>(resolve => {
-			this.onSignal(signal => {
-				if (
-					signal.type !== 'EntryCreated' ||
-					signal.app_entry.type !== 'PrivateMessengerEntry' ||
-					signal.app_entry.signed_content.content.type !== 'GroupChatEvent'
-				)
-					return;
-				if (
-					encodeHashToBase64(signal.action.hashed.content.entry_hash) ===
-					encodeHashToBase64(entryHash)
-				)
-					resolve(entryHash);
-			});
-		});
+		return this.callZome('create_group_chat_event', groupChatEvent);
 	}
 
 	async sendGroupMessage(
@@ -126,26 +83,10 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 		currentGroupChatEventsHashes: EntryHash[],
 		message: Message,
 	): Promise<EntryHash> {
-		const entryHash: EntryHash = await this.callZome('send_group_message', {
+		return this.callZome('send_group_message', {
 			group_chat_hash: groupChatHash,
 			current_group_chat_events_hashes: currentGroupChatEventsHashes,
 			message,
-		});
-
-		return new Promise(resolve => {
-			this.onSignal(signal => {
-				if (
-					signal.type !== 'EntryCreated' ||
-					signal.app_entry.type !== 'PrivateMessengerEntry' ||
-					signal.app_entry.signed_content.content.type !== 'GroupMessage'
-				)
-					return;
-				if (
-					encodeHashToBase64(signal.action.hashed.content.entry_hash) ===
-					encodeHashToBase64(entryHash)
-				)
-					resolve(entryHash);
-			});
 		});
 	}
 
@@ -181,11 +122,5 @@ export class MessengerClient extends ZomeClient<MessengerSignal> {
 			group_hash: groupHash,
 			all_agents: allAgents,
 		});
-	}
-
-	/** Linked Devices */
-
-	async synchronizeWithLinkedDevice(linkedDevice: AgentPubKey) {
-		await this.callZome('synchronize_with_linked_device', linkedDevice);
 	}
 }

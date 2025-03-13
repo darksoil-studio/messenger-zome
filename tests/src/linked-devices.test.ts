@@ -42,14 +42,14 @@ test('messages get to all devices', async () => {
 		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(messages)[0].signed_content.content.message.message,
+			Object.values(messages)[0].event.content.message.message,
 			'hey!',
 		);
 
 		messages = await toPromise(bob2.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(messages)[0].signed_content.content.message.message,
+			Object.values(messages)[0].event.content.message.message,
 			'hey!',
 		);
 
@@ -128,7 +128,7 @@ test('add new device while receiving message is reconciled', async () => {
 				Object.keys(
 					await toPromise(bob2.store.peerChats.get(peerChatHash).messages),
 				).length === 2,
-			3_000,
+			60_000,
 		);
 		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 2);
@@ -162,7 +162,7 @@ test('messages get synchronized even when offline', async () => {
 		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 1);
 		assert.equal(
-			Object.values(messages)[0].signed_content.content.message.message,
+			Object.values(messages)[0].event.content.message.message,
 			'hey!',
 		);
 

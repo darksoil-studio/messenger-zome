@@ -2,6 +2,8 @@ import {
 	LinkedDevicesStore,
 	linkedDevicesStoreContext,
 } from '@darksoil-studio/linked-devices-zome';
+import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
+import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item.js';
 import {
 	AgentPubKey,
 	AgentPubKeyB64,
@@ -12,13 +14,18 @@ import {
 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
-import { SlTextarea } from '@shoelace-style/shoelace';
+import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
 import { hashProperty, notifyError, sharedStyles } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
-import { SignalWatcher, joinAsync, toPromise } from '@tnesh-stack/signals';
+import {
+	AsyncResult,
+	SignalWatcher,
+	joinAsync,
+	toPromise,
+} from '@tnesh-stack/signals';
 import { LitElement, css, html, render } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -31,9 +38,9 @@ import { messengerStyles } from '../styles.js';
 import {
 	GroupMessage,
 	Message,
+	MessengerProfile,
 	PeerChat,
 	PeerMessage,
-	SignedEntry,
 } from '../types.js';
 import './message-input.js';
 
@@ -71,6 +78,27 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 		}
 	}
 
+	private renderTopBar(peerChat: PeerChat) {
+		const peer = peerChat.peer_1.agents.find(
+			a =>
+				encodeHashToBase64(a) ===
+				encodeHashToBase64(this.store.client.client.myPubKey),
+		)
+			? peerChat.peer_2
+			: peerChat.peer_1;
+
+		return html`
+			<div
+				part="top-bar"
+				class="row top-bar"
+				style="align-items: center; gap: 8px"
+			>
+				<slot name="top-bar-left-action"></slot>
+				<profile-list-item .agentPubKey=${peer.agents[0]}> </profile-list-item>
+			</div>
+		`;
+	}
+
 	private renderTypingIndicator() {
 		return html`
 			<div class="row">
@@ -83,7 +111,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 
 	private renderChat(
 		peerChat: PeerChat,
-		messages: Record<EntryHashB64, SignedEntry<PeerMessage>>,
+		messages: Record<EntryHashB64, SignedEvent<PeerMessage>>,
 		myReadMessages: Array<EntryHashB64>,
 	) {
 		const peerIsTyping = this.store.peerChats
@@ -105,66 +133,69 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 		]);
 
 		return html`<div class="column" style="flex: 1;">
-			<div class="flex-scrollable-parent">
-				<div class="flex-scrollable-container">
-					<div
-						${ref(el => {
-							if (!el) return;
-							const theirMessageSets = ([] as EventSet<PeerMessage>[])
-								.concat(...messageSetsInDays.map(esid => esid.eventsSets))
-								.filter(
-									set =>
-										!myAgentsB64.includes(
-											encodeHashToBase64(set[0][1].provenance),
-										),
-								);
+			${this.renderTopBar(peerChat)}
+			<div part="chat" class="column" style="flex: 1; margin: 8px">
+				<div class="flex-scrollable-parent">
+					<div class="flex-scrollable-container">
+						<div
+							${ref(el => {
+								if (!el) return;
+								const theirMessageSets = ([] as EventSet<PeerMessage>[])
+									.concat(...messageSetsInDays.map(esid => esid.eventsSets))
+									.filter(
+										set =>
+											!myAgentsB64.includes(
+												encodeHashToBase64(set[0][1].author),
+											),
+									);
 
-							const unreadMessages: EntryHash[] = [];
+								const unreadMessages: EntryHash[] = [];
 
-							for (const messageSet of theirMessageSets) {
-								for (const [messageHash, _] of messageSet) {
-									if (!myReadMessages.includes(messageHash)) {
-										unreadMessages.push(decodeHashFromBase64(messageHash));
+								for (const messageSet of theirMessageSets) {
+									for (const [messageHash, _] of messageSet) {
+										if (!myReadMessages.includes(messageHash)) {
+											unreadMessages.push(decodeHashFromBase64(messageHash));
+										}
 									}
 								}
-							}
 
-							if (unreadMessages.length > 0) {
-								this.store.peerChats
-									.get(this.peerChatHash)
-									.markMessagesAsRead(unreadMessages);
-							}
-						})}
-						class="flex-scrollable-y"
-						id="scrolling-chat"
-						style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
-					>
-						<div style="margin-bottom: 4px"></div>
-						${peerIsTyping ? this.renderTypingIndicator() : html``}
-						${messageSetsInDays.map(messageSetInDay =>
-							this.renderEventsSetsInDay(
-								myAgentsB64,
-								messageSetInDay.day,
-								messageSetInDay.eventsSets,
-							),
-						)}
-						<div class="row" style="justify-content: center">
-							<sl-tag style="margin-top: 12px"
-								>${msg('Beginning of chat history')}
-							</sl-tag>
+								if (unreadMessages.length > 0) {
+									this.store.peerChats
+										.get(this.peerChatHash)
+										.markMessagesAsRead(unreadMessages);
+								}
+							})}
+							class="flex-scrollable-y"
+							id="scrolling-chat"
+							style="padding-right: 8px; padding-left: 8px; gap: 8px; flex: 1; display: flex; flex-direction: column-reverse"
+						>
+							<div style="margin-bottom: 4px"></div>
+							${peerIsTyping ? this.renderTypingIndicator() : html``}
+							${messageSetsInDays.map(messageSetInDay =>
+								this.renderEventsSetsInDay(
+									myAgentsB64,
+									messageSetInDay.day,
+									messageSetInDay.eventsSets,
+								),
+							)}
+							<div class="row" style="justify-content: center">
+								<sl-tag style="margin-top: 8px"
+									>${msg('Beginning of chat history')}
+								</sl-tag>
+							</div>
 						</div>
 					</div>
 				</div>
+				<message-input
+					@input=${() =>
+						this.store.client.sendPeerChatTypingIndicator(
+							this.peerChatHash,
+							theirAgents,
+						)}
+					@send-message=${(e: CustomEvent) =>
+						this.sendMessage(e.detail.message as Message)}
+				></message-input>
 			</div>
-			<message-input
-				@input=${() =>
-					this.store.client.sendPeerChatTypingIndicator(
-						this.peerChatHash,
-						theirAgents,
-					)}
-				@send-message=${(e: CustomEvent) =>
-					this.sendMessage(e.detail.message as Message)}
-			></message-input>
 		</div> `;
 	}
 
@@ -190,17 +221,18 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 			</div>
 		`;
 	}
+
 	private renderMessageSet(
 		messageSet: EventSet<PeerMessage>,
 		myAgentsB64: AgentPubKeyB64[],
 	) {
 		const lastMessage = messageSet[0];
-		const timestamp = lastMessage[1].signed_content.timestamp / 1000;
+		const timestamp = lastMessage[1].event.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
 		const fromMe = myAgentsB64.includes(
-			encodeHashToBase64(lastMessage[1].provenance),
+			encodeHashToBase64(lastMessage[1].author),
 		);
 		return html`
 			<div
@@ -214,16 +246,16 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 					([messageHash, message], i) => html`
 						<div
 							class="message row"
-							style="align-items: end; flex-wrap: wrap; gap: 8px;"
+							style="align-items: end; flex-wrap: wrap; gap: 16px;"
 						>
 							<span style="flex: 1; word-break: break-all"
-								>${message.signed_content.content.message.message}</span
+								>${message.event.content.message.message}</span
 							>
 							${i === 0
 								? html`
 										<div
 											class="placeholder column"
-											style="font-size: 12px; width: 4.5em; overflow: hidden; text-align: right"
+											style="font-size: 12px; text-align: right"
 										>
 											${lessThanAMinuteAgo
 												? html`<span>${msg('now')}</span>`

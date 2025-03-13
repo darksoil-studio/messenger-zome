@@ -2,15 +2,15 @@
   "name": "tests",
   "private": true,
   "scripts": {
-    "test": "vitest run"
+    "test": "WASM_LOG=debug vitest run"
   },
   "dependencies": {
-    "@darksoil-studio/linked-devices-zome": "github:darksoil-studio/linked-devices-zome#c8b08f5da81d030e846dcb7afa8e244d3c0a6d50&path:ui",
+    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23",
     "@msgpack/msgpack": "^2.8.0",
-    "@holochain/client": "^0.18.0-rc",
-    "@holochain/tryorama": "^0.17.0-rc",
-    "@tnesh-stack/signals": "^0.400.0-rc",
-    "@tnesh-stack/utils": "^0.400.0-rc",
+    "@holochain/client": "^0.18.0",
+    "@holochain/tryorama": "^0.17.0",
+    "@tnesh-stack/signals": "^0.400.0",
+    "@tnesh-stack/utils": "^0.400.0",
     "typescript": "^5.4.5",
     "vitest": "^1.4.0"
   },

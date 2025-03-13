@@ -6,10 +6,8 @@ import {
 	Signature,
 	Timestamp,
 } from '@holochain/client';
-import { ActionCommittedSignal } from '@tnesh-stack/utils';
 
 export type MessengerSignal =
-	| ActionCommittedSignal<EntryTypes, LinkTypes>
 	| {
 			type: 'PeerChatTypingIndicator';
 			peer: AgentPubKey;
@@ -21,31 +19,7 @@ export type MessengerSignal =
 			group_chat_hash: EntryHash;
 	  };
 
-export type EntryTypes =
-	| ({
-			type: 'PrivateMessengerEntry';
-	  } & PrivateMessengerEntry)
-	| ({
-			type: 'MessengerHistory';
-	  } & MessengerHistory);
-
-export interface MessengerHistory {
-	my_profile: MessengerProfile | undefined;
-	entries: Record<EntryHashB64, PrivateMessengerEntry>;
-}
-
 export type LinkTypes = string;
-
-export interface SignedContent<T> {
-	content: T;
-	timestamp: Timestamp;
-}
-
-export interface SignedEntry<T> {
-	signed_content: SignedContent<T>;
-	provenance: AgentPubKey;
-	signature: Signature;
-}
 
 export interface Message {
 	reply_to: EntryHash | undefined;
@@ -53,6 +27,11 @@ export interface Message {
 }
 
 export interface CreatePeer {
+	agents: AgentPubKey[];
+	proofs: LinkedDevicesProof[];
+}
+
+export interface CreateGroupPeer {
 	agents: AgentPubKey[];
 	proofs: LinkedDevicesProof[];
 	profile: MessengerProfile | undefined;
@@ -72,7 +51,6 @@ export interface ReadPeerMessages {
 
 export interface Peer {
 	agents: Array<AgentPubKey>;
-	profile: MessengerProfile | undefined;
 }
 
 export interface NewPeerAgent {
@@ -90,13 +68,9 @@ export interface PeerChat {
 	peer_2: Peer;
 }
 
-export type PeerEvent =
-	| ({
-			type: 'NewPeerAgent';
-	  } & NewPeerAgent)
-	| ({
-			type: 'UpdateProfile';
-	  } & MessengerProfile);
+export type PeerEvent = {
+	type: 'NewPeerAgent';
+} & NewPeerAgent;
 
 export interface PeerChatEvent {
 	peer_chat_hash: EntryHash;
@@ -108,7 +82,7 @@ export interface PeerChatEvent {
 export interface GroupInfo {
 	name: string;
 	description: string;
-	avatar_hash: EntryHash | undefined;
+	avatar: string | undefined;
 }
 export interface GroupSettings {
 	only_admins_can_edit_group_info: boolean;
@@ -155,8 +129,9 @@ export interface GroupChatEvent {
 }
 
 export interface MessengerProfile {
-	nickname: string;
-	avatar_src: string | undefined;
+	name: string;
+	avatar: string | undefined;
+	fields: Record<string, string>;
 }
 
 export interface GroupMessage {
@@ -172,24 +147,27 @@ export interface ReadGroupMessages {
 }
 
 export interface CreateGroupChat {
-	me: CreatePeer;
-	others: Array<CreatePeer>;
+	me: CreateGroupPeer;
+	others: Array<CreateGroupPeer>;
 	info: GroupInfo;
 	settings: GroupSettings;
 }
 
-export type PrivateMessengerEntry = PeerChatEntry | GroupChatEntry;
+export interface AgentWithProfile {
+	profile: MessengerProfile | undefined;
+	agent: AgentPubKey;
+}
 
-export type PeerChatEntry = SignedEntry<
+export type MessengerEvent = PeerChatEntry | GroupChatEntry;
+
+export type PeerChatEntry =
 	| ({ type: 'CreatePeerChat' } & CreatePeerChat)
 	| ({ type: 'PeerChatEvent' } & PeerChatEvent)
 	| ({ type: 'PeerMessage' } & PeerMessage)
-	| ({ type: 'ReadPeerMessages' } & ReadPeerMessages)
->;
+	| ({ type: 'ReadPeerMessages' } & ReadPeerMessages);
 
-export type GroupChatEntry = SignedEntry<
+export type GroupChatEntry =
 	| ({ type: 'CreateGroupChat' } & CreateGroupChat)
 	| ({ type: 'GroupChatEvent' } & GroupChatEvent)
 	| ({ type: 'GroupMessage' } & GroupMessage)
-	| ({ type: 'ReadGroupMessages' } & ReadGroupMessages)
->;
+	| ({ type: 'ReadGroupMessages' } & ReadGroupMessages);

@@ -19,57 +19,57 @@ export default defineConfig({
 			include: ['mermaid'],
 		},
 	},
-	base: '/messenger',
+	base: '/messenger-zome',
 	title: 'Messenger Zome',
 	description: 'Messenger zome for holochain apps',
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
 
 		sidebar: [
-			{
-				text: 'Setup',
-				link: '/setup.md',
-			},
-			{
-				text: 'API Reference',
-				items: [
-					{
-						text: 'Integrity Zome',
-						link: '/backend/doc/messenger_integrity/index.html',
-						target: '_blank',
-					},
-					{
-						text: 'Coordinator Zome',
-						link: '/backend/doc/messenger/index.html',
-						target: '_blank',
-					},
-					{
-						text: 'Frontend',
-						items: [
-							{
-								text: 'MessengerStore',
-								link: '/messenger-store.md',
-							},
-							{
-								text: 'Elements',
-								items: fs
-									.readdirSync('./elements')
-									.filter(file => file.endsWith('.md'))
-									.map(el => ({
-										text: el.split('.md')[0],
-										link: `/elements/${el}`,
-									})),
-							},
-						],
-					},
-				],
-			},
+			// {
+			// 	text: 'Setup',
+			// 	link: '/setup.md',
+			// },
+			// {
+			// 	text: 'API Reference',
+			// 	items: [
+			// 		{
+			// 			text: 'Integrity Zome',
+			// 			link: '/backend/doc/messenger_integrity/index.html',
+			// 			target: '_blank',
+			// 		},
+			// 		{
+			// 			text: 'Coordinator Zome',
+			// 			link: '/backend/doc/messenger/index.html',
+			// 			target: '_blank',
+			// 		},
+			// 		{
+			// 			text: 'Frontend',
+			// 			items: [
+			// 				{
+			// 					text: 'MessengerStore',
+			// 					link: '/messenger-store.md',
+			// 				},
+			// 				{
+			// 					text: 'Elements',
+			// 					items: fs
+			// 						.readdirSync('./elements')
+			// 						.filter(file => file.endsWith('.md'))
+			// 						.map(el => ({
+			// 							text: el.split('.md')[0],
+			// 							link: `/elements/${el}`,
+			// 						})),
+			// 				},
+			// 			],
+			// 		},
+			// 	],
+			// },
 		],
 
 		socialLinks: [
 			{
 				icon: 'github',
-				link: 'https://github.com/darksoil-studio/messenger',
+				link: 'https://github.com/darksoil-studio/messenger-zome',
 			},
 		],
 		search: {

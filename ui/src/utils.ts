@@ -1,14 +1,5 @@
-import { Profile, ProfilesStore } from '@darksoil-studio/profiles-zome';
-import { AgentPubKey, HoloHash, encodeHashToBase64 } from '@holochain/client';
-import {
-	AsyncComputed,
-	AsyncResult,
-	AsyncSignal,
-	AsyncState,
-	Signal,
-	pipe,
-} from '@tnesh-stack/signals';
-import { EntryRecord } from '@tnesh-stack/utils';
+import { HoloHash, encodeHashToBase64 } from '@holochain/client';
+import { AsyncState, Signal } from '@tnesh-stack/signals';
 
 import { MessengerProfile } from './types';
 
@@ -45,7 +36,7 @@ export function asyncReadable<T>(
 	return signal;
 }
 
-export const TYPING_INDICATOR_TTL_MS = 1 * 1000; // 1 second
+export const TYPING_INDICATOR_TTL_MS = 3 * 1000; // 1 second
 
 export function mergeStrings(s1: string, s2: string): string {
 	if (s1! < s2!) return s2;
@@ -73,19 +64,37 @@ export function mergeMaybeHashes(
 	return h1;
 }
 
+export function mergeMaybeFields(
+	fields1: Record<string, string> | undefined,
+	fields2: Record<string, string> | undefined,
+): Record<string, string> {
+	if (!fields1 && !fields2) return {};
+	if (fields1 && !fields2) return fields1;
+	if (!fields1 && fields2) return fields2;
+	const result = { ...fields1 };
+
+	for (const [key, value] of Object.entries(fields2!)) {
+		if (key in result) {
+			result[key] = mergeStrings(result[key], value);
+		} else {
+			result[key] = value;
+		}
+	}
+	return result;
+}
+
 export function mergeProfiles(
 	profile1: MessengerProfile | undefined,
 	profile2: MessengerProfile | undefined,
 ): MessengerProfile | undefined {
 	if (!profile1 && !profile2) return undefined;
-	if (profile1 && !profile2) return profile2;
+	if (profile1 && !profile2) return profile1;
 	if (!profile1 && profile2) return profile2;
-	const nickname =
-		profile1!.nickname < profile2!.nickname
-			? profile2!.nickname
-			: profile1!.nickname;
+	const name =
+		profile1!.name < profile2!.name ? profile2!.name : profile1!.name;
 	return {
-		nickname,
-		avatar_src: mergeMaybeStrings(profile1!.avatar_src, profile2!.avatar_src),
+		name,
+		avatar: mergeMaybeStrings(profile1!.avatar, profile2!.avatar),
+		fields: mergeMaybeFields(profile1?.fields, profile2?.fields),
 	};
 }
