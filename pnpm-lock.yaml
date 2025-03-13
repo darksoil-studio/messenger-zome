@@ -75,8 +75,8 @@ importers:
   tests:
     dependencies:
       '@darksoil-studio/linked-devices-zome':
-        specifier: 0.400.0-rev.3771839e56d9f93f7d5c3f4cb2171b305e98d4f5
-        version: 0.400.0-rev.3771839e56d9f93f7d5c3f4cb2171b305e98d4f5(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+        specifier: 0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23
+        version: 0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@holochain/client':
         specifier: ^0.18.0
         version: 0.18.0
@@ -105,11 +105,11 @@ importers:
         specifier: 0.400.0-rev.6c851601e203a8927d896b5026b558f61badfb77
         version: 0.400.0-rev.6c851601e203a8927d896b5026b558f61badfb77(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/linked-devices-zome':
-        specifier: 0.400.0-rev.3771839e56d9f93f7d5c3f4cb2171b305e98d4f5
-        version: 0.400.0-rev.3771839e56d9f93f7d5c3f4cb2171b305e98d4f5(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+        specifier: 0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23
+        version: 0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/private-event-sourcing-zome':
-        specifier: file:/home/guillem/projects/darksoil/private-event-sourcing-zome/ui
-        version: file:../private-event-sourcing-zome/ui(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+        specifier: 0.400.0-rev.8a6d74f0ee4436bf956b480130fcbda442fe0a62
+        version: 0.400.0-rev.8a6d74f0ee4436bf956b480130fcbda442fe0a62(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/profiles-provider':
         specifier: ^0.400.1
         version: 0.400.1(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
@@ -379,8 +379,11 @@ packages:
   '@darksoil-studio/linked-devices-zome@0.400.0-rev.3771839e56d9f93f7d5c3f4cb2171b305e98d4f5':
     resolution: {integrity: sha512-dnd+6xgkcLrOCNHG6aUoLwZY+Zg169HyZW3t3JBacG+2itZZxHM+aDlh/j6z7DfLkFev85JsBa9nREGVyyYqjw==}
 
-  '@darksoil-studio/private-event-sourcing-zome@file:../private-event-sourcing-zome/ui':
-    resolution: {directory: ../private-event-sourcing-zome/ui, type: directory}
+  '@darksoil-studio/linked-devices-zome@0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23':
+    resolution: {integrity: sha512-bczzlqO5LzSQsgECzq0VBPfaDMXGmjplHlCb4QJCllzynBCcUkfwlDUgvug7ZnyAzAy6j7b5I39se5YNcxPIJQ==}
+
+  '@darksoil-studio/private-event-sourcing-zome@0.400.0-rev.8a6d74f0ee4436bf956b480130fcbda442fe0a62':
+    resolution: {integrity: sha512-JUV/6vvXaKuvquTgzg0TbNAsk3muoarPiK5+to0QVj4r9BeWsKjzrIb0V8Jeg3PJUypSB0WEuIEZkFLDjqaDGQ==}
 
   '@darksoil-studio/profiles-provider@0.400.0':
     resolution: {integrity: sha512-X95UsxJU7MLCe81ge9lPuOktaI8PYcQnqV5mAIAaIjixYvOQOLYBi4TTypQh3e5CrlnYHFf1Ek24EiZBmXcKCA==}
@@ -3326,7 +3329,27 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@darksoil-studio/private-event-sourcing-zome@file:../private-event-sourcing-zome/ui(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
+  '@darksoil-studio/linked-devices-zome@0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
+    dependencies:
+      '@holochain/client': 0.18.0
+      '@lit/context': 1.1.4
+      '@lit/localize': 0.12.2
+      '@mdi/js': 7.4.47
+      '@msgpack/msgpack': 2.8.0
+      '@shoelace-style/shoelace': 2.20.0(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+      '@tauri-apps/plugin-barcode-scanner': 2.2.0
+      '@tnesh-stack/elements': 0.400.2(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+      '@tnesh-stack/signals': 0.400.0
+      '@tnesh-stack/utils': 0.400.0
+      js-base64: 3.7.7
+      lit: 3.2.1
+    transitivePeerDependencies:
+      - '@floating-ui/utils'
+      - '@types/react'
+      - bufferutil
+      - utf-8-validate
+
+  '@darksoil-studio/private-event-sourcing-zome@0.400.0-rev.8a6d74f0ee4436bf956b480130fcbda442fe0a62(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
     dependencies:
       '@darksoil-studio/profiles-zome': 0.400.0-rev.cca82532f957ff1656da8cf2be3d7d6a9c9d4c68(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@holochain/client': 0.18.0
