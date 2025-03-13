@@ -120,21 +120,13 @@ export async function groupConsistency(
 	groups: Array<GroupChatStore>,
 	timeoutMs: number = 20_000,
 ): Promise<void> {
+	const error = new Error('Timeout');
 	return new Promise((resolve, reject) => {
 		effect(() => {
 			let currentEventsHashes = joinAsync(
 				groups.map(group => group.events.get()),
 			);
-			let currentGroup = joinAsync(
-				groups.map(group => group.currentGroupChat.get()),
-			);
 			if (currentEventsHashes.status !== 'completed') return;
-			if (currentGroup.status !== 'completed') return;
-
-			// const entries = groups[1].messengerStore.messengerEntries.get();
-			// if (entries.status === 'completed') {
-			// 	console.log(entries.value.groupChats);
-			// }
 
 			let eh = Object.keys(currentEventsHashes.value[0]);
 
@@ -146,18 +138,11 @@ export async function groupConsistency(
 				}
 			}
 
-			let cg = currentGroup.value[0];
-
-			for (let i = 1; i < currentGroup.value.length; i++) {
-				if (cg?.info?.name !== currentGroup.value[i]?.info?.name) {
-					return;
-				}
-			}
 			setTimeout(() => resolve(undefined), 200);
 			// resolve();
 		});
 
-		setTimeout(() => reject('Timeout'), timeoutMs);
+		setTimeout(() => reject(error), timeoutMs);
 	});
 }
 function areArrayHashesEqual(

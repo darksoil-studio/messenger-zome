@@ -3,7 +3,7 @@ import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@tnesh-stack/signals';
 import { assert, expect, test } from 'vitest';
 
-import { setup, waitUntil } from '../../setup.js';
+import { groupConsistency, setup, waitUntil } from '../../setup.js';
 
 test('sync_message_history_with_new_members works appropriately', async () => {
 	await runScenario(async scenario => {
@@ -32,9 +32,8 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 			settings,
 		);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await alice.store.groupChats.get(groupHash).sendMessage({
@@ -42,9 +41,8 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 			reply_to: undefined,
 		});
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		let messages = await toPromise(
@@ -52,18 +50,16 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 		);
 		assert.equal(Object.keys(messages).length, 1);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await bob.store.groupChats
 			.get(groupHash)
 			.addMember([carol.player.agentPubKey]);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		messages = await toPromise(carol.store.groupChats.get(groupHash).messages);
@@ -74,9 +70,8 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 			reply_to: undefined,
 		});
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player, dave.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		messages = await toPromise(carol.store.groupChats.get(groupHash).messages);
@@ -87,18 +82,16 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 			sync_message_history_with_new_members: true,
 		});
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player, dave.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		await bob.store.groupChats
 			.get(groupHash)
 			.addMember([dave.player.agentPubKey]);
 
-		await dhtSync(
-			[alice.player, bob.player, carol.player, dave.player],
-			alice.player.cells[0].cell_id[0],
+		await groupConsistency(
+			[alice, bob, carol, dave].map(p => p.store.groupChats.get(groupHash)),
 		);
 
 		messages = await toPromise(dave.store.groupChats.get(groupHash).messages);

@@ -94,7 +94,7 @@ impl PrivateEvent for MessengerEvent {
             MessengerEvent::GroupChatEvent(group_chat_event) => {
                 let mut recipients_at_event = group_chat_recipients_at_events(
                     &group_chat_event.group_chat_hash,
-                    &vec![event_hash].into_iter().collect(),
+                    &vec![event_hash.clone()].into_iter().collect(),
                 )?;
                 let mut current_recipients =
                     group_chat_current_recipients(&group_chat_event.group_chat_hash)?;

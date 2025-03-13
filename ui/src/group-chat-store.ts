@@ -101,6 +101,7 @@ export class GroupChatStore {
 	private groupChatEntries = new AsyncComputed(() => {
 		const privateMessengerEntriesResult =
 			this.messengerStore.messengerEntries.get();
+
 		if (privateMessengerEntriesResult.status !== 'completed')
 			return privateMessengerEntriesResult;
 

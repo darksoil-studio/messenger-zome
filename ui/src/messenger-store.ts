@@ -121,7 +121,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 						);
 						await store.notifyNewAgent(linkedDevice, proofs);
 					}
-				}, 1000);
+				}, 2000);
 			});
 		}
 	}
@@ -257,17 +257,17 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 
 		set(messengerEntries);
 
-		this.client.onSignal(signal => {
-			if (signal.type !== 'EntryCreated') return;
+		return this.client.onSignal(signal => {
+			if (signal.type !== 'NewPrivateEvent') return;
 
-			const entryHash = encodeHashToBase64(
-				signal.action.hashed.content.entry_hash,
-			);
+			const entryHash = encodeHashToBase64(signal.event_hash);
 			const event = {
-				...signal.app_entry,
+				...signal.private_event_entry,
 				event: {
-					timestamp: signal.app_entry.event.timestamp,
-					content: decode(signal.app_entry.event.content) as MessengerEvent,
+					timestamp: signal.private_event_entry.event.timestamp,
+					content: decode(
+						signal.private_event_entry.event.content,
+					) as MessengerEvent,
 				},
 			};
 			addEntry(entryHash, event);
