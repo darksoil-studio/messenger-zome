@@ -1,4 +1,3 @@
-import '@darksoil-studio/file-storage-zome/dist/elements/show-image.js';
 import { EntryHash } from '@holochain/client';
 import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
@@ -38,10 +37,18 @@ export class GroupInfoEl extends SignalWatcher(LitElement) {
 		return html`
 			<div class="column" style="gap: 8px;">
 				${info.avatar
-					? html`<show-image
-							.imageHash=${info.avatar}
-							style="height: 150px"
-						></show-image>`
+					? html`
+							<div
+								class="column"
+								style="height: 150px; align-items: center; justify-content: center;"
+							>
+								<sl-avatar
+									style="--size: 32px"
+									.image=${info.avatar}
+									.initials=${info.name.slice(0, 2)}
+								></sl-avatar>
+							</div>
+						`
 					: html`<sl-icon
 							.src=${wrapPathInSvg(mdiImageOffOutline)}
 							style="font-size: 64px; border-radius: 50%; align-self: center; height: 150px"

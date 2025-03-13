@@ -12,12 +12,11 @@ pub struct SendPeerChatTypingIndicatorInput {
 pub fn send_peer_chat_typing_indicator(
     input: SendPeerChatTypingIndicatorInput,
 ) -> ExternResult<()> {
-    send_remote_signal(
-        MessengerRemoteSignal::PeerChatTypingIndicator {
-            peer_chat_hash: input.peer_chat_hash,
-        },
-        input.peer_agents,
-    )?;
+    let signal = MessengerRemoteSignal::PeerChatTypingIndicator {
+        peer_chat_hash: input.peer_chat_hash,
+    };
+    let bytes = SerializedBytes::try_from(signal).map_err(|err| wasm_error!(err))?;
+    send_remote_signal(bytes, input.peer_agents)?;
 
     Ok(())
 }
@@ -31,12 +30,11 @@ pub struct SendGroupChatTypingIndicatorInput {
 pub fn send_group_chat_typing_indicator(
     input: SendGroupChatTypingIndicatorInput,
 ) -> ExternResult<()> {
-    send_remote_signal(
-        MessengerRemoteSignal::GroupChatTypingIndicator {
-            group_chat_hash: input.group_hash,
-        },
-        input.all_agents.into_iter().flatten().collect(),
-    )?;
+    let signal = MessengerRemoteSignal::GroupChatTypingIndicator {
+        group_chat_hash: input.group_hash,
+    };
+    let bytes = SerializedBytes::try_from(signal).map_err(|err| wasm_error!(err))?;
+    send_remote_signal(bytes, input.all_agents.into_iter().flatten().collect())?;
 
     Ok(())
 }
