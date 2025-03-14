@@ -2,7 +2,6 @@
   description = "Template for Holochain app development";
 
   inputs = {
-    file-storage.url = "github:darksoil-studio/file-storage/main-0.4";
     holonix.url = "github:holochain/holonix/main-0.4";
 
     nixpkgs.follows = "holonix/nixpkgs";

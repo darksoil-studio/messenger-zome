@@ -1,7 +1,5 @@
-import '@darksoil-studio/file-storage-zome/dist/elements/show-avatar-image.js';
 import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
-	Profile,
 	ProfilesProvider,
 	profilesProviderContext,
 } from '@darksoil-studio/profiles-provider';
@@ -33,18 +31,10 @@ import {
 	hashProperty,
 	notifyError,
 	onSubmit,
-	sharedStyles,
 	wrapPathInSvg,
 } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
-import {
-	AsyncResult,
-	SignalWatcher,
-	joinAsync,
-	joinAsyncMap,
-	toPromise,
-} from '@tnesh-stack/signals';
-import { EntryRecord, mapValues, slice } from '@tnesh-stack/utils';
+import { SignalWatcher, joinAsync } from '@tnesh-stack/signals';
 import ColorHash from 'color-hash';
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -53,18 +43,15 @@ import { styleMap } from 'lit/directives/style-map.js';
 
 import { messengerStoreContext } from '../context.js';
 import { EventSet, orderInEventSets } from '../event-set.js';
-import { GroupChatStore } from '../group-chat-store.js';
 import { MessengerStore } from '../messenger-store.js';
 import { messengerStyles } from '../styles.js';
 import {
 	CreateGroupChat,
 	GroupChat,
-	GroupChatEntry,
 	GroupChatEvent,
 	GroupInfo,
 	GroupMessage,
 	Message,
-	PeerMessage,
 } from '../types.js';
 import './group-info.js';
 import './group-members.js';
@@ -150,8 +137,11 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						this.view = 'details';
 					}}
 				>
-					<show-avatar-image .imageHash=${groupChat.info.avatar}>
-					</show-avatar-image>
+					<sl-avatar
+						style="--size: 32px"
+						.image=${groupChat.info.avatar}
+						.initials=${groupChat.info.name.slice(0, 2)}
+					></sl-avatar>
 					<span>${groupChat.info.name} </span>
 				</div>
 			</div>
@@ -612,7 +602,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							<div class="flex-scrollable-container">
 								<div class="flex-scrollable-y">
 									<search-users
-										id="profiles"
+										id="users"
 										.excludedUsers=${groupChat.members
 											.filter(m => !m.removed)
 											.map(m => m.agents)}

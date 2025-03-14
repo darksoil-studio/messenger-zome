@@ -52,11 +52,10 @@ export class PeerChatStore {
 						this.peerIsTyping.set(false);
 					}, TYPING_INDICATOR_TTL_MS);
 				}
-			} else if (
-				signal.type === 'EntryCreated' &&
-				signal.app_entry.type === 'PrivateEvent'
-			) {
-				const event = decode(signal.app_entry.event.content) as MessengerEvent;
+			} else if (signal.type === 'NewPrivateEvent') {
+				const event = decode(
+					signal.private_event_entry.event.content,
+				) as MessengerEvent;
 				if (
 					event.type === 'PeerMessage' &&
 					encodeHashToBase64(event.peer_chat_hash) ===

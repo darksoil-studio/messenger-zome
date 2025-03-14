@@ -1,4 +1,3 @@
-import '@darksoil-studio/file-storage-zome/dist/elements/show-avatar-image.js';
 import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	Profile,
@@ -281,21 +280,12 @@ export class AllChats extends SignalWatcher(LitElement) {
 				);
 			}}
 		>
-			${!info.avatar
-				? html`
-						<sl-avatar
-							style="align-self: center; --size: 32px"
-							.initials=${info.name.slice(0, 2)}
-						></sl-avatar>
-					`
-				: html`
-						<show-avatar-image
-							.initials=${info.name.slice(0, 2)}
-							.imageHash=${info.avatar}
-							style="--size: 32px; align-self: center"
-						>
-						</show-avatar-image>
-					`}
+			<sl-avatar
+				style="align-self: center; --size: 32px"
+				.image=${info.avatar}
+				.initials=${info.name.slice(0, 2)}
+			></sl-avatar>
+
 			<div class="column" style="gap: 4px; flex: 1; overflow: hidden">
 				<span class="chat-name">${info.name}</span>
 				<span class="placeholder last-activity"

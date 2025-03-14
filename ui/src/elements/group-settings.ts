@@ -1,4 +1,3 @@
-import '@darksoil-studio/file-storage-zome/dist/elements/show-image.js';
 import { EntryHash, encodeHashToBase64 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
