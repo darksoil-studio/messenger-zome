@@ -1,0 +1,13 @@
+import{s as l,n as d}from"./property.COiWTaZV.js";/**
+ * @license
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */class p{get value(){return this.o}set value(t){this.setValue(t)}setValue(t,s=!1){const i=s||!Object.is(t,this.o);this.o=t,i&&this.updateObservers()}constructor(t){this.subscriptions=new Map,this.updateObservers=()=>{for(const[s,{disposer:i}]of this.subscriptions)s(this.o,i)},t!==void 0&&(this.value=t)}addCallback(t,s,i){if(!i)return void t(this.value);this.subscriptions.has(t)||this.subscriptions.set(t,{disposer:()=>{this.subscriptions.delete(t)},consumerHost:s});const{disposer:o}=this.subscriptions.get(t);t(this.value,o)}clearCallbacks(){this.subscriptions.clear()}}/**
+ * @license
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */let x=class extends Event{constructor(t,s){super("context-provider",{bubbles:!0,composed:!0}),this.context=t,this.contextTarget=s}};class u extends p{constructor(t,s,i){var o,n;super(s.context!==void 0?s.initialValue:i),this.onContextRequest=e=>{if(e.context!==this.context)return;const r=e.contextTarget??e.composedPath()[0];r!==this.host&&(e.stopPropagation(),this.addCallback(e.callback,r,e.subscribe))},this.onProviderRequest=e=>{if(e.context!==this.context||(e.contextTarget??e.composedPath()[0])===this.host)return;const r=new Set;for(const[a,{consumerHost:h}]of this.subscriptions)r.has(a)||(r.add(a),h.dispatchEvent(new l(this.context,h,a,!0)));e.stopPropagation()},this.host=t,s.context!==void 0?this.context=s.context:this.context=s,this.attachListeners(),(n=(o=this.host).addController)==null||n.call(o,this)}attachListeners(){this.host.addEventListener("context-request",this.onContextRequest),this.host.addEventListener("context-provider",this.onProviderRequest)}hostConnected(){this.host.dispatchEvent(new x(this.context,this.host))}}/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */function f({context:c}){return(t,s)=>{const i=new WeakMap;if(typeof s=="object")return s.addInitializer(function(){i.set(this,new u(this,{context:c}))}),{get(){return t.get.call(this)},set(o){var n;return(n=i.get(this))==null||n.setValue(o),t.set.call(this,o)},init(o){var n;return(n=i.get(this))==null||n.setValue(o),o}};{t.constructor.addInitializer(e=>{i.set(e,new u(e,{context:c}))});const o=Object.getOwnPropertyDescriptor(t,s);let n;if(o===void 0){const e=new WeakMap;n={get(){return e.get(this)},set(r){i.get(this).setValue(r),e.set(this,r)},configurable:!0,enumerable:!0}}else{const e=o.set;n={...o,set(r){i.get(this).setValue(r),e==null||e.call(this,r)}}}return void Object.defineProperty(t,s,n)}}}const g=d("tnesh/appClientContext");export{g as a,f as e};
