@@ -19,7 +19,6 @@ pub struct Message {
 }
 
 #[private_event]
-#[serde(tag = "type")]
 pub enum MessengerEvent {
     CreatePeerChat(CreatePeerChat),
     PeerMessage(PeerMessage),
