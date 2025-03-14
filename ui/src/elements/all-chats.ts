@@ -314,18 +314,13 @@ export class AllChats extends SignalWatcher(LitElement) {
 		if (chats.length === 0) {
 			return html`<div
 				class="column placeholder"
-				style="flex: 1; align-items: center; justify-content: center"
+				style="flex: 1; align-items: center; justify-content: center; gap: 8px"
 			>
-				<div
-					class="column"
-					style="align-items: center; justify-content: center; gap: 8px"
-				>
-					<sl-icon
-						.src=${wrapPathInSvg(mdiInformationOutline)}
-						style="height: 64px; width: 64px"
-					></sl-icon>
-					<span>${msg('There are no chats yet.')}</span>
-				</div>
+				<sl-icon
+					.src=${wrapPathInSvg(mdiInformationOutline)}
+					style="height: 64px; width: 64px"
+				></sl-icon>
+				<span>${msg('There are no chats yet.')}</span>
 			</div>`;
 		}
 
