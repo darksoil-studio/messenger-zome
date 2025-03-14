@@ -98,7 +98,7 @@
             {
               "name": "events",
               "type": {
-                "text": "Record<EntryHashB64, SignedEntry<T>>"
+                "text": "Record<EntryHashB64, SignedEvent<T>>"
               }
             },
             {
@@ -156,23 +156,23 @@
               "kind": "field",
               "name": "groupChatEntries",
               "privacy": "private",
-              "default": "new AsyncComputed(() => { const privateMessengerEntriesResult = this.messengerStore.privateMessengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const groupChatHashB64 = encodeHashToBase64(this.groupChatHash); const groupChatEntries = privateMessengerEntriesResult.value.groupChats[groupChatHashB64]; const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {}; const initialEventsHashes: Array<EntryHashB64> = []; if (!groupChatEntries) { return { status: 'error' as const, error: msg('Group not found'), }; } for (const [entryHash, groupChatEvent] of Object.entries( groupChatEntries.events, )) { const previousEventsHashes = groupChatEvent.signed_content.content.previous_group_chat_events_hashes; if (previousEventsHashes.length === 0) { initialEventsHashes.push(entryHash); } else { for (const previous of previousEventsHashes) { const previousB64 = encodeHashToBase64(previous); if (!previousToNexts[previousB64]) { previousToNexts[previousB64] = []; } previousToNexts[previousB64].push(entryHash); } } } const allEventsWithDescendants = Object.keys(previousToNexts); const currentEventsHashes = Object.keys(groupChatEntries.events).filter( eventHash => !allEventsWithDescendants.includes(eventHash), ); return { status: 'completed', value: { ...groupChatEntries, previousToNexts, currentEventsHashes, initialEventsHashes, }, }; })"
+              "default": "new AsyncComputed(() => { const privateMessengerEntriesResult = this.messengerStore.messengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const groupChatHashB64 = encodeHashToBase64(this.groupChatHash); const groupChatEntries = privateMessengerEntriesResult.value.groupChats[groupChatHashB64]; const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {}; const initialEventsHashes: Array<EntryHashB64> = []; if (!groupChatEntries) { return { status: 'error' as const, error: msg('Group not found'), }; } for (const [entryHash, groupChatEvent] of Object.entries( groupChatEntries.events, )) { const previousEventsHashes = groupChatEvent.event.content.previous_group_chat_events_hashes; if (previousEventsHashes.length === 0) { initialEventsHashes.push(entryHash); } else { for (const previous of previousEventsHashes) { const previousB64 = encodeHashToBase64(previous); if (!previousToNexts[previousB64]) { previousToNexts[previousB64] = []; } previousToNexts[previousB64].push(entryHash); } } } const allEventsWithDescendants = Object.keys(previousToNexts); const currentEventsHashes = Object.keys(groupChatEntries.events).filter( eventHash => !allEventsWithDescendants.includes(eventHash), ); return { status: 'completed', value: { ...groupChatEntries, previousToNexts, currentEventsHashes, initialEventsHashes, }, }; })"
             },
             {
               "kind": "field",
               "name": "groupChatAtEvent",
               "privacy": "private",
-              "default": "new MemoHoloHashMap( (eventHash: EntryHash) => new AsyncComputed<GroupChat>((): AsyncResult<GroupChat> => { const entries = this.groupChatEntries.get(); if (entries.status !== 'completed') return entries; const eventHashB64 = encodeHashToBase64(eventHash); const event = entries.value.events[eventHashB64]; if (!event || !entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } const previousEventsHashes = event.signed_content.content.previous_group_chat_events_hashes; if (previousEventsHashes.length === 0) { const originalGroupChat: GroupChat = initialGroupChat( entries.value.createGroupChat.signed_content.content, ); const groupChat = apply( originalGroupChat, event.provenance, event.signed_content.content.event, ); return { status: 'completed', value: groupChat, }; } const previousGroupChats = joinAsync( previousEventsHashes.map( eventHash => this.groupChatAtEvent .get(eventHash) .get() as AsyncResult<GroupChat>, ), ); if (previousGroupChats.status !== 'completed') return previousGroupChats; let currentGroupChat = previousGroupChats.value[0]; for (let i = 1; i < previousGroupChats.value.length; i++) { currentGroupChat = merge( currentGroupChat, previousGroupChats.value[i], ); } currentGroupChat = apply( currentGroupChat, event.provenance, event.signed_content.content.event, ); return { status: 'completed', value: currentGroupChat, }; }), )"
+              "default": "new MemoHoloHashMap( (eventHash: EntryHash) => new AsyncComputed<GroupChat>((): AsyncResult<GroupChat> => { const entries = this.groupChatEntries.get(); if (entries.status !== 'completed') return entries; const eventHashB64 = encodeHashToBase64(eventHash); const event = entries.value.events[eventHashB64]; if (!event || !entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } const previousEventsHashes = event.event.content.previous_group_chat_events_hashes; if (previousEventsHashes.length === 0) { const originalGroupChat: GroupChat = initialGroupChat( entries.value.createGroupChat.event.content, ); const groupChat = apply( originalGroupChat, event.author, event.event.content.event, ); return { status: 'completed', value: groupChat, }; } const previousGroupChats = joinAsync( previousEventsHashes.map( eventHash => this.groupChatAtEvent .get(eventHash) .get() as AsyncResult<GroupChat>, ), ); if (previousGroupChats.status !== 'completed') return previousGroupChats; let currentGroupChat = previousGroupChats.value[0]; for (let i = 1; i < previousGroupChats.value.length; i++) { currentGroupChat = merge( currentGroupChat, previousGroupChats.value[i], ); } currentGroupChat = apply( currentGroupChat, event.author, event.event.content.event, ); return { status: 'completed', value: currentGroupChat, }; }), )"
             },
             {
               "kind": "field",
               "name": "currentGroupChat",
-              "default": "new AsyncComputed<GroupChat>(() => { const entries = this.groupChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } if (entries.value.currentEventsHashes.length === 0) { return { status: 'completed' as const, value: initialGroupChat( entries.value.createGroupChat.signed_content.content, ), }; } const previousGroupChats = joinAsync( entries.value.currentEventsHashes.map( eventHash => this.groupChatAtEvent .get(decodeHashFromBase64(eventHash)) .get() as AsyncResult<GroupChat>, ), ); if (previousGroupChats.status !== 'completed') return previousGroupChats; let currentGroupChat = previousGroupChats.value[0]; for (let i = 1; i < previousGroupChats.value.length; i++) { currentGroupChat = merge(currentGroupChat, previousGroupChats.value[i]); } return { status: 'completed' as const, value: currentGroupChat, }; })"
+              "default": "new AsyncComputed<GroupChat>(() => { const entries = this.groupChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } if (entries.value.currentEventsHashes.length === 0) { return { status: 'completed' as const, value: initialGroupChat(entries.value.createGroupChat.event.content), }; } const previousGroupChats = joinAsync( entries.value.currentEventsHashes.map( eventHash => this.groupChatAtEvent .get(decodeHashFromBase64(eventHash)) .get() as AsyncResult<GroupChat>, ), ); if (previousGroupChats.status !== 'completed') return previousGroupChats; let currentGroupChat = previousGroupChats.value[0]; for (let i = 1; i < previousGroupChats.value.length; i++) { currentGroupChat = merge(currentGroupChat, previousGroupChats.value[i]); } return { status: 'completed' as const, value: currentGroupChat, }; })"
             },
             {
               "kind": "field",
               "name": "readMessages",
-              "default": "new AsyncComputed(() => { const entries = this.groupChatEntries.get(); const currentGroupChat = this.currentGroupChat.get(); if (entries.status !== 'completed') return entries; if (currentGroupChat.status !== 'completed') return currentGroupChat; const me = currentGroupChat.value.members.find(m => m.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ), )!; let myReadMessages: EntryHashB64[] = []; const theirReadMessages: Record<AgentPubKeyB64, EntryHashB64[]> = {}; for (const readMessages of Object.values(entries.value.readMessages)) { if ( me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(readMessages.provenance), ) ) { myReadMessages = [ ...myReadMessages, ...readMessages.signed_content.content.read_messages_hashes.map( encodeHashToBase64, ), ]; } else { const provenance = encodeHashToBase64(readMessages.provenance); if (!theirReadMessages[provenance]) { theirReadMessages[provenance] = []; } theirReadMessages[provenance] = Array.from( new Set([ ...theirReadMessages[provenance], ...readMessages.signed_content.content.read_messages_hashes.map( encodeHashToBase64, ), ]), ); } } return { status: 'completed' as const, value: { myReadMessages: Array.from(new Set(myReadMessages)), theirReadMessages, }, }; })"
+              "default": "new AsyncComputed(() => { const entries = this.groupChatEntries.get(); const currentGroupChat = this.currentGroupChat.get(); if (entries.status !== 'completed') return entries; if (currentGroupChat.status !== 'completed') return currentGroupChat; const me = currentGroupChat.value.members.find(m => m.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ), )!; let myReadMessages: EntryHashB64[] = []; const theirReadMessages: Record<AgentPubKeyB64, EntryHashB64[]> = {}; for (const readMessages of Object.values(entries.value.readMessages)) { if ( me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(readMessages.author), ) ) { myReadMessages = [ ...myReadMessages, ...readMessages.event.content.read_messages_hashes.map( encodeHashToBase64, ), ]; } else { const author = encodeHashToBase64(readMessages.author); if (!theirReadMessages[author]) { theirReadMessages[author] = []; } theirReadMessages[author] = Array.from( new Set([ ...theirReadMessages[author], ...readMessages.event.content.read_messages_hashes.map( encodeHashToBase64, ), ]), ); } } return { status: 'completed' as const, value: { myReadMessages: Array.from(new Set(myReadMessages)), theirReadMessages, }, }; })"
             },
             {
               "kind": "field",
@@ -190,7 +190,7 @@
             {
               "kind": "field",
               "name": "summary",
-              "default": "new AsyncComputed<GroupChatSummary>(() => { const currentGroupChat = this.currentGroupChat.get(); const entries = this.groupChatEntries.get(); const readMessages = this.readMessages.get(); if (currentGroupChat.status !== 'completed') return currentGroupChat; if (entries.status !== 'completed') return entries; if (readMessages.status !== 'completed') return readMessages; if (!entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } const me = currentGroupChat.value.members.find(m => m.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ), )!; const myUnreadMessages = Object.entries(entries.value.messages) .filter( ([messageHash, message]) => !readMessages.value.myReadMessages.includes(messageHash) && !me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(message.provenance), ), ) .map(([hash, _]) => hash); const allActivity: GroupChatEntry[] = [ ...Object.values(entries.value.messages).map(m => ({ ...m, signed_content: { content: { ...m.signed_content.content, }, timestamp: m.signed_content.timestamp, }, })), { ...entries.value.createGroupChat, signed_content: { content: { type: 'CreateGroupChat' as const, ...entries.value.createGroupChat.signed_content.content, }, timestamp: entries.value.createGroupChat.signed_content.timestamp, }, }, ...Object.values(entries.value.events) .filter(e => { const type = e.signed_content.content.event.type; return ( type === 'AddMember' || type === 'RemoveMember' || type === 'UpdateGroupInfo' || type === 'LeaveGroup' || type === 'DeleteGroup' ); }) .map(e => ({ ...e, signed_content: { content: { ...e.signed_content.content, }, timestamp: e.signed_content.timestamp, }, })), ]; const lastActivity = allActivity.sort( (m1, m2) => m2.signed_content.timestamp - m1.signed_content.timestamp, )[0]; return { status: 'completed', value: { groupChatHash: this.groupChatHash, currentGroup: currentGroupChat.value, lastActivity, myUnreadMessages, }, }; })"
+              "default": "new AsyncComputed<GroupChatSummary>(() => { const currentGroupChat = this.currentGroupChat.get(); const entries = this.groupChatEntries.get(); const readMessages = this.readMessages.get(); if (currentGroupChat.status !== 'completed') return currentGroupChat; if (entries.status !== 'completed') return entries; if (readMessages.status !== 'completed') return readMessages; if (!entries.value.createGroupChat) { return { status: 'error' as const, error: msg('Group chat not found.'), }; } const me = currentGroupChat.value.members.find(m => m.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ), )!; const myUnreadMessages = Object.entries(entries.value.messages) .filter( ([messageHash, message]) => !readMessages.value.myReadMessages.includes(messageHash) && !me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(message.author), ), ) .map(([hash, _]) => hash); const allActivity: Array<SignedEvent<GroupChatEntry>> = [ ...Object.values(entries.value.messages).map(m => ({ ...m, event: { content: { ...m.event.content, }, timestamp: m.event.timestamp, }, })), { ...entries.value.createGroupChat, event: { content: { type: 'CreateGroupChat' as const, ...entries.value.createGroupChat.event.content, }, timestamp: entries.value.createGroupChat.event.timestamp, }, }, ...Object.values(entries.value.events) .filter(e => { const type = e.event.content.event.type; return ( type === 'AddMember' || type === 'RemoveMember' || type === 'UpdateGroupInfo' || type === 'LeaveGroup' || type === 'DeleteGroup' ); }) .map(e => ({ ...e, event: { content: { ...e.event.content, }, timestamp: e.event.timestamp, }, })), ]; const lastActivity = allActivity.sort( (m1, m2) => m2.event.timestamp - m1.event.timestamp, )[0]; return { status: 'completed', value: { groupChatHash: this.groupChatHash, currentGroup: currentGroupChat.value, lastActivity, myUnreadMessages, }, }; })"
             },
             {
               "kind": "method",
@@ -408,24 +408,6 @@
           "members": [
             {
               "kind": "method",
-              "name": "queryPrivateMessengerEntries",
-              "return": {
-                "type": {
-                  "text": "Promise<\n\t\tRecord<EntryHashB64, PrivateMessengerEntry>\n\t>"
-                }
-              }
-            },
-            {
-              "kind": "method",
-              "name": "commitMyPendingEncryptedMessages",
-              "return": {
-                "type": {
-                  "text": "Promise<void>"
-                }
-              }
-            },
-            {
-              "kind": "method",
               "name": "createPeerChat",
               "return": {
                 "type": {
@@ -517,9 +499,15 @@
               },
               "parameters": [
                 {
+                  "name": "myProfile",
+                  "type": {
+                    "text": "MessengerProfile | undefined"
+                  }
+                },
+                {
                   "name": "otherMembers",
                   "type": {
-                    "text": "Array<AgentPubKey>"
+                    "text": "Array<AgentWithProfile>"
                   }
                 },
                 {
@@ -638,24 +626,11 @@
                   }
                 }
               ]
-            },
-            {
-              "kind": "method",
-              "name": "synchronizeWithLinkedDevice",
-              "parameters": [
-                {
-                  "name": "linkedDevice",
-                  "type": {
-                    "text": "AgentPubKey"
-                  }
-                }
-              ],
-              "description": "Linked Devices"
             }
           ],
           "superclass": {
-            "name": "ZomeClient",
-            "package": "@tnesh-stack/utils"
+            "name": "PrivateEventSourcingClient",
+            "package": "@darksoil-studio/private-event-sourcing-zome"
           }
         }
       ],
@@ -681,7 +656,7 @@
           "members": [
             {
               "kind": "field",
-              "name": "privateMessengerEntries"
+              "name": "messengerEntries"
             },
             {
               "kind": "field",
@@ -696,14 +671,18 @@
             {
               "kind": "field",
               "name": "peerChatsForPeer",
-              "default": "new MemoHoloHashMap( (agent: AgentPubKey) => new AsyncComputed(() => { const entries = this.privateMessengerEntries.get(); if (entries.status !== 'completed') return entries; const allPeerChatsHashes = Object.keys(entries.value.peerChats); const allCurrentPeerChats = joinAsync( allPeerChatsHashes.map(peerChatHash => this.peerChats .get(decodeHashFromBase64(peerChatHash)) .currentPeerChat.get(), ), ); if (allCurrentPeerChats.status !== 'completed') return allCurrentPeerChats; const peerChatsHashesForPeer: EntryHash[] = []; for (let i = 0; i < allCurrentPeerChats.value.length; i++) { if ( allCurrentPeerChats.value[i].peer_1.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(agent), ) || allCurrentPeerChats.value[i].peer_2.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(agent), ) ) { peerChatsHashesForPeer.push( decodeHashFromBase64(allPeerChatsHashes[i]), ); } } return { status: 'completed', value: peerChatsHashesForPeer, }; }), )"
+              "default": "new MemoHoloHashMap( (agent: AgentPubKey) => new AsyncComputed(() => { const entries = this.messengerEntries.get(); if (entries.status !== 'completed') return entries; const allPeerChatsHashes = Object.keys(entries.value.peerChats); const allCurrentPeerChats = joinAsync( allPeerChatsHashes.map(peerChatHash => this.peerChats .get(decodeHashFromBase64(peerChatHash)) .currentPeerChat.get(), ), ); if (allCurrentPeerChats.status !== 'completed') return allCurrentPeerChats; const peerChatsHashesForPeer: EntryHash[] = []; for (let i = 0; i < allCurrentPeerChats.value.length; i++) { if ( allCurrentPeerChats.value[i].peer_1.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(agent), ) || allCurrentPeerChats.value[i].peer_2.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(agent), ) ) { peerChatsHashesForPeer.push( decodeHashFromBase64(allPeerChatsHashes[i]), ); } } return { status: 'completed', value: peerChatsHashesForPeer, }; }), )"
             },
             {
               "kind": "field",
               "name": "allChats",
-              "default": "new AsyncComputed<Array<ChatSummary>>(() => { const entries = this.privateMessengerEntries.get(); if (entries.status !== 'completed') return entries; const peerChatsHashes = Object.keys(entries.value.peerChats); const peerChatsSummaries = joinAsync( peerChatsHashes.map(peerChatHash => this.peerChats.get(decodeHashFromBase64(peerChatHash)).summary.get(), ), ); const groupChatsHashes = Object.keys(entries.value.groupChats); const groupChatsSummaries = joinAsync( groupChatsHashes.map(groupChatHash => this.groupChats.get(decodeHashFromBase64(groupChatHash)).summary.get(), ), ); if (peerChatsSummaries.status !== 'completed') return peerChatsSummaries; if (groupChatsSummaries.status !== 'completed') return groupChatsSummaries; const chats: ChatSummary[] = [ ...peerChatsSummaries.value.map(s => ({ type: 'PeerChat' as const, ...s, })), ...groupChatsSummaries.value.map(s => ({ type: 'GroupChat' as const, ...s, })), ]; const sortedChats = chats.sort( (c1, c2) => c2.lastActivity.signed_content.timestamp - c1.lastActivity.signed_content.timestamp, ); return { status: 'completed', value: sortedChats, }; })"
+              "default": "new AsyncComputed<Array<ChatSummary>>(() => { const entries = this.messengerEntries.get(); if (entries.status !== 'completed') return entries; const peerChatsHashes = Object.keys(entries.value.peerChats); const peerChatsSummaries = joinAsync( peerChatsHashes.map(peerChatHash => this.peerChats.get(decodeHashFromBase64(peerChatHash)).summary.get(), ), ); const groupChatsHashes = Object.keys(entries.value.groupChats); const groupChatsSummaries = joinAsync( groupChatsHashes.map(groupChatHash => this.groupChats.get(decodeHashFromBase64(groupChatHash)).summary.get(), ), ); if (peerChatsSummaries.status !== 'completed') return peerChatsSummaries; if (groupChatsSummaries.status !== 'completed') return groupChatsSummaries; const chats: ChatSummary[] = [ ...peerChatsSummaries.value.map(s => ({ type: 'PeerChat' as const, ...s, })), ...groupChatsSummaries.value.map(s => ({ type: 'GroupChat' as const, ...s, })), ]; const sortedChats = chats.sort( (c1, c2) => c2.lastActivity.event.timestamp - c1.lastActivity.event.timestamp, ); return { status: 'completed', value: sortedChats, }; })"
             }
-          ]
+          ],
+          "superclass": {
+            "name": "PrivateEventSourcingStore",
+            "package": "@darksoil-studio/private-event-sourcing-zome"
+          }
         }
       ],
       "exports": [
@@ -730,7 +709,7 @@
               "kind": "field",
               "name": "entries",
               "type": {
-                "text": "Record<EntryHashB64, PrivateMessengerEntry>"
+                "text": "Record<EntryHashB64, SignedEvent<MessengerEvent>>"
               },
               "default": "{}"
             },
@@ -891,18 +870,18 @@
               "kind": "field",
               "name": "peerChatEntries",
               "privacy": "private",
-              "default": "new AsyncComputed(() => { const privateMessengerEntriesResult = this.messengerStore.privateMessengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const peerChatHashB64 = encodeHashToBase64(this.peerChatHash); const peerChatEntries = privateMessengerEntriesResult.value.peerChats[peerChatHashB64]; if (!peerChatEntries) return { status: 'error' as const, error: msg('Peer Chat not found'), }; const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {}; const initialEventsHashes: Array<EntryHashB64> = []; for (const [entryHash, peerChatEvent] of Object.entries( peerChatEntries.events, )) { const previousEventsHashes = peerChatEvent.signed_content.content.previous_peer_chat_events_hashes; if (previousEventsHashes.length === 0) { initialEventsHashes.push(entryHash); } else { for (const previous of previousEventsHashes) { const previousB64 = encodeHashToBase64(previous); if (!previousToNexts[previousB64]) { previousToNexts[previousB64] = []; } previousToNexts[previousB64].push(entryHash); } } } const allEventsWithDescendants = Object.keys(previousToNexts); const currentEventsHashes = Object.keys(peerChatEntries.events).filter( eventHash => !allEventsWithDescendants.includes(eventHash), ); return { status: 'completed', value: { ...peerChatEntries, previousToNexts, currentEventsHashes, initialEventsHashes, }, }; })"
+              "default": "new AsyncComputed(() => { const privateMessengerEntriesResult = this.messengerStore.messengerEntries.get(); if (privateMessengerEntriesResult.status !== 'completed') return privateMessengerEntriesResult; const peerChatHashB64 = encodeHashToBase64(this.peerChatHash); const peerChatEntries = privateMessengerEntriesResult.value.peerChats[peerChatHashB64]; if (!peerChatEntries) return { status: 'error' as const, error: msg('Peer Chat not found'), }; const previousToNexts: Record<EntryHashB64, Array<EntryHashB64>> = {}; const initialEventsHashes: Array<EntryHashB64> = []; for (const [entryHash, peerChatEvent] of Object.entries( peerChatEntries.events, )) { const previousEventsHashes = peerChatEvent.event.content.previous_peer_chat_events_hashes; if (previousEventsHashes.length === 0) { initialEventsHashes.push(entryHash); } else { for (const previous of previousEventsHashes) { const previousB64 = encodeHashToBase64(previous); if (!previousToNexts[previousB64]) { previousToNexts[previousB64] = []; } previousToNexts[previousB64].push(entryHash); } } } const allEventsWithDescendants = Object.keys(previousToNexts); const currentEventsHashes = Object.keys(peerChatEntries.events).filter( eventHash => !allEventsWithDescendants.includes(eventHash), ); return { status: 'completed', value: { ...peerChatEntries, previousToNexts, currentEventsHashes, initialEventsHashes, }, }; })"
             },
             {
               "kind": "field",
               "name": "peerChatAtEvent",
               "privacy": "private",
-              "default": "new MemoHoloHashMap( (eventHash: EntryHash) => new AsyncComputed<PeerChat>((): AsyncResult<PeerChat> => { const entries = this.peerChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createPeerChat) { return { status: 'error' as const, error: msg('Peer chat not found.'), }; } const eventHashB64 = encodeHashToBase64(eventHash); const event = entries.value.events[eventHashB64]; const previousEventsHashes = event.signed_content.content.previous_peer_chat_events_hashes; if (previousEventsHashes.length === 0) { const peerChat = apply( initialPeerChat( entries.value.createPeerChat.signed_content.content, ), event.provenance, event.signed_content.content.event, ); return { status: 'completed', value: peerChat, }; } const previousPeerChats = joinAsync( previousEventsHashes.map( eventHash => this.peerChatAtEvent .get(eventHash) .get() as AsyncResult<PeerChat>, ), ); if (previousPeerChats.status !== 'completed') return previousPeerChats; let currentPeerChat = previousPeerChats.value[0]; for (let i = 1; i < previousPeerChats.value.length; i++) { currentPeerChat = merge(currentPeerChat, previousPeerChats.value[i]); } currentPeerChat = apply( currentPeerChat, event.provenance, event.signed_content.content.event, ); return { status: 'completed', value: currentPeerChat, }; }), )"
+              "default": "new MemoHoloHashMap( (eventHash: EntryHash) => new AsyncComputed<PeerChat>((): AsyncResult<PeerChat> => { const entries = this.peerChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createPeerChat) { return { status: 'error' as const, error: msg('Peer chat not found.'), }; } const eventHashB64 = encodeHashToBase64(eventHash); const event = entries.value.events[eventHashB64]; const previousEventsHashes = event.event.content.previous_peer_chat_events_hashes; if (previousEventsHashes.length === 0) { const peerChat = apply( initialPeerChat(entries.value.createPeerChat.event.content), event.author, event.event.content.event, ); return { status: 'completed', value: peerChat, }; } const previousPeerChats = joinAsync( previousEventsHashes.map( eventHash => this.peerChatAtEvent .get(eventHash) .get() as AsyncResult<PeerChat>, ), ); if (previousPeerChats.status !== 'completed') return previousPeerChats; let currentPeerChat = previousPeerChats.value[0]; for (let i = 1; i < previousPeerChats.value.length; i++) { currentPeerChat = merge(currentPeerChat, previousPeerChats.value[i]); } currentPeerChat = apply( currentPeerChat, event.author, event.event.content.event, ); return { status: 'completed', value: currentPeerChat, }; }), )"
             },
             {
               "kind": "field",
               "name": "currentPeerChat",
-              "default": "new AsyncComputed<PeerChat>(() => { const entries = this.peerChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createPeerChat) { return { status: 'error' as const, error: msg('Peer chat not found.'), }; } if (entries.value.currentEventsHashes.length === 0) { return { status: 'completed', value: entries.value.createPeerChat.signed_content.content, }; } const previousPeerChats = joinAsync( entries.value.currentEventsHashes.map( eventHash => this.peerChatAtEvent .get(decodeHashFromBase64(eventHash)) .get() as AsyncResult<PeerChat>, ), ); if (previousPeerChats.status !== 'completed') return previousPeerChats; let currentPeerChat = previousPeerChats.value[0]; for (let i = 1; i < previousPeerChats.value.length; i++) { currentPeerChat = merge(currentPeerChat, previousPeerChats.value[i]); } return { status: 'completed', value: currentPeerChat, }; })"
+              "default": "new AsyncComputed<PeerChat>(() => { const entries = this.peerChatEntries.get(); if (entries.status !== 'completed') return entries; if (!entries.value.createPeerChat) { return { status: 'error' as const, error: msg('Peer chat not found.'), }; } if (entries.value.currentEventsHashes.length === 0) { return { status: 'completed', value: entries.value.createPeerChat.event.content, }; } const previousPeerChats = joinAsync( entries.value.currentEventsHashes.map( eventHash => this.peerChatAtEvent .get(decodeHashFromBase64(eventHash)) .get() as AsyncResult<PeerChat>, ), ); if (previousPeerChats.status !== 'completed') return previousPeerChats; let currentPeerChat = previousPeerChats.value[0]; for (let i = 1; i < previousPeerChats.value.length; i++) { currentPeerChat = merge(currentPeerChat, previousPeerChats.value[i]); } return { status: 'completed', value: currentPeerChat, }; })"
             },
             {
               "kind": "field",
@@ -915,12 +894,12 @@
             {
               "kind": "field",
               "name": "readMessages",
-              "default": "new AsyncComputed(() => { const entries = this.peerChatEntries.get(); const currentPeerChat = this.currentPeerChat.get(); if (entries.status !== 'completed') return entries; if (currentPeerChat.status !== 'completed') return currentPeerChat; const imPeer1 = !!currentPeerChat.value.peer_1.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ); const me = imPeer1 ? currentPeerChat.value.peer_1 : currentPeerChat.value.peer_2; let myReadMessages: EntryHashB64[] = []; let theirReadMessages: EntryHashB64[] = []; for (const readMessages of Object.values(entries.value.readMessages)) { if ( me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(readMessages.provenance), ) ) { myReadMessages = [ ...myReadMessages, ...readMessages.signed_content.content.read_messages_hashes.map( encodeHashToBase64, ), ]; } else { theirReadMessages = [ ...theirReadMessages, ...readMessages.signed_content.content.read_messages_hashes.map( encodeHashToBase64, ), ]; } } return { status: 'completed' as const, value: { myReadMessages: Array.from(new Set(myReadMessages)), theirReadMessages: Array.from(new Set(theirReadMessages)), }, }; })"
+              "default": "new AsyncComputed(() => { const entries = this.peerChatEntries.get(); const currentPeerChat = this.currentPeerChat.get(); if (entries.status !== 'completed') return entries; if (currentPeerChat.status !== 'completed') return currentPeerChat; const imPeer1 = !!currentPeerChat.value.peer_1.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ); const me = imPeer1 ? currentPeerChat.value.peer_1 : currentPeerChat.value.peer_2; let myReadMessages: EntryHashB64[] = []; let theirReadMessages: EntryHashB64[] = []; for (const readMessages of Object.values(entries.value.readMessages)) { if ( me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(readMessages.author), ) ) { myReadMessages = [ ...myReadMessages, ...readMessages.event.content.read_messages_hashes.map( encodeHashToBase64, ), ]; } else { theirReadMessages = [ ...theirReadMessages, ...readMessages.event.content.read_messages_hashes.map( encodeHashToBase64, ), ]; } } return { status: 'completed' as const, value: { myReadMessages: Array.from(new Set(myReadMessages)), theirReadMessages: Array.from(new Set(theirReadMessages)), }, }; })"
             },
             {
               "kind": "field",
               "name": "summary",
-              "default": "new AsyncComputed<PeerChatSummary>(() => { const entries = this.peerChatEntries.get(); const currentPeerChat = this.currentPeerChat.get(); const readMessages = this.readMessages.get(); if (entries.status !== 'completed') return entries; if (currentPeerChat.status !== 'completed') return currentPeerChat; if (readMessages.status !== 'completed') return readMessages; if (!entries.value.createPeerChat) { return { status: 'error' as const, error: msg('Peer chat not found.'), }; } const imPeer1 = !!currentPeerChat.value.peer_1.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ); const me = imPeer1 ? currentPeerChat.value.peer_1 : currentPeerChat.value.peer_2; const peer = imPeer1 ? currentPeerChat.value.peer_2 : currentPeerChat.value.peer_1; const myUnreadMessages = Object.entries(entries.value.messages) .filter( ([messageHash, message]) => !readMessages.value.myReadMessages.includes(messageHash) && !me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(message.provenance), ), ) .map(([hash, _]) => hash); const allActivity: PeerChatEntry[] = [ ...Object.values(entries.value.messages).map(m => ({ ...m, signed_content: { content: { type: 'PeerMessage' as const, ...m.signed_content.content, }, timestamp: m.signed_content.timestamp, }, })), { ...entries.value.createPeerChat, signed_content: { content: { type: 'CreatePeerChat' as const, ...entries.value.createPeerChat.signed_content.content, }, timestamp: entries.value.createPeerChat.signed_content.timestamp, }, }, // ...Object.values(entries.value.events).map(e => ({ // ...e, // signed_content: { // content: { // type: 'PeerChatEvent' as const, // ...e.signed_content.content, // }, // timestamp: e.signed_content.timestamp, // }, // })), ]; const lastActivity = allActivity.sort( (m1, m2) => m2.signed_content.timestamp - m1.signed_content.timestamp, )[0]; return { status: 'completed', value: { peerChatHash: this.peerChatHash, lastActivity, me, peer, myUnreadMessages, }, }; })"
+              "default": "new AsyncComputed<PeerChatSummary>(() => { const entries = this.peerChatEntries.get(); const currentPeerChat = this.currentPeerChat.get(); const readMessages = this.readMessages.get(); if (entries.status !== 'completed') return entries; if (currentPeerChat.status !== 'completed') return currentPeerChat; if (readMessages.status !== 'completed') return readMessages; if (!entries.value.createPeerChat) { return { status: 'error' as const, error: msg('Peer chat not found.'), }; } const imPeer1 = !!currentPeerChat.value.peer_1.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(this.messengerStore.client.client.myPubKey), ); const me = imPeer1 ? currentPeerChat.value.peer_1 : currentPeerChat.value.peer_2; const peer = imPeer1 ? currentPeerChat.value.peer_2 : currentPeerChat.value.peer_1; const myUnreadMessages = Object.entries(entries.value.messages) .filter( ([messageHash, message]) => !readMessages.value.myReadMessages.includes(messageHash) && !me.agents.find( a => encodeHashToBase64(a) === encodeHashToBase64(message.author), ), ) .map(([hash, _]) => hash); const allActivity: Array<SignedEvent<PeerChatEntry>> = [ ...Object.values(entries.value.messages).map(m => ({ ...m, event: { content: { type: 'PeerMessage' as const, ...m.event.content, }, timestamp: m.event.timestamp, }, })), { ...entries.value.createPeerChat, event: { content: { type: 'CreatePeerChat' as const, ...entries.value.createPeerChat.event.content, }, timestamp: entries.value.createPeerChat.event.timestamp, }, }, // ...Object.values(entries.value.events).map(e => ({ // ...e, // event: { // content: { // type: 'PeerChatEvent' as const, // ...e.event.content, // }, // timestamp: e.event.timestamp, // }, // })), ]; const lastActivity = allActivity.sort( (m1, m2) => m2.event.timestamp - m1.event.timestamp, )[0]; return { status: 'completed', value: { peerChatHash: this.peerChatHash, lastActivity, me, peer, myUnreadMessages, }, }; })"
             },
             {
               "kind": "method",
@@ -1109,6 +1088,29 @@
         },
         {
           "kind": "function",
+          "name": "mergeMaybeFields",
+          "return": {
+            "type": {
+              "text": "Record<string, string>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "fields1",
+              "type": {
+                "text": "Record<string, string> | undefined"
+              }
+            },
+            {
+              "name": "fields2",
+              "type": {
+                "text": "Record<string, string> | undefined"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
           "name": "mergeProfiles",
           "return": {
             "type": {
@@ -1174,6 +1176,14 @@
         },
         {
           "kind": "js",
+          "name": "mergeMaybeFields",
+          "declaration": {
+            "name": "mergeMaybeFields",
+            "module": "src/utils.ts"
+          }
+        },
+        {
+          "kind": "js",
           "name": "mergeProfiles",
           "declaration": {
             "name": "mergeProfiles",
@@ -1200,10 +1210,12 @@
             },
             {
               "kind": "field",
-              "name": "profilesStore",
+              "name": "profilesProvider",
               "type": {
-                "text": "ProfilesStore"
-              }
+                "text": "ProfilesProvider"
+              },
+              "description": "Profiles provider",
+              "attribute": "profilesProvider"
             },
             {
               "kind": "method",
@@ -1277,7 +1289,7 @@
                   }
                 },
                 {
-                  "name": "provenance",
+                  "name": "author",
                   "type": {
                     "text": "AgentPubKey"
                   }
@@ -1303,7 +1315,7 @@
                 {
                   "name": "groupMessengerEntry",
                   "type": {
-                    "text": "GroupChatEntry"
+                    "text": "SignedEvent<GroupChatEntry>"
                   }
                 }
               ]
@@ -1345,6 +1357,16 @@
               "type": {
                 "text": "CustomEvent"
               }
+            }
+          ],
+          "attributes": [
+            {
+              "name": "profilesProvider",
+              "type": {
+                "text": "ProfilesProvider"
+              },
+              "description": "Profiles provider",
+              "fieldName": "profilesProvider"
             }
           ],
           "mixins": [
@@ -1398,10 +1420,11 @@
             },
             {
               "kind": "field",
-              "name": "profilesStore",
+              "name": "profilesProvider",
               "type": {
-                "text": "ProfilesStore"
-              }
+                "text": "ProfilesProvider"
+              },
+              "attribute": "profilesProvider"
             },
             {
               "kind": "method",
@@ -1423,6 +1446,15 @@
               "type": {
                 "text": "CustomEvent"
               }
+            }
+          ],
+          "attributes": [
+            {
+              "name": "profilesProvider",
+              "type": {
+                "text": "ProfilesProvider"
+              },
+              "fieldName": "profilesProvider"
             }
           ],
           "mixins": [
@@ -1484,18 +1516,20 @@
             },
             {
               "kind": "field",
-              "name": "profilesStore",
-              "type": {
-                "text": "ProfilesStore"
-              }
-            },
-            {
-              "kind": "field",
               "name": "view",
               "type": {
                 "text": "'chat' | 'details' | 'add-members' | 'edit-info'"
               },
               "default": "'chat'"
+            },
+            {
+              "kind": "field",
+              "name": "profilesProvider",
+              "type": {
+                "text": "ProfilesProvider"
+              },
+              "description": "Profiles provider",
+              "attribute": "profilesProvider"
             },
             {
               "kind": "method",
@@ -1505,7 +1539,7 @@
                 {
                   "name": "event",
                   "type": {
-                    "text": "SignedEntry<GroupChatEvent>"
+                    "text": "SignedEvent<GroupChatEvent>"
                   }
                 }
               ]
@@ -1531,7 +1565,7 @@
                 {
                   "name": "createGroupChat",
                   "type": {
-                    "text": "SignedEntry<CreateGroupChat>"
+                    "text": "SignedEvent<CreateGroupChat>"
                   }
                 },
                 {
@@ -1543,13 +1577,13 @@
                 {
                   "name": "messages",
                   "type": {
-                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupMessage' } & GroupMessage>\n\t\t>"
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEvent<{ type: 'GroupMessage' } & GroupMessage>\n\t\t>"
                   }
                 },
                 {
                   "name": "events",
                   "type": {
-                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>\n\t\t>"
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEvent<{ type: 'GroupChatEvent' } & GroupChatEvent>\n\t\t>"
                   }
                 },
                 {
@@ -1667,24 +1701,12 @@
             },
             {
               "kind": "field",
-              "name": "profilesToBeAdded",
+              "name": "usersToBeAdded",
               "readonly": true
             },
             {
               "kind": "method",
               "name": "addMembers"
-            },
-            {
-              "kind": "method",
-              "name": "profileHashesForAgents",
-              "parameters": [
-                {
-                  "name": "agents",
-                  "type": {
-                    "text": "AgentPubKey[]"
-                  }
-                }
-              ]
             },
             {
               "kind": "method",
@@ -1732,7 +1754,7 @@
                 {
                   "name": "createGroupChat",
                   "type": {
-                    "text": "SignedEntry<CreateGroupChat>"
+                    "text": "SignedEvent<CreateGroupChat>"
                   }
                 },
                 {
@@ -1744,13 +1766,13 @@
                 {
                   "name": "messages",
                   "type": {
-                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupMessage' } & GroupMessage>\n\t\t>"
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEvent<{ type: 'GroupMessage' } & GroupMessage>\n\t\t>"
                   }
                 },
                 {
                   "name": "events",
                   "type": {
-                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEntry<{ type: 'GroupChatEvent' } & GroupChatEvent>\n\t\t>"
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tSignedEvent<{ type: 'GroupChatEvent' } & GroupChatEvent>\n\t\t>"
                   }
                 },
                 {
@@ -1777,6 +1799,14 @@
                 "text": "EntryHash"
               },
               "fieldName": "groupChatHash"
+            },
+            {
+              "name": "profilesProvider",
+              "type": {
+                "text": "ProfilesProvider"
+              },
+              "description": "Profiles provider",
+              "fieldName": "profilesProvider"
             }
           ],
           "mixins": [
@@ -2314,13 +2344,6 @@
               }
             },
             {
-              "kind": "field",
-              "name": "profilesStore",
-              "type": {
-                "text": "ProfilesStore"
-              }
-            },
-            {
               "kind": "method",
               "name": "renderTopBar",
               "privacy": "private",
@@ -2352,7 +2375,7 @@
                 {
                   "name": "messages",
                   "type": {
-                    "text": "Record<EntryHashB64, SignedEntry<PeerMessage>>"
+                    "text": "Record<EntryHashB64, SignedEvent<PeerMessage>>"
                   }
                 },
                 {
