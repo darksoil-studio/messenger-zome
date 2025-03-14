@@ -92,7 +92,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 	get shoelaceTheme(): 'light' | 'dark' {
 		const darkClassElement = closestPassShadow(this, '.sl-theme-dark');
-		return !!darkClassElement ? 'dark' : 'light';
+		return darkClassElement ? 'dark' : 'light';
 	}
 
 	get colorHash() {
