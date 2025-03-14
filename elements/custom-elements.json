@@ -1468,6 +1468,19 @@
             },
             {
               "kind": "field",
+              "name": "shoelaceTheme",
+              "type": {
+                "text": "'light' | 'dark'"
+              },
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "colorHash",
+              "readonly": true
+            },
+            {
+              "kind": "field",
               "name": "profilesProvider",
               "type": {
                 "text": "ProfilesProvider"

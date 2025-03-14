@@ -836,6 +836,7 @@ import{p as F,S as T}from"./context.CP7mVcaJ.js";import{_ as h}from"./tslib.es6.
 						avatar-height="300"
 						label=""
 						name="avatar"
+						required
 					>
 					</select-avatar>
 					<sl-input
