@@ -3,7 +3,7 @@ import {
 	linkedDevicesStoreContext,
 } from '@darksoil-studio/linked-devices-zome';
 import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
-import '@darksoil-studio/profiles-zome/dist/elements/profile-list-item.js';
+import '@darksoil-studio/profiles-provider/dist/elements/profile-list-item.js';
 import {
 	AgentPubKey,
 	AgentPubKeyB64,
