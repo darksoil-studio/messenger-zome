@@ -95,8 +95,8 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 			>
 				<div class="row" style="gap: 8px; align-items: center">
 					<select-avatar
-						avatar-width="48"
-						avatar-height="48"
+						avatar-width="300"
+						avatar-height="300"
 						label=""
 						name="avatar"
 					>

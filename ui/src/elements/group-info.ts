@@ -1,20 +1,10 @@
 import { EntryHash } from '@holochain/client';
 import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
-import {
-	mdiImage,
-	mdiImageOffOutline,
-	mdiImageOutline,
-	mdiPencil,
-} from '@mdi/js';
+import { mdiImageOffOutline } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
-import {
-	hashProperty,
-	notifyError,
-	onSubmit,
-	wrapPathInSvg,
-} from '@tnesh-stack/elements';
+import { hashProperty, wrapPathInSvg } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
 import { SignalWatcher } from '@tnesh-stack/signals';
 import { LitElement, css, html } from 'lit';
@@ -37,18 +27,7 @@ export class GroupInfoEl extends SignalWatcher(LitElement) {
 		return html`
 			<div class="column" style="gap: 8px;">
 				${info.avatar
-					? html`
-							<div
-								class="column"
-								style="height: 150px; align-items: center; justify-content: center;"
-							>
-								<sl-avatar
-									style="--size: 32px"
-									.image=${info.avatar}
-									.initials=${info.name.slice(0, 2)}
-								></sl-avatar>
-							</div>
-						`
+					? html` <img style="height: 150px" src="${info.avatar}" /> `
 					: html`<sl-icon
 							.src=${wrapPathInSvg(mdiImageOffOutline)}
 							style="font-size: 64px; border-radius: 50%; align-self: center; height: 150px"

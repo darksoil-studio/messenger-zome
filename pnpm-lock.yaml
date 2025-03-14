@@ -105,8 +105,8 @@ importers:
         specifier: 0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23
         version: 0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/private-event-sourcing-zome':
-        specifier: 0.400.0-rev.c8324a5c336e861a0b56036e7081e8a32b8f9ed3
-        version: 0.400.0-rev.c8324a5c336e861a0b56036e7081e8a32b8f9ed3(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+        specifier: 0.400.0-rev.6211f22a39ac13f941a43c8a738588d7b4dab7f6
+        version: 0.400.0-rev.6211f22a39ac13f941a43c8a738588d7b4dab7f6(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/profiles-provider':
         specifier: ^0.400.1
         version: 0.400.1(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
@@ -370,8 +370,8 @@ packages:
   '@darksoil-studio/linked-devices-zome@0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23':
     resolution: {integrity: sha512-bczzlqO5LzSQsgECzq0VBPfaDMXGmjplHlCb4QJCllzynBCcUkfwlDUgvug7ZnyAzAy6j7b5I39se5YNcxPIJQ==}
 
-  '@darksoil-studio/private-event-sourcing-zome@0.400.0-rev.c8324a5c336e861a0b56036e7081e8a32b8f9ed3':
-    resolution: {integrity: sha512-CJejsSDO53uSrZBqlAIZgMR6qenkqkxomyzfqImgW0Nh9c414ahP6UXqiYmvkypDWPU+MWTqdLCF5ArwjSf5Nw==}
+  '@darksoil-studio/private-event-sourcing-zome@0.400.0-rev.6211f22a39ac13f941a43c8a738588d7b4dab7f6':
+    resolution: {integrity: sha512-TToxWutL5HghjcGEqldm8ZLHmltKSgkzxLY+TKqqbvHMFLFTniXOUEBdCQOE4qxu6uJ4Z18rJAIjI26k/+0FbQ==}
 
   '@darksoil-studio/profiles-provider@0.400.1':
     resolution: {integrity: sha512-Ja77MAjyVlTAHzEZjW+10vFrGRV6BSzEBSmR/M2Rl7t98geO424N9CgasMPcq1g7knwv6AIsKOo6OC4a/q2Ohg==}
@@ -3253,7 +3253,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@darksoil-studio/private-event-sourcing-zome@0.400.0-rev.c8324a5c336e861a0b56036e7081e8a32b8f9ed3(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
+  '@darksoil-studio/private-event-sourcing-zome@0.400.0-rev.6211f22a39ac13f941a43c8a738588d7b4dab7f6(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
     dependencies:
       '@holochain/client': 0.18.0
       '@lit/context': 1.1.4
