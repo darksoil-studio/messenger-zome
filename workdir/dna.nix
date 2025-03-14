@@ -6,8 +6,6 @@
       inputs.tnesh-stack.outputs.builders.${system}.dna {
         dnaManifest = ./dna.yaml;
         zomes = {
-          file_storage_integrity = inputs'.file-storage.packages.file_storage_integrity;
-          file_storage = inputs'.file-storage.packages.file_storage;
           notifications_integrity =
             inputs'.notifications-zome.packages.notifications_integrity;
           notifications = inputs'.notifications-zome.packages.notifications;

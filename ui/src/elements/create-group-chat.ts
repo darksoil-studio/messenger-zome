@@ -94,7 +94,13 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 				style="gap: 24px; flex: 1"
 			>
 				<div class="row" style="gap: 8px; align-items: center">
-					<select-avatar label="" name="avatar"> </select-avatar>
+					<select-avatar
+						avatar-width="300"
+						avatar-height="300"
+						label=""
+						name="avatar"
+					>
+					</select-avatar>
 					<sl-input
 						style="flex: 1"
 						required
@@ -106,7 +112,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 				<search-users
 					.label=${msg('Add Members')}
 					name="members"
-					.excludedUsers=${[this.store.client.client.myPubKey]}
+					.excludedUsers=${[[this.store.client.client.myPubKey]]}
 				>
 				</search-users>
 

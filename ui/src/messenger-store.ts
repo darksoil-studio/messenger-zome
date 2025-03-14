@@ -83,7 +83,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 			this.client.commitMyPendingEncryptedMessages();
 		}, 4000);
 		if (this.linkedDevicesStore) {
-			this.linkedDevicesStore.client.onSignal(signal => {
+			this.linkedDevicesStore.client.onSignal(async signal => {
 				if (
 					signal.type !== 'LinkCreated' ||
 					signal.link_type !== 'AgentToLinkedDevices'
@@ -95,33 +95,33 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 				);
 
 				// Wait for the whole processing to finish
-				setTimeout(async () => {
-					this.client.synchronizeWithLinkedDevice(linkedDevice);
+				this.client.synchronizeWithLinkedDevice(linkedDevice);
+				// Send to everyone that we have a new peer
+				const entries = await toPromise(this.messengerEntries);
 
-					// Send to everyone that we have a new peer
-					const entries = await toPromise(this.messengerEntries);
+				const allPeerChats = Object.keys(entries.peerChats);
+				const proofs = decode(
+					signal.action.hashed.content.tag,
+				) as Array<LinkedDevicesProof>;
 
-					const allPeerChats = Object.keys(entries.peerChats);
-					const proofs = decode(
-						signal.action.hashed.content.tag,
-					) as Array<LinkedDevicesProof>;
+				for (const peerChatHash of allPeerChats) {
+					const store = this.peerChats.get(decodeHashFromBase64(peerChatHash));
+					await store.notifyNewPeerAgent(linkedDevice, proofs);
+				}
 
-					for (const peerChatHash of allPeerChats) {
-						const store = this.peerChats.get(
-							decodeHashFromBase64(peerChatHash),
-						);
-						await store.notifyNewPeerAgent(linkedDevice, proofs);
-					}
+				const allGroupChats = Object.keys(entries.groupChats);
 
-					const allGroupChats = Object.keys(entries.groupChats);
+				for (const groupChatHash of allGroupChats) {
+					const store = this.groupChats.get(
+						decodeHashFromBase64(groupChatHash),
+					);
+					console.log(
+						encodeHashToBase64(this.client.client.myPubKey),
+						Object.keys(await this.client.queryPrivateEventEntries()),
+					);
 
-					for (const groupChatHash of allGroupChats) {
-						const store = this.groupChats.get(
-							decodeHashFromBase64(groupChatHash),
-						);
-						await store.notifyNewAgent(linkedDevice, proofs);
-					}
-				}, 2000);
+					await store.notifyNewAgent(linkedDevice, proofs);
+				}
 			});
 		}
 	}
