@@ -118,7 +118,7 @@ import{S as w,p as $}from"./context.CP7mVcaJ.js";import{c as y,_ as d,S as b,e a
  * @license
  * Copyright 2021 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */function*O(e,t){const a=typeof t=="function";if(e!==void 0){let s=-1;for(const l of e)s>-1&&(yield a?t(s):t),s++,yield l}}var j=Object.defineProperty,z=Object.getOwnPropertyDescriptor,m=(e,t,a,s)=>{for(var l=s>1?void 0:s?z(t,a):t,i=e.length-1,u;i>=0;i--)(u=e[i])&&(l=(s?u(t,a,l):u(l))||l);return s&&l&&j(t,a,l),l};let o=class extends w(D){renderPeerChat(e){const t=e.lastActivity.event.content;return r`<div
+ */function*O(e,t){const a=typeof t=="function";if(e!==void 0){let s=-1;for(const l of e)s>-1&&(yield a?t(s):t),s++,yield l}}var z=Object.defineProperty,L=Object.getOwnPropertyDescriptor,m=(e,t,a,s)=>{for(var l=s>1?void 0:s?L(t,a):t,i=e.length-1,u;i>=0;i--)(u=e[i])&&(l=(s?u(t,a,l):u(l))||l);return s&&l&&z(t,a,l),l};let o=class extends w(D){renderPeerChat(e){const t=e.lastActivity.event.content;return r`<div
 			class="row"
 			style="gap: 8px; cursor: pointer;"
 			@click=${()=>{this.dispatchEvent(new CustomEvent("peer-chat-selected",{composed:!0,bubbles:!0,detail:{peerChatHash:e.peerChatHash}}))}}
@@ -223,18 +223,13 @@ import{S as w,p as $}from"./context.CP7mVcaJ.js";import{c as y,_ as d,S as b,e a
 			</div>
 		</div>`}renderChats(e){return e.length===0?r`<div
 				class="column placeholder"
-				style="flex: 1; align-items: center; justify-content: center"
+				style="flex: 1; align-items: center; justify-content: center; gap: 8px"
 			>
-				<div
-					class="column"
-					style="align-items: center; justify-content: center; gap: 8px"
-				>
-					<sl-icon
-						.src=${C(_)}
-						style="height: 64px; width: 64px"
-					></sl-icon>
-					<span>${n("There are no chats yet.")}</span>
-				</div>
+				<sl-icon
+					.src=${C(_)}
+					style="height: 64px; width: 64px"
+				></sl-icon>
+				<span>${n("There are no chats yet.")}</span>
 			</div>`:r`<div class="column" style="flex: 1; overflow: hidden">
 			${O(e.map(t=>t.type==="PeerChat"?this.renderPeerChat(t):this.renderGroupChat(t)),r`<sl-divider></sl-divider>`)}
 		</div>`}render(){const e=this.store.allChats.get();switch(e.status){case"pending":return r`
