@@ -99,6 +99,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 						avatar-height="300"
 						label=""
 						name="avatar"
+						required
 					>
 					</select-avatar>
 					<sl-input

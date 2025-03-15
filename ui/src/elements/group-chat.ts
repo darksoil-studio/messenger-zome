@@ -58,7 +58,25 @@ import './group-members.js';
 import './group-settings.js';
 import './message-input.js';
 
-const colorHash = new ColorHash({ lightness: [0.1, 0.2, 0.3, 0.4] });
+function closestPassShadow(node: Node | null, selector: string) {
+	if (!node) {
+		return null;
+	}
+
+	if (node instanceof ShadowRoot) {
+		return closestPassShadow(node.host, selector);
+	}
+
+	if (node instanceof HTMLElement) {
+		if (node.matches(selector)) {
+			return node;
+		} else {
+			return closestPassShadow(node.parentNode, selector);
+		}
+	}
+
+	return closestPassShadow(node.parentNode, selector);
+}
 
 @localized()
 @customElement('group-chat')
@@ -71,6 +89,17 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 	@state()
 	view: 'chat' | 'details' | 'add-members' | 'edit-info' = 'chat';
+
+	get shoelaceTheme(): 'light' | 'dark' {
+		const darkClassElement = closestPassShadow(this, '.sl-theme-dark');
+		return darkClassElement ? 'dark' : 'light';
+	}
+
+	get colorHash() {
+		if (this.shoelaceTheme === 'dark')
+			return new ColorHash({ lightness: [0.7, 0.8, 0.9] });
+		return new ColorHash({ lightness: [0.1, 0.2, 0.3, 0.4] });
+	}
 
 	/**
 	 * Profiles provider
@@ -425,7 +454,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		return html`
 			<span
 				style=${styleMap({
-					color: colorHash.hex(encodeHashToBase64(agent)),
+					color: this.colorHash.hex(encodeHashToBase64(agent)),
 					'font-weight': 'bold',
 				})}
 				@click=${() => {
