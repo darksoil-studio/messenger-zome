@@ -108,8 +108,8 @@ importers:
         specifier: 0.400.0-rev.6211f22a39ac13f941a43c8a738588d7b4dab7f6
         version: 0.400.0-rev.6211f22a39ac13f941a43c8a738588d7b4dab7f6(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/profiles-provider':
-        specifier: ^0.400.1
-        version: 0.400.1(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+        specifier: ^0.400.2
+        version: 0.400.2(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@holochain/client':
         specifier: ^0.18.0
         version: 0.18.0
@@ -375,6 +375,9 @@ packages:
 
   '@darksoil-studio/profiles-provider@0.400.1':
     resolution: {integrity: sha512-Ja77MAjyVlTAHzEZjW+10vFrGRV6BSzEBSmR/M2Rl7t98geO424N9CgasMPcq1g7knwv6AIsKOo6OC4a/q2Ohg==}
+
+  '@darksoil-studio/profiles-provider@0.400.2':
+    resolution: {integrity: sha512-QjPlzze3F5xXgQ8EOpsOdlsfCPJvWduLFQ7j36JD9v+SvgmemNOGCmgOOxms3zcpZ6Hd41F3rX0GC/qnahDveg==}
 
   '@darksoil-studio/profiles-zome@0.400.0-rev.1022bb5032eea69f0d3b6aef173d2b956a7e0feb':
     resolution: {integrity: sha512-BE2HIkCBOuEt/OO/hmgiWr3hJakPT4l/CSZtM15SPw0dOUTeNkLS3i3bWXTgVBvg2e0ZkA/bRL7IoZT89AzeIQ==}
@@ -3272,6 +3275,24 @@ snapshots:
       - utf-8-validate
 
   '@darksoil-studio/profiles-provider@0.400.1(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
+    dependencies:
+      '@holochain/client': 0.18.0
+      '@lit/context': 1.1.4
+      '@lit/localize': 0.12.2
+      '@mdi/js': 7.4.47
+      '@msgpack/msgpack': 2.8.0
+      '@shoelace-style/shoelace': 2.20.0(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+      '@tnesh-stack/elements': 0.400.2(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+      '@tnesh-stack/signals': 0.400.0
+      '@tnesh-stack/utils': 0.400.0
+      lit: 3.2.1
+    transitivePeerDependencies:
+      - '@floating-ui/utils'
+      - '@types/react'
+      - bufferutil
+      - utf-8-validate
+
+  '@darksoil-studio/profiles-provider@0.400.2(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
     dependencies:
       '@holochain/client': 0.18.0
       '@lit/context': 1.1.4

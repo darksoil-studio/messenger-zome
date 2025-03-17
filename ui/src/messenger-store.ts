@@ -6,6 +6,7 @@ import {
 	PrivateEventSourcingStore,
 	SignedEvent,
 } from '@darksoil-studio/private-event-sourcing-zome';
+import { ProfilesProvider } from '@darksoil-studio/profiles-provider';
 import {
 	AgentPubKey,
 	EntryHash,
@@ -72,8 +73,25 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 	constructor(
 		public client: MessengerClient,
 		public linkedDevicesStore?: LinkedDevicesStore,
+		public profilesProvider?: ProfilesProvider,
 	) {
 		super(client);
+
+		if (profilesProvider && !profilesProvider.profilesArePublic) {
+			profilesProvider.onProfileUpdated(async profile => {
+				const entries = await toPromise(this.messengerEntries);
+
+				const allGroupChats = Object.keys(entries.groupChats);
+
+				for (const groupChatHash of allGroupChats) {
+					const store = this.groupChats.get(
+						decodeHashFromBase64(groupChatHash),
+					);
+
+					await store.updateProfile(profile);
+				}
+			});
+		}
 
 		this.client.commitMyPendingEncryptedMessages();
 		setTimeout(() => {
@@ -114,10 +132,6 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 				for (const groupChatHash of allGroupChats) {
 					const store = this.groupChats.get(
 						decodeHashFromBase64(groupChatHash),
-					);
-					console.log(
-						encodeHashToBase64(this.client.client.myPubKey),
-						Object.keys(await this.client.queryPrivateEventEntries()),
 					);
 
 					await store.notifyNewAgent(linkedDevice, proofs);
