@@ -108,12 +108,15 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	@property()
 	profilesProvider!: ProfilesProvider;
 
-	private renderEvent(event: SignedEvent<GroupChatEvent>) {
+	private renderEvent(
+		currentGroup: GroupChat,
+		event: SignedEvent<GroupChatEvent>,
+	) {
 		switch (event.event.content.event.type) {
 			case 'UpdateGroupInfo':
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
-						${this.renderAgentNickname(event.author)}
+						${this.renderAgentNickname(currentGroup, event.author)}
 						&nbsp;${msg(str`updated the group's info.`)}
 					</sl-tag>
 				`;
@@ -121,6 +124,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
 						${this.renderAgentNickname(
+							currentGroup,
 							event.event.content.event.member_agents[0],
 						)}&nbsp;${msg(str`was added to the group.`)}
 					</sl-tag>
@@ -128,8 +132,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			case 'RemoveMember':
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
-						${this.renderAgentNickname(event.author)}
+						${this.renderAgentNickname(currentGroup, event.author)}
 						&nbsp;${msg('removed')}&nbsp;${this.renderAgentNickname(
+							currentGroup,
 							event.event.content.event.member_agents[0],
 						)}&nbsp;${msg('from the group.')}
 					</sl-tag>
@@ -137,14 +142,14 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			case 'LeaveGroup':
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
-						${this.renderAgentNickname(event.author)}
+						${this.renderAgentNickname(currentGroup, event.author)}
 						&nbsp;${msg(str`left the group.`)}
 					</sl-tag>
 				`;
 			case 'DeleteGroup':
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
-						${this.renderAgentNickname(event.author)}
+						${this.renderAgentNickname(currentGroup, event.author)}
 						&nbsp;${msg(str`deleted the group.`)}
 					</sl-tag>
 				`;
@@ -283,6 +288,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							${this.renderTypingIndicators(typingPeers)}
 							${eventsSetsInDay.map(eventSetsInDay =>
 								this.renderEventsSetsInDay(
+									currentGroup,
 									myAgentsB64,
 									eventSetsInDay.day,
 									eventSetsInDay.eventsSets,
@@ -291,7 +297,10 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							<div class="row" style="justify-content: center">
 								<sl-tag style="align-self: center; margin: 8px">
 									${msg(str`Group was created by`)}&nbsp;
-									${this.renderAgentNickname(createGroupChat.author)}
+									${this.renderAgentNickname(
+										currentGroup,
+										createGroupChat.author,
+									)}
 								</sl-tag>
 							</div>
 						</div>
@@ -316,6 +325,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	}
 
 	private renderEventsSetsInDay(
+		currentGroup: GroupChat,
 		myAgentsB64: Array<AgentPubKeyB64>,
 		day: Date,
 		eventsSets: Array<
@@ -331,8 +341,14 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					eventSet[0][1].event.content.type === 'GroupMessage'
 						? myAgentsB64.includes(encodeHashToBase64(eventSet[0][1].author))
 							? this.renderMessageSetFromMe(eventSet as EventSet<GroupMessage>)
-							: this.renderMessageSetToMe(eventSet as EventSet<GroupMessage>)
-						: this.renderEvent(eventSet[0][1] as SignedEvent<GroupChatEvent>),
+							: this.renderMessageSetToMe(
+									currentGroup,
+									eventSet as EventSet<GroupMessage>,
+								)
+						: this.renderEvent(
+								currentGroup,
+								eventSet[0][1] as SignedEvent<GroupChatEvent>,
+							),
 				)}
 				<div style="align-self: center">
 					<sl-tag>
@@ -444,12 +460,21 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		`;
 	}
 
-	renderAgentNickname(agent: AgentPubKey) {
-		const profile = this.profilesProvider.currentProfileForAgent
-			.get(agent)
-			.get();
-		if (profile.status !== 'completed' || !profile.value)
-			return html`${msg('Profile not found.')}`;
+	renderAgentNickname(currentGroup: GroupChat, agent: AgentPubKey) {
+		let profile = currentGroup.members.find(member =>
+			member.agents.find(
+				a => encodeHashToBase64(a) === encodeHashToBase64(agent),
+			),
+		)!.profile;
+
+		if (this.profilesProvider.profilesArePublic && !profile) {
+			const profileResult = this.profilesProvider.currentProfileForAgent
+				.get(agent)
+				.get();
+			if (profileResult.status !== 'completed' || !profileResult.value)
+				return html`${msg('Profile not found.')}`;
+			profile = profileResult.value;
+		}
 
 		return html`
 			<span
@@ -468,12 +493,15 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						}),
 					);
 				}}
-				>${profile.value?.name}</span
+				>${profile!.name}</span
 			>
 		`;
 	}
 
-	private renderMessageSetToMe(messageSet: EventSet<GroupMessage>) {
+	private renderMessageSetToMe(
+		currentGroup: GroupChat,
+		messageSet: EventSet<GroupMessage>,
+	) {
 		const lastMessage = messageSet[0][1];
 		const timestamp = lastMessage.event.timestamp / 1000;
 		const date = new Date(timestamp);
@@ -492,7 +520,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						<div class="colum message" style="gap:8px">
 							${
 								i === messageSet.length - 1
-									? this.renderAgentNickname(message.author)
+									? this.renderAgentNickname(currentGroup, message.author)
 									: html``
 							}
 							<div

@@ -543,6 +543,13 @@ function apply(
 				name: groupEvent.name,
 			};
 			break;
+		case 'UpdateProfile':
+			groupChat.members.find(member =>
+				member.agents.find(
+					agent => encodeHashToBase64(agent) === encodeHashToBase64(author),
+				),
+			)!.profile = groupEvent.profile;
+			break;
 		case 'UpdateGroupSettings':
 			groupChat.settings = {
 				only_admins_can_add_members: groupEvent.only_admins_can_add_members,

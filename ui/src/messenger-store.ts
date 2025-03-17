@@ -17,6 +17,7 @@ import {
 import { decode } from '@msgpack/msgpack';
 import { AsyncComputed, joinAsync, toPromise } from '@tnesh-stack/signals';
 import { HashType, MemoHoloHashMap, retype } from '@tnesh-stack/utils';
+import isEqual from 'lodash-es/isEqual.js';
 
 import { GroupChatStore, GroupChatSummary } from './group-chat-store.js';
 import { MessengerClient } from './messenger-client.js';
@@ -32,7 +33,7 @@ import {
 	ReadGroupMessages,
 	ReadPeerMessages,
 } from './types.js';
-import { asyncReadable } from './utils.js';
+import { areEqual, asyncReadable, effect } from './utils.js';
 
 export type ChatSummary =
 	| ({
@@ -78,22 +79,42 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 		super(client);
 
 		if (profilesProvider && !profilesProvider.profilesArePublic) {
-			profilesProvider.onProfileUpdated(async profile => {
-				const entries = await toPromise(this.messengerEntries);
+			effect(() => {
+				const myProfile = this.profilesProvider?.currentProfileForAgent
+					.get(this.client.client.myPubKey)
+					.get();
+				const entries = this.messengerEntries.get();
 
-				const allGroupChats = Object.keys(entries.groupChats);
+				if (myProfile!.status !== 'completed' || !myProfile?.value) return;
+				if (entries!.status !== 'completed') return;
 
-				for (const groupChatHash of allGroupChats) {
-					const store = this.groupChats.get(
+				for (const groupChatHash of Object.keys(entries.value.groupChats)) {
+					const groupChatStore = this.groupChats.get(
 						decodeHashFromBase64(groupChatHash),
 					);
+					const groupChat = groupChatStore.currentGroupChat.get();
+					if (groupChat.status !== 'completed') continue;
 
-					await store.updateProfile(profile);
+					const myMember = groupChat.value.members.find(member =>
+						member.agents.find(
+							agent =>
+								encodeHashToBase64(agent) ===
+								encodeHashToBase64(this.client.client.myPubKey),
+						),
+					);
+					if (!myMember || myMember.removed) continue;
+
+					if (
+						!myMember.profile ||
+						!areEqual(myMember.profile, myProfile.value)
+					) {
+						console.log(myMember.profile, myProfile.value);
+						groupChatStore.updateProfile(myProfile.value);
+					}
 				}
 			});
 		}
 
-		this.client.commitMyPendingEncryptedMessages();
 		setTimeout(() => {
 			this.client.commitMyPendingEncryptedMessages();
 		}, 2000);
@@ -113,7 +134,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 				);
 
 				// Wait for the whole processing to finish
-				this.client.synchronizeWithLinkedDevice(linkedDevice);
+				// this.client.synchronizeWithLinkedDevice(linkedDevice);
 				// Send to everyone that we have a new peer
 				const entries = await toPromise(this.messengerEntries);
 
