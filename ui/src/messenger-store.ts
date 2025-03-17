@@ -108,7 +108,6 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 						!myMember.profile ||
 						!areEqual(myMember.profile, myProfile.value)
 					) {
-						console.log(myMember.profile, myProfile.value);
 						groupChatStore.updateProfile(myProfile.value);
 					}
 				}
