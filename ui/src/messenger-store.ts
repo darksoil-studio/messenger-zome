@@ -17,7 +17,6 @@ import {
 import { decode } from '@msgpack/msgpack';
 import { AsyncComputed, joinAsync, toPromise } from '@tnesh-stack/signals';
 import { HashType, MemoHoloHashMap, retype } from '@tnesh-stack/utils';
-import isEqual from 'lodash-es/isEqual.js';
 
 import { GroupChatStore, GroupChatSummary } from './group-chat-store.js';
 import { MessengerClient } from './messenger-client.js';

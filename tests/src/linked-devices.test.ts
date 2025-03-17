@@ -8,7 +8,10 @@ test('messages get to all devices', async () => {
 	await runScenario(async scenario => {
 		const [alice, bob, bob2] = await setup(scenario, 3);
 
-		await linkDevices(bob.linkedDevicesStore, bob2.linkedDevicesStore);
+		await linkDevices(
+			bob.store.linkedDevicesStore,
+			bob2.store.linkedDevicesStore,
+		);
 
 		await dhtSync(
 			[alice.player, bob.player, bob2.player],
@@ -116,7 +119,10 @@ test('add new device while receiving message is reconciled', async () => {
 			message: 'hey!',
 			reply_to: undefined,
 		});
-		await linkDevices(bob.linkedDevicesStore, bob2.linkedDevicesStore);
+		await linkDevices(
+			bob.store.linkedDevicesStore,
+			bob2.store.linkedDevicesStore,
+		);
 
 		await dhtSync(
 			[alice.player, bob.player, bob2.player],
@@ -186,7 +192,10 @@ test('messages get synchronized even when offline', async () => {
 			[alice.player, bob.player, bob2.player],
 			alice.player.cells[0].cell_id[0],
 		);
-		await linkDevices(bob.linkedDevicesStore, bob2.linkedDevicesStore);
+		await linkDevices(
+			bob.store.linkedDevicesStore,
+			bob2.store.linkedDevicesStore,
+		);
 		await dhtSync(
 			[alice.player, bob.player, bob2.player],
 			alice.player.cells[0].cell_id[0],
