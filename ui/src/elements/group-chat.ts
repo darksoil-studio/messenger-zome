@@ -710,7 +710,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					<span>${msg('Edit group info')}</span>
 				</div>
 
-				<div class="row" style="justify-content: center; flex: 1; margin: 8px">
+				<div class="row" style="justify-content: center; flex: 1; margin: 16px">
 					<sl-card style="flex-basis: 500px; align-items: start">
 						<div class="column" style="gap: 16px; flex: 1">
 							<div class="row" style="align-items: start; gap: 16px">
