@@ -27,6 +27,7 @@ import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js'
 import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
 import '@shoelace-style/shoelace/dist/components/switch/switch.js';
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
+import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
 import {
 	hashProperty,
 	notifyError,
@@ -696,7 +697,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				${onSubmit(fields => this.updateGroupInfo(fields))}
 			>
 				<div
-					parr"
+					part="top-bar"
 					class="row top-bar"
 					style="gap: 8px; align-items: center "
 				>
@@ -710,31 +711,33 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				</div>
 
 				<div class="row" style="justify-content: center; flex: 1; margin: 8px">
-					<div class="column" style="gap: 8px; flex-basis: 500px">
-						<div class="row" style="align-items: start; gap: 16px">
-							<select-avatar
-								name="avatar"
-								.label=${msg('Image*')}
-								.value=${info.avatar}
-							></select-avatar>
-							<sl-input
-								required
-								.label=${msg('Name')}
-								name="name"
-								.value=${info.name}
-								style="flex: 1"
-							></sl-input>
+					<sl-card style="flex-basis: 500px">
+						<div class="column" style="gap: 8px;">
+							<div class="row" style="align-items: start; gap: 16px">
+								<select-avatar
+									name="avatar"
+									.label=${msg('Image*')}
+									.value=${info.avatar}
+								></select-avatar>
+								<sl-input
+									required
+									.label=${msg('Name')}
+									name="name"
+									.value=${info.name}
+									style="flex: 1"
+								></sl-input>
+							</div>
+							<sl-textarea
+								.label=${msg('Description')}
+								name="description"
+								.value=${info.description}
+							></sl-textarea>
+							<div style="flex: 1"></div>
+							<sl-button type="submit" variant="primary"
+								>${msg('Save')}
+							</sl-button>
 						</div>
-						<sl-input
-							.label=${msg('Description')}
-							name="description"
-							.value=${info.description}
-						></sl-input>
-						<div style="flex: 1"></div>
-						<sl-button type="submit" variant="primary"
-							>${msg('Save')}
-						</sl-button>
-					</div>
+					</sl-card>
 				</div>
 			</form>
 		`;
@@ -751,7 +754,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 		return html`
 			<div class="column" style="flex: 1">
-				<div part="top-bar" class="row top-bar" style="align">
+				<div part="top-bar" class="row top-bar" style="align-items: center">
 					<sl-icon-button
 						.src=${wrapPathInSvg(mdiArrowLeft)}
 						@click=${() => {
