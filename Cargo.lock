@@ -673,7 +673,7 @@ checksum = "c19937216e9d3aa9956d9bb8dfc0b0c8beb6058fc4f7a4dc4d850edf86a237d6"
 [[package]]
 name = "linked_devices_types"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/linked-devices-zome?branch=main-0.4#e85058930c86c486390f0e52c932b0c5065c4b23"
+source = "git+https://github.com/darksoil-studio/linked-devices-zome?branch=main-0.4#2679811ecd7856667c8397af7b1ecf41c8e82d79"
 dependencies = [
  "hdi",
  "serde",
@@ -732,9 +732,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.21.0"
+version = "1.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cde51589ab56b20a6f686b2c68f7a0bd6add753d697abf720d63f8db3ab7b1ad"
+checksum = "d75b0bedcc4fe52caa0e03d9f1151a323e4aa5e2d78ba3580400cd3c9e2bc4bc"
 
 [[package]]
 name = "paste"
@@ -757,7 +757,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 [[package]]
 name = "private_event_proc_macro"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.4#8a6d74f0ee4436bf956b480130fcbda442fe0a62"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.4#fe5e05c552c255a2eaf426c408ecad7c725dfe7e"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -769,7 +769,7 @@ dependencies = [
 [[package]]
 name = "private_event_sourcing"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.4#8a6d74f0ee4436bf956b480130fcbda442fe0a62"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.4#fe5e05c552c255a2eaf426c408ecad7c725dfe7e"
 dependencies = [
  "hdk",
  "linked_devices_types",
@@ -782,7 +782,7 @@ dependencies = [
 [[package]]
 name = "private_event_sourcing_integrity"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.4#8a6d74f0ee4436bf956b480130fcbda442fe0a62"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.4#fe5e05c552c255a2eaf426c408ecad7c725dfe7e"
 dependencies = [
  "hdi",
  "serde",

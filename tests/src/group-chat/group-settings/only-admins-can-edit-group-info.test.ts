@@ -64,8 +64,6 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
-		// watch(carol.store.messengerEntries, () => {});
-
 		await alice.store.groupChats
 			.get(groupHash)
 			.addMember([carol.player.agentPubKey]);
@@ -86,11 +84,12 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
-		await carol.store.groupChats.get(groupHash).updateGroupChatInfo(info);
-
-		await carol.store.groupChats
-			.get(groupHash)
-			.removeMember([bob.player.agentPubKey]);
+		await Promise.all([
+			carol.store.groupChats.get(groupHash).updateGroupChatInfo(info),
+			carol.store.groupChats
+				.get(groupHash)
+				.removeMember([bob.player.agentPubKey]),
+		]);
 
 		await groupConsistency(
 			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
@@ -105,11 +104,13 @@ test('only_admins_can_edit_group_info allows works correctly', async () => {
 
 		// Carol deletes the group at the same time as Alice updates it
 		// Should result in the group being deleted
-		await carol.store.groupChats.get(groupHash).deleteGroupChat();
-		await alice.store.groupChats.get(groupHash).updateGroupChatInfo({
-			...info,
-			name: 'anothername',
-		});
+		await Promise.all([
+			carol.store.groupChats.get(groupHash).deleteGroupChat(),
+			alice.store.groupChats.get(groupHash).updateGroupChatInfo({
+				...info,
+				name: 'anothername',
+			}),
+		]);
 
 		await groupConsistency(
 			[alice, carol].map(p => p.store.groupChats.get(groupHash)),

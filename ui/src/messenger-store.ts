@@ -6,6 +6,7 @@ import {
 	PrivateEventSourcingStore,
 	SignedEvent,
 } from '@darksoil-studio/private-event-sourcing-zome';
+import { ProfilesProvider } from '@darksoil-studio/profiles-provider';
 import {
 	AgentPubKey,
 	EntryHash,
@@ -31,7 +32,7 @@ import {
 	ReadGroupMessages,
 	ReadPeerMessages,
 } from './types.js';
-import { asyncReadable } from './utils.js';
+import { areEqual, asyncReadable, effect } from './utils.js';
 
 export type ChatSummary =
 	| ({
@@ -72,10 +73,46 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 	constructor(
 		public client: MessengerClient,
 		public linkedDevicesStore?: LinkedDevicesStore,
+		public profilesProvider?: ProfilesProvider,
 	) {
 		super(client);
 
-		this.client.commitMyPendingEncryptedMessages();
+		if (profilesProvider && !profilesProvider.profilesArePublic) {
+			effect(() => {
+				const myProfile = this.profilesProvider?.currentProfileForAgent
+					.get(this.client.client.myPubKey)
+					.get();
+				const entries = this.messengerEntries.get();
+
+				if (myProfile!.status !== 'completed' || !myProfile?.value) return;
+				if (entries!.status !== 'completed') return;
+
+				for (const groupChatHash of Object.keys(entries.value.groupChats)) {
+					const groupChatStore = this.groupChats.get(
+						decodeHashFromBase64(groupChatHash),
+					);
+					const groupChat = groupChatStore.currentGroupChat.get();
+					if (groupChat.status !== 'completed') continue;
+
+					const myMember = groupChat.value.members.find(member =>
+						member.agents.find(
+							agent =>
+								encodeHashToBase64(agent) ===
+								encodeHashToBase64(this.client.client.myPubKey),
+						),
+					);
+					if (!myMember || myMember.removed) continue;
+
+					if (
+						!myMember.profile ||
+						!areEqual(myMember.profile, myProfile.value)
+					) {
+						groupChatStore.updateProfile(myProfile.value);
+					}
+				}
+			});
+		}
+
 		setTimeout(() => {
 			this.client.commitMyPendingEncryptedMessages();
 		}, 2000);
@@ -95,7 +132,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 				);
 
 				// Wait for the whole processing to finish
-				this.client.synchronizeWithLinkedDevice(linkedDevice);
+				// this.client.synchronizeWithLinkedDevice(linkedDevice);
 				// Send to everyone that we have a new peer
 				const entries = await toPromise(this.messengerEntries);
 
@@ -114,10 +151,6 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 				for (const groupChatHash of allGroupChats) {
 					const store = this.groupChats.get(
 						decodeHashFromBase64(groupChatHash),
-					);
-					console.log(
-						encodeHashToBase64(this.client.client.myPubKey),
-						Object.keys(await this.client.queryPrivateEventEntries()),
 					);
 
 					await store.notifyNewAgent(linkedDevice, proofs);

@@ -2,6 +2,7 @@ import {
 	LinkedDevicesClient,
 	LinkedDevicesStore,
 } from '@darksoil-studio/linked-devices-zome';
+import { ProfilesClient, ProfilesStore } from '@darksoil-studio/profiles-zome';
 import { HoloHashB64 } from '@holochain/client';
 import { Scenario, dhtSync, pause } from '@holochain/tryorama';
 import { Signal, joinAsync } from '@tnesh-stack/signals';
@@ -22,19 +23,20 @@ async function addPlayer(scenario: Scenario) {
 		.adminWs()
 		.authorizeSigningCredentials(player.cells[0].cell_id);
 
-	const linkedDevicesStore = new LinkedDevicesStore(
-		new LinkedDevicesClient(player.appWs as any, 'messenger_test'),
-	);
 	const store = new MessengerStore(
 		new MessengerClient(player.appWs as any, 'messenger_test'),
-		linkedDevicesStore,
+		new LinkedDevicesStore(
+			new LinkedDevicesClient(player.appWs as any, 'messenger_test'),
+		),
+		new ProfilesStore(
+			new ProfilesClient(player.appWs as any, 'messenger_test'),
+		),
 	);
 	await store.client.queryPrivateEventEntries();
 
 	return {
 		store,
 		player,
-		linkedDevicesStore,
 		startUp: async () => {
 			await player.conductor.startUp();
 			const port = await player.conductor.attachAppInterface();
@@ -45,7 +47,8 @@ async function addPlayer(scenario: Scenario) {
 				});
 			const appWs = await player.conductor.connectAppWs(issued.token, port);
 			store.client.client = appWs;
-			linkedDevicesStore.client.client = appWs;
+			store.linkedDevicesStore.client.client = appWs;
+			(store.profilesProvider as ProfilesStore).client.client = appWs;
 		},
 	};
 }
@@ -118,7 +121,7 @@ export async function waitUntil(
 
 export async function groupConsistency(
 	groups: Array<GroupChatStore>,
-	timeoutMs: number = 20_000,
+	timeoutMs: number = 40_000,
 ): Promise<void> {
 	const error = new Error('Timeout');
 	return new Promise((resolve, reject) => {

@@ -1,4 +1,5 @@
 import { LinkedDevicesProof } from '@darksoil-studio/linked-devices-zome';
+import { Profile } from '@darksoil-studio/profiles-provider';
 import {
 	AgentPubKey,
 	EntryHash,
@@ -105,6 +106,7 @@ export interface GroupMember {
 export type GroupEvent =
 	| ({ type: 'UpdateGroupInfo' } & GroupInfo)
 	| ({ type: 'UpdateGroupSettings' } & GroupSettings)
+	| { type: 'UpdateProfile'; profile: Profile }
 	| { type: 'AddMember'; member_agents: Array<AgentPubKey> }
 	| { type: 'RemoveMember'; member_agents: Array<AgentPubKey> }
 	| {
