@@ -28,7 +28,7 @@
     "./locales/*": "./locales/*"
   },
   "dependencies": {
-    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.d196a85a27196424465c309afc32f8a4f290714e",
+    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.87424a5d279cf9d5840223d2247d66b99f713f5f",
     "@darksoil-studio/private-event-sourcing-zome": "0.400.0-rev.fe5e05c552c255a2eaf426c408ecad7c725dfe7e",
     "@darksoil-studio/profiles-provider": "^0.400.3",
     "@holochain/client": "^0.18.0",
