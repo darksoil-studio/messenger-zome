@@ -34,6 +34,7 @@ import {
 	wrapPathInSvg,
 } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
+import '@tnesh-stack/elements/dist/elements/select-avatar.js';
 import { SignalWatcher, joinAsync } from '@tnesh-stack/signals';
 import ColorHash from 'color-hash';
 import { LitElement, css, html } from 'lit';
@@ -159,7 +160,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	private renderTopBar(groupChat: GroupChat) {
 		return html`
 			<div
-				part="top-bar"
+				parr"
 				class="row top-bar"
 				style="align-items: center; gap: 8px"
 			>
@@ -239,7 +240,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 		return html`<div class="column" style="flex: 1;">
 			${this.renderTopBar(currentGroup)}
-			<div part="chat" class="column" style="flex: 1; margin: 8px">
+			<div part="chat" class="column" style="flex: 1;">
 				<div class="flex-scrollable-parent">
 					<div class="flex-scrollable-container">
 						<div
@@ -650,12 +651,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							this.view = 'details';
 						}}
 					></sl-icon-button>
-					<span>${msg('Add Members')}</span>
+					<span>${msg('Add members')}</span>
 				</div>
 
-				<div class="row" style="justify-content: center; flex: 1; margin: 8px">
+				<div class="row" style="justify-content: center; flex: 1;">
 					<div class="column" style="gap: 8px; flex-basis: 500px">
-						<div class="flex-scrollable-parent">
+						<div class="flex-scrollable-parent" style="flex: 1">
 							<div class="flex-scrollable-container">
 								<div class="flex-scrollable-y">
 									<search-users
@@ -672,8 +673,6 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							</div>
 						</div>
 
-						<div style="flex: 1"></div>
-
 						<sl-button
 							variant="primary"
 							.disabled=${this.usersToBeAdded &&
@@ -681,7 +680,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							@click=${() => {
 								this.addMembers();
 							}}
-							>${msg('Add Members')}
+							>${msg('Add members')}
 						</sl-button>
 					</div>
 				</div>
@@ -697,12 +696,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				${onSubmit(fields => this.updateGroupInfo(fields))}
 			>
 				<div
-					part="top-bar"
+					parr"
 					class="row top-bar"
 					style="gap: 8px; align-items: center "
 				>
 					<sl-icon-button
-						.src=${wrapPathInSvg(mdiArrowLeft)}
+						.src=${wrapPathInSvg(mdiClose)}
 						@click=${() => {
 							this.view = 'details';
 						}}
@@ -712,13 +711,20 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 				<div class="row" style="justify-content: center; flex: 1; margin: 8px">
 					<div class="column" style="gap: 8px; flex-basis: 500px">
-						<upload-avatar name="avatar" .value=${info.avatar}></upload-avatar>
-						<sl-input
-							required
-							.label=${msg('Name')}
-							name="name"
-							.value=${info.name}
-						></sl-input>
+						<div class="row" style="align-items: start; gap: 16px">
+							<select-avatar
+								name="avatar"
+								.label=${msg('Image*')}
+								.value=${info.avatar}
+							></select-avatar>
+							<sl-input
+								required
+								.label=${msg('Name')}
+								name="name"
+								.value=${info.name}
+								style="flex: 1"
+							></sl-input>
+						</div>
 						<sl-input
 							.label=${msg('Description')}
 							name="description"
@@ -745,43 +751,44 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 		return html`
 			<div class="column" style="flex: 1">
-				<div part="top-bar" class="row top-bar" style="align-items: center;">
+				<div part="top-bar" class="row top-bar" style="align">
 					<sl-icon-button
 						.src=${wrapPathInSvg(mdiArrowLeft)}
 						@click=${() => {
 							this.view = 'chat';
 						}}
 					></sl-icon-button>
-					<span>${msg('Group Info')}</span>
 					<div style="flex: 1"></div>
-
-					${!groupChat.deleted &&
-					!me.removed &&
-					(me.admin || !groupChat.settings.only_admins_can_edit_group_info)
-						? html`
-								<sl-button
-									@click=${() => {
-										this.view = 'edit-info';
-									}}
-									variant="text"
-									style="margin: -8px"
-								>
-									<sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}>
-									</sl-icon>
-									${msg('Edit')}
-								</sl-button>
-							`
-						: html``}
 				</div>
 				<div class="flex-scrollable-parent">
 					<div class="flex-scrollable-container">
 						<div class="flex-scrollable-y">
 							<div
 								class="row"
-								style="justify-content: center; flex: 1; margin: 8px"
+								style="justify-content: center; flex: 1; margin: 8px; margin-top: 0"
 							>
-								<div class="column" style="gap: 8px; flex-basis: 500px">
-									<group-info .groupChatHash=${this.groupChatHash}></group-info>
+								<div class="column" style="gap: 16px; flex-basis: 500px">
+									<group-info .groupChatHash=${this.groupChatHash}>
+										${!groupChat.deleted &&
+										!me.removed &&
+										(me.admin ||
+											!groupChat.settings.only_admins_can_edit_group_info)
+											? html`
+													<sl-button
+														slot="action"
+														@click=${() => {
+															this.view = 'edit-info';
+														}}
+														circle
+														variant="primary"
+														outline
+													>
+														<sl-icon .src=${wrapPathInSvg(mdiPencil)}>
+														</sl-icon>
+													</sl-button>
+												`
+											: html``}
+									</group-info>
 
 									<sl-card>
 										<group-members
@@ -971,7 +978,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				font-size: 14px;
 			}
 			sl-tag {
-				max-width: 250px;
+				max-width: 400px;
 			}
 		`,
 	];

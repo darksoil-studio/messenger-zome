@@ -151,7 +151,7 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 											const dialog = this.shadowRoot!.getElementById(
 												dialogId,
 											) as SlDialog;
-											dialog.hide();
+											dialog?.hide();
 										} catch (e) {
 											console.error(e);
 											notifyError(msg('Error removing member.'));
@@ -183,10 +183,11 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 			>
 				${member.profile
 					? html`
-							<div class="row" style="gap: 8px; flex: 1">
+							<div class="row" style="gap: 8px; flex: 1; align-items: center">
 								<sl-avatar
 									.image=${member.profile.avatar}
 									.initials=${member.profile.name.slice(0, 2)}
+									style="--size: 32px"
 								>
 								</sl-avatar>
 								<span>${member.profile.name} </span>
@@ -220,9 +221,10 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 				!me.removed &&
 				(me.admin || !groupChat.settings.only_admins_can_add_members)
 					? html`
-							<div
-								class="row"
-								style="align-items: center; gap: 8px; margin-top: 8px; cursor: pointer"
+							<sl-button
+								variant="primary"
+								style="margin-top: 8px"
+								outline
 								@click=${() => {
 									this.dispatchEvent(
 										new CustomEvent('add-members-clicked', {
@@ -235,7 +237,7 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 								<sl-icon slot="prefix" .src=${wrapPathInSvg(mdiAccountPlus)}>
 								</sl-icon>
 								${msg('Add members')}
-							</div>
+							</sl-button>
 						`
 					: html``}
 			</div>

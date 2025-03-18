@@ -36,7 +36,7 @@ export class GroupSettingsEl extends SignalWatcher(LitElement) {
 
 	private renderSettings(iAmAdmin: boolean, settings: GroupSettings) {
 		return html`
-			<div class="column" style="gap: 8px">
+			<div class="column" style="gap: 16px">
 				<sl-switch
 					.disabled=${!iAmAdmin}
 					.checked=${settings.only_admins_can_edit_group_info}
