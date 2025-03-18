@@ -25,18 +25,28 @@ export class GroupInfoEl extends SignalWatcher(LitElement) {
 
 	private renderInfo(info: GroupInfo) {
 		return html`
-			<div class="column" style="gap: 8px;">
+			<div class="column" style="gap: 16px;">
 				${info.avatar
-					? html` <img style="height: 150px" src="${info.avatar}" /> `
+					? html`
+							<img
+								src="${info.avatar}"
+								style="height: 150px; object-fit: cover"
+							/>
+						`
 					: html`<sl-icon
 							.src=${wrapPathInSvg(mdiImageOffOutline)}
 							style="font-size: 64px; border-radius: 50%; align-self: center; height: 150px"
 							class="placeholder"
 						></sl-icon>`}
-				<span class="title">${info.name}</span>
-				${info.description
-					? html` <span class="placeholder">${info.description}</span> `
-					: html``}
+				<div class="row">
+					<div class="column" style="gap: 8px; flex: 1">
+						<span class="title" style="flex: 1">${info.name}</span>
+						${info.description
+							? html` <span class="placeholder">${info.description}</span> `
+							: html``}
+					</div>
+					<slot name="action"></slot>
+				</div>
 			</div>
 		`;
 	}

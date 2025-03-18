@@ -35,6 +35,7 @@
 			import '@darksoil-studio/linked-devices-zome/dist/elements/linked-devices-context.js';
 			import '@darksoil-studio/profiles-zome/dist/elements/profile-prompt.js';
 			import '@darksoil-studio/profiles-zome/dist/elements/profiles-context.js';
+			import '@darksoil-studio/profiles-zome/dist/elements/update-profile.js';
 			import { AppWebsocket, encodeHashToBase64 } from '@holochain/client';
 			import { ContextProvider } from '@lit/context';
 			import '@shoelace-style/shoelace/dist/components/input/input.js';
@@ -159,6 +160,7 @@
 								}}
 								>Send Peer Message</sl-button
 							>
+							<update-profile> </update-profile>
 						</div>
 					`;
 				}

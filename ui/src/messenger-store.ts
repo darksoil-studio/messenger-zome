@@ -76,7 +76,6 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 		public profilesProvider?: ProfilesProvider,
 	) {
 		super(client);
-
 		if (profilesProvider && !profilesProvider.profilesArePublic) {
 			effect(() => {
 				const myProfile = this.profilesProvider?.currentProfileForAgent
