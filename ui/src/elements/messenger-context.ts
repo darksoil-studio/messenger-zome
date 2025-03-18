@@ -65,20 +65,23 @@ export class MessengerContext extends LitElement {
 					this.store = new MessengerStore(
 						new MessengerClient(this.client, this.role, this.zome),
 						context.store,
+						this.store.profilesProvider,
 					);
 				});
 			} else if (e.context === profilesProviderContext) {
+				// eslint-disable-next-line
+				const context = e.contextTarget as any;
 				setTimeout(() => {
+					const profilesProvider: ProfilesProvider = context.store; // TODO: this is not safe!
+					profilesProvider.profilesArePublic = false;
 					this.store = new MessengerStore(
 						new MessengerClient(this.client, this.role, this.zome),
 						this.store.linkedDevicesStore,
-						// eslint-disable-next-line
-						(e.target as any).store, // TODO: this is not safe!
+						profilesProvider,
 					);
 				});
 			}
 		});
-
 		this.store = new MessengerStore(
 			new MessengerClient(this.client, this.role, this.zome),
 			this.linkedDevicesStore,
