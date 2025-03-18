@@ -161,7 +161,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 	private renderTopBar(groupChat: GroupChat) {
 		return html`
 			<div
-				parr"
+				part="top-bar"
 				class="row top-bar"
 				style="align-items: center; gap: 8px"
 			>
@@ -707,12 +707,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							this.view = 'details';
 						}}
 					></sl-icon-button>
-					<span>${msg('Edit Group Info')}</span>
+					<span>${msg('Edit group info')}</span>
 				</div>
 
 				<div class="row" style="justify-content: center; flex: 1; margin: 8px">
-					<sl-card style="flex-basis: 500px">
-						<div class="column" style="gap: 8px;">
+					<sl-card style="flex-basis: 500px; align-items: start">
+						<div class="column" style="gap: 16px; flex: 1">
 							<div class="row" style="align-items: start; gap: 16px">
 								<select-avatar
 									name="avatar"
