@@ -655,34 +655,39 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					<span>${msg('Add members')}</span>
 				</div>
 
-				<div class="row" style="justify-content: center; flex: 1;">
-					<div class="column" style="gap: 8px; flex-basis: 500px">
-						<div class="flex-scrollable-parent" style="flex: 1">
-							<div class="flex-scrollable-container">
-								<div class="flex-scrollable-y">
-									<search-users
-										id="users"
-										.excludedUsers=${groupChat.members
-											.filter(m => !m.removed)
-											.map(m => m.agents)}
-										@user-selected=${(e: CustomEvent) => {
-											this.requestUpdate();
-										}}
-									>
-									</search-users>
-								</div>
+				<div class="flex-scrollable-parent" style="flex: 1">
+					<div class="flex-scrollable-container">
+						<div class="flex-scrollable-y">
+							<div class="row" style="justify-content: center; flex: 1;">
+								<sl-card
+									style="flex-basis: 500px; align-self: start; margin: 16px"
+								>
+									<div class="column" style="gap: 16px; flex: 1">
+										<search-users
+											id="users"
+											.excludedUsers=${groupChat.members
+												.filter(m => !m.removed)
+												.map(m => m.agents)}
+											@user-selected=${(e: CustomEvent) => {
+												this.requestUpdate();
+											}}
+											style="min-height: 200px"
+										>
+										</search-users>
+
+										<sl-button
+											variant="primary"
+											.disabled=${this.usersToBeAdded &&
+											this.usersToBeAdded.length === 0}
+											@click=${() => {
+												this.addMembers();
+											}}
+											>${msg('Add members')}
+										</sl-button>
+									</div>
+								</sl-card>
 							</div>
 						</div>
-
-						<sl-button
-							variant="primary"
-							.disabled=${this.usersToBeAdded &&
-							this.usersToBeAdded.length === 0}
-							@click=${() => {
-								this.addMembers();
-							}}
-							>${msg('Add members')}
-						</sl-button>
 					</div>
 				</div>
 			</div>
