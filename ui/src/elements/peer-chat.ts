@@ -134,7 +134,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 
 		return html`<div class="column" style="flex: 1;">
 			${this.renderTopBar(peerChat)}
-			<div part="chat" class="column" style="flex: 1; margin: 8px">
+			<div part="chat" class="column" style="flex: 1;">
 				<div class="flex-scrollable-parent">
 					<div class="flex-scrollable-container">
 						<div

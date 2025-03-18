@@ -7,6 +7,7 @@ import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import '@shoelace-style/shoelace/dist/components/input/input.js';
+import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
 import { notifyError, onSubmit } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/select-avatar.js';
 import { SignalWatcher, toPromise } from '@tnesh-stack/signals';
@@ -93,7 +94,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 				${onSubmit(fields => this.createGroupChat(fields))}
 				style="gap: 24px; flex: 1"
 			>
-				<div class="row" style="gap: 8px; align-items: center">
+				<div class="row" style="gap: 16px; align-items: center">
 					<select-avatar
 						avatar-width="300"
 						avatar-height="300"
@@ -109,6 +110,10 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 						name="name"
 					></sl-input>
 				</div>
+				<sl-textarea
+					.placeholder=${msg('Description')}
+					name="description"
+				></sl-textarea>
 
 				<search-users
 					.label=${msg('Add Members')}

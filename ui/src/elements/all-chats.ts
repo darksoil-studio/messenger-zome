@@ -196,7 +196,13 @@ export class AllChats extends SignalWatcher(LitElement) {
 					<span>
 						${this.renderAgentNickname(
 							event.member_agents[0],
-							memberProfile,
+							groupChat.members.find(m =>
+								m.agents.find(
+									a =>
+										encodeHashToBase64(a) ===
+										encodeHashToBase64(event.member_agents[0]),
+								),
+							)!.profile,
 						)}&nbsp;${msg(str`was added to the group.`)}
 					</span>
 				`;

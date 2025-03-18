@@ -38,6 +38,7 @@ import {
 	TYPING_INDICATOR_TTL_MS,
 	mergeMaybeHashes,
 	mergeMaybeStrings,
+	mergeProfiles,
 	mergeStrings,
 } from './utils.js';
 
@@ -693,6 +694,10 @@ function merge(groupChat1: GroupChat, groupChat2: GroupChat): GroupChat {
 				group2member.removed || existingGroup1Member.removed;
 			existingGroup1Member.admin =
 				group2member.admin && existingGroup1Member.admin;
+			existingGroup1Member.profile = mergeProfiles(
+				existingGroup1Member.profile,
+				group2member.profile,
+			);
 		} else {
 			members.push(group2member);
 		}
