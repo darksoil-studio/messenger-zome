@@ -109,7 +109,6 @@ test('add new device while receiving message is reconciled', async () => {
 			[alice.player, bob.player, bob2.player],
 			alice.player.cells[0].cell_id[0],
 		);
-
 		let messages = await toPromise(
 			bob.store.peerChats.get(peerChatHash).messages,
 		);
@@ -132,10 +131,13 @@ test('add new device while receiving message is reconciled', async () => {
 		await waitUntil(
 			async () =>
 				Object.keys(
-					await toPromise(bob2.store.peerChats.get(peerChatHash).messages),
+					await toPromise(
+						bob2.store.peerChats.get(peerChatHash).messages,
+					).catch(() => ({})),
 				).length === 2,
 			60_000,
 		);
+
 		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
 		assert.equal(Object.keys(messages).length, 2);
 	});
