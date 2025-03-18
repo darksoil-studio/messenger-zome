@@ -73,7 +73,6 @@ export class MessengerContext extends LitElement {
 				const context = e.contextTarget as any;
 				setTimeout(() => {
 					const profilesProvider: ProfilesProvider = context.store; // TODO: this is not safe!
-					profilesProvider.profilesArePublic = false;
 					this.store = new MessengerStore(
 						new MessengerClient(this.client, this.role, this.zome),
 						this.store.linkedDevicesStore,
