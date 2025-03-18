@@ -1,4 +1,4 @@
-import{a as d,c as y,p as w,t as $}from"./property.rnZ96Gce.js";import{c as b,_ as c,S as x,e as A,w as k,a as C,m as _,b as P,l as G}from"./styles.By2RxiHb.js";import{i as f,x as r,m as n,f as v,g,r as D}from"./messenger-client.BdwBMR5i.js";import"./chunk.UJ4C5V3J.Cv-qYjFP.js";import{S as T}from"./signal-watcher.Dnw_ZDU5.js";import{m as N}from"./context.Cue3sNVd.js";import"./tslib.es6.kHcLnhpD.js";var H=f`
+import{a as c,c as y,p as w,t as $}from"./property.aM4kGVap.js";import{c as b,_ as p,S as x,e as A,w as k,a as C,m as _,b as P,l as G}from"./styles.B3oeT_Sb.js";import{i as f,x as r,m as n,f as o,g,r as D}from"./messenger-client.B7FUcpsY.js";import"./chunk.UJ4C5V3J.Bqyn4yfz.js";import{S as T}from"./signal-watcher.up8QMDE0.js";import{m as N}from"./context.4V2b8mzb.js";import"./tslib.es6.kHcLnhpD.js";var H=f`
   :host {
     display: inline-flex;
   }
@@ -87,7 +87,7 @@ import{a as d,c as y,p as w,t as $}from"./property.rnZ96Gce.js";import{c as b,_ 
       box-shadow: 0 0 0 0 transparent;
     }
   }
-`,p=class extends x{constructor(){super(...arguments),this.variant="primary",this.pill=!1,this.pulse=!1}render(){return r`
+`,u=class extends x{constructor(){super(...arguments),this.variant="primary",this.pill=!1,this.pulse=!1}render(){return r`
       <span
         part="base"
         class=${A({badge:!0,"badge--primary":this.variant==="primary","badge--success":this.variant==="success","badge--neutral":this.variant==="neutral","badge--warning":this.variant==="warning","badge--danger":this.variant==="danger","badge--pill":this.pill,"badge--pulse":this.pulse})}
@@ -95,7 +95,7 @@ import{a as d,c as y,p as w,t as $}from"./property.rnZ96Gce.js";import{c as b,_ 
       >
         <slot></slot>
       </span>
-    `}};p.styles=[b,H];c([d({reflect:!0})],p.prototype,"variant",2);c([d({type:Boolean,reflect:!0})],p.prototype,"pill",2);c([d({type:Boolean,reflect:!0})],p.prototype,"pulse",2);p.define("sl-badge");var M=f`
+    `}};u.styles=[b,H];p([c({reflect:!0})],u.prototype,"variant",2);p([c({type:Boolean,reflect:!0})],u.prototype,"pill",2);p([c({type:Boolean,reflect:!0})],u.prototype,"pulse",2);u.define("sl-badge");var M=f`
   :host {
     --color: var(--sl-panel-border-color);
     --width: var(--sl-panel-border-width);
@@ -114,11 +114,11 @@ import{a as d,c as y,p as w,t as $}from"./property.rnZ96Gce.js";import{c as b,_ 
     border-left: solid var(--width) var(--color);
     margin: 0 var(--spacing);
   }
-`,h=class extends x{constructor(){super(...arguments),this.vertical=!1}connectedCallback(){super.connectedCallback(),this.setAttribute("role","separator")}handleVerticalChange(){this.setAttribute("aria-orientation",this.vertical?"vertical":"horizontal")}};h.styles=[b,M];c([d({type:Boolean,reflect:!0})],h.prototype,"vertical",2);c([k("vertical")],h.prototype,"handleVerticalChange",1);h.define("sl-divider");/**
+`,h=class extends x{constructor(){super(...arguments),this.vertical=!1}connectedCallback(){super.connectedCallback(),this.setAttribute("role","separator")}handleVerticalChange(){this.setAttribute("aria-orientation",this.vertical?"vertical":"horizontal")}};h.styles=[b,M];p([c({type:Boolean,reflect:!0})],h.prototype,"vertical",2);p([k("vertical")],h.prototype,"handleVerticalChange",1);h.define("sl-divider");/**
  * @license
  * Copyright 2021 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */function*O(e,t){const a=typeof t=="function";if(e!==void 0){let s=-1;for(const l of e)s>-1&&(yield a?t(s):t),s++,yield l}}var z=Object.defineProperty,L=Object.getOwnPropertyDescriptor,m=(e,t,a,s)=>{for(var l=s>1?void 0:s?L(t,a):t,i=e.length-1,u;i>=0;i--)(u=e[i])&&(l=(s?u(t,a,l):u(l))||l);return s&&l&&z(t,a,l),l};let o=class extends T(D){renderPeerChat(e){const t=e.lastActivity.event.content;return r`<div
+ */function*O(e,t){const a=typeof t=="function";if(e!==void 0){let s=-1;for(const l of e)s>-1&&(yield a?t(s):t),s++,yield l}}var z=Object.defineProperty,L=Object.getOwnPropertyDescriptor,m=(e,t,a,s)=>{for(var l=s>1?void 0:s?L(t,a):t,i=e.length-1,v;i>=0;i--)(v=e[i])&&(l=(s?v(t,a,l):v(l))||l);return s&&l&&z(t,a,l),l};let d=class extends T(D){renderPeerChat(e){const t=e.lastActivity.event.content;return r`<div
 			class="row"
 			style="gap: 8px; cursor: pointer;"
 			@click=${()=>{this.dispatchEvent(new CustomEvent("peer-chat-selected",{composed:!0,bubbles:!0,detail:{peerChatHash:e.peerChatHash}}))}}
@@ -165,14 +165,14 @@ import{a as d,c as y,p as w,t as $}from"./property.rnZ96Gce.js";import{c as b,_ 
 				.date=${new Date(e)}
 			>
 			</sl-relative-time>
-		`}renderAvatar(e,t){return t?r`<sl-avatar .image=${t.avatar}></sl-avatar>`:r` <agent-avatar .agentPubKey=${e}></agent-avatar> `}renderAgentNickname(e,t){var s;if(t)return r`<span>${t.name}</span>`;const a=this.profilesProvider.currentProfileForAgent.get(e).get();return a.status!=="completed"?r`${n("Loading...")}`:a.value?r`<span>${(s=a.value)==null?void 0:s.name}</span>`:r`${n("Profile not found")}`}renderGroupEventLastActivity(e,t,a){const s=e.members.find(l=>l.agents.find(i=>v(i)===v(t))).profile;switch(a.type){case"UpdateGroupInfo":return r`
+		`}renderAvatar(e,t){return t?r`<sl-avatar .image=${t.avatar}></sl-avatar>`:r` <agent-avatar .agentPubKey=${e}></agent-avatar> `}renderAgentNickname(e,t){var s;if(t)return r`<span>${t.name}</span>`;const a=this.profilesProvider.currentProfileForAgent.get(e).get();return a.status!=="completed"?r`${n("Loading...")}`:a.value?r`<span>${(s=a.value)==null?void 0:s.name}</span>`:r`${n("Profile not found")}`}renderGroupEventLastActivity(e,t,a){const s=e.members.find(l=>l.agents.find(i=>o(i)===o(t))).profile;switch(a.type){case"UpdateGroupInfo":return r`
 					<span>
 						${this.renderAgentNickname(t,s)}
 						${n(g`updated the group's info.`)}
 					</span>
 				`;case"AddMember":return r`
 					<span>
-						${this.renderAgentNickname(a.member_agents[0],s)}&nbsp;${n(g`was added to the group.`)}
+						${this.renderAgentNickname(a.member_agents[0],e.members.find(l=>l.agents.find(i=>o(i)===o(a.member_agents[0]))).profile)}&nbsp;${n(g`was added to the group.`)}
 					</span>
 				`;case"RemoveMember":return r`
 					<span>
@@ -189,7 +189,7 @@ import{a as d,c as y,p as w,t as $}from"./property.rnZ96Gce.js";import{c as b,_ 
 						${this.renderAgentNickname(t,s)}
 						${n(g`deleted the group.`)}
 					</span>
-				`}}renderGroupLastActivity(e,t){const a=e.members.find(s=>!!s.agents.find(l=>v(l)===v(t.author)));if(t.event.content.type==="CreateGroupChat")return r`<span
+				`}}renderGroupLastActivity(e,t){const a=e.members.find(s=>!!s.agents.find(l=>o(l)===o(t.author)));if(t.event.content.type==="CreateGroupChat")return r`<span
 				>${this.renderAgentNickname(t.author,a.profile)}&nbsp;${n("created the group.")}
 			</span>`;if(t.event.content.type==="GroupMessage")return r`<span
 				>${this.renderAgentNickname(t.author,a.profile)}:
@@ -270,7 +270,7 @@ import{a as d,c as y,p as w,t as $}from"./property.rnZ96Gce.js";import{c as b,_ 
 				`;case"error":return r`<display-error
 					.headline=${n("Error fetching the chats")}
 					.error=${e.error}
-				></display-error>`;case"completed":return this.renderChats(e.value)}}};o.styles=[P,f`
+				></display-error>`;case"completed":return this.renderChats(e.value)}}};d.styles=[P,f`
 			:host {
 				display: flex;
 			}
@@ -285,4 +285,4 @@ import{a as d,c as y,p as w,t as $}from"./property.rnZ96Gce.js";import{c as b,_ 
 			.time {
 				font-size: 14px;
 			}
-		`];m([y({context:N,subscribe:!0})],o.prototype,"store",2);m([y({context:w,subscribe:!0}),d()],o.prototype,"profilesProvider",2);o=m([G(),$("all-chats")],o);export{o as AllChats};
+		`];m([y({context:N,subscribe:!0})],d.prototype,"store",2);m([y({context:w,subscribe:!0}),c()],d.prototype,"profilesProvider",2);d=m([G(),$("all-chats")],d);export{d as AllChats};
