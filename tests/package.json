@@ -5,7 +5,7 @@
     "test": "WASM_LOG=debug vitest run"
   },
   "dependencies": {
-    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.2679811ecd7856667c8397af7b1ecf41c8e82d79",
+    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.d196a85a27196424465c309afc32f8a4f290714e",
     "@darksoil-studio/profiles-zome": "0.400.0-rev.a6bfd3e24bff204f7d7b170ec47d82112183ff35",
     "@msgpack/msgpack": "^2.8.0",
     "@holochain/client": "^0.18.0",

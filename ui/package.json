@@ -1,57 +1,61 @@
 {
-	"name": "@darksoil-studio/messenger-zome",
-	"version": "0.400.0",
-	"scripts": {
-		"start": "vite --clearScreen false --port $UI_PORT",
-		"build": "pnpm lint && tsc && pnpm localize:build && pnpm analyze",
-		"lint": "eslint src && prettier \"src/**/*.ts\" --check --ignore-path .gitignore",
-		"format": "eslint src --fix && prettier \"src/**/*.ts\" --write --ignore-path .gitignore",
-		"localize:extract": "lit-localize extract",
-		"localize:build": "lit-localize build",
-		"analyze": "cem analyze --litelement --exclude dist"
-	},
-	"main": "dist/index.js",
-	"module": "dist/index.js",
-	"types": "dist/index.d.ts",
-	"files": ["dist", "locales", "src"],
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/darksoil-studio/messenger-zome.git"
-	},
-	"exports": {
-		".": "./dist/index.js",
-		"./dist/*": "./dist/*",
-		"./locales/*": "./locales/*"
-	},
-	"dependencies": {
-		"@darksoil-studio/linked-devices-zome": "0.400.0-rev.2679811ecd7856667c8397af7b1ecf41c8e82d79",
-		"@darksoil-studio/private-event-sourcing-zome": "0.400.0-rev.fe5e05c552c255a2eaf426c408ecad7c725dfe7e",
-		"@darksoil-studio/profiles-provider": "^0.400.3",
-		"@holochain/client": "^0.18.0",
-		"@lit/context": "^1.0.0",
-		"@lit/localize": "^0.12.0",
-		"@mdi/js": "^7.2.0",
-		"@msgpack/msgpack": "^2.8.0",
-		"@shoelace-style/shoelace": "^2.11.0",
-		"@tnesh-stack/elements": "^0.400.0",
-		"@tnesh-stack/signals": "^0.400.0",
-		"@tnesh-stack/utils": "^0.400.0",
-		"color-hash": "^2.0.2",
-		"lit": "^3.0.0"
-	},
-	"devDependencies": {
-		"@custom-elements-manifest/analyzer": "^0.10.3",
-		"@darksoil-studio/profiles-zome": "0.400.0-rev.a6bfd3e24bff204f7d7b170ec47d82112183ff35",
-		"@lit/localize-tools": "^0.6.3",
-		"@types/color-hash": "^2.0.0",
-		"@vaadin/virtual-list": "^24.5.3",
-		"tslib": "^2.6.2",
-		"typescript": "^5.4.5",
-		"vite": "^4.0.0"
-	},
-	"publishConfig": {
-		"access": "public"
-	},
-	"customElements": "custom-elements.json",
-	"type": "module"
+  "name": "@darksoil-studio/messenger-zome",
+  "version": "0.400.0",
+  "scripts": {
+    "start": "vite --clearScreen false --port $UI_PORT",
+    "build": "pnpm lint && tsc && pnpm localize:build && pnpm analyze",
+    "lint": "eslint src && prettier \"src/**/*.ts\" --check --ignore-path .gitignore",
+    "format": "eslint src --fix && prettier \"src/**/*.ts\" --write --ignore-path .gitignore",
+    "localize:extract": "lit-localize extract",
+    "localize:build": "lit-localize build",
+    "analyze": "cem analyze --litelement --exclude dist"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "locales",
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darksoil-studio/messenger-zome.git"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./dist/*": "./dist/*",
+    "./locales/*": "./locales/*"
+  },
+  "dependencies": {
+    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.d196a85a27196424465c309afc32f8a4f290714e",
+    "@darksoil-studio/private-event-sourcing-zome": "0.400.0-rev.fe5e05c552c255a2eaf426c408ecad7c725dfe7e",
+    "@darksoil-studio/profiles-provider": "^0.400.3",
+    "@holochain/client": "^0.18.0",
+    "@lit/context": "^1.0.0",
+    "@lit/localize": "^0.12.0",
+    "@mdi/js": "^7.2.0",
+    "@msgpack/msgpack": "^2.8.0",
+    "@shoelace-style/shoelace": "^2.11.0",
+    "@tnesh-stack/elements": "^0.400.0",
+    "@tnesh-stack/signals": "^0.400.0",
+    "@tnesh-stack/utils": "^0.400.0",
+    "color-hash": "^2.0.2",
+    "lit": "^3.0.0"
+  },
+  "devDependencies": {
+    "@custom-elements-manifest/analyzer": "^0.10.3",
+    "@darksoil-studio/profiles-zome": "0.400.0-rev.a6bfd3e24bff204f7d7b170ec47d82112183ff35",
+    "@lit/localize-tools": "^0.6.3",
+    "@types/color-hash": "^2.0.0",
+    "@vaadin/virtual-list": "^24.5.3",
+    "tslib": "^2.6.2",
+    "typescript": "^5.4.5",
+    "vite": "^4.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "customElements": "custom-elements.json",
+  "type": "module"
 }

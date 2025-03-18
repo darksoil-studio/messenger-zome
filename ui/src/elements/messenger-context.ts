@@ -72,6 +72,7 @@ export class MessengerContext extends LitElement {
 					this.store = new MessengerStore(
 						new MessengerClient(this.client, this.role, this.zome),
 						this.store.linkedDevicesStore,
+						// eslint-disable-next-line
 						(e.target as any).store, // TODO: this is not safe!
 					);
 				});

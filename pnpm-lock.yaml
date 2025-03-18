@@ -75,8 +75,8 @@ importers:
   tests:
     dependencies:
       '@darksoil-studio/linked-devices-zome':
-        specifier: 0.400.0-rev.2679811ecd7856667c8397af7b1ecf41c8e82d79
-        version: 0.400.0-rev.2679811ecd7856667c8397af7b1ecf41c8e82d79(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+        specifier: 0.400.0-rev.d196a85a27196424465c309afc32f8a4f290714e
+        version: 0.400.0-rev.d196a85a27196424465c309afc32f8a4f290714e(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/profiles-zome':
         specifier: 0.400.0-rev.a6bfd3e24bff204f7d7b170ec47d82112183ff35
         version: 0.400.0-rev.a6bfd3e24bff204f7d7b170ec47d82112183ff35(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
@@ -105,8 +105,8 @@ importers:
   ui:
     dependencies:
       '@darksoil-studio/linked-devices-zome':
-        specifier: 0.400.0-rev.2679811ecd7856667c8397af7b1ecf41c8e82d79
-        version: 0.400.0-rev.2679811ecd7856667c8397af7b1ecf41c8e82d79(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+        specifier: 0.400.0-rev.d196a85a27196424465c309afc32f8a4f290714e
+        version: 0.400.0-rev.d196a85a27196424465c309afc32f8a4f290714e(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/private-event-sourcing-zome':
         specifier: 0.400.0-rev.fe5e05c552c255a2eaf426c408ecad7c725dfe7e
         version: 0.400.0-rev.fe5e05c552c255a2eaf426c408ecad7c725dfe7e(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
@@ -372,6 +372,9 @@ packages:
 
   '@darksoil-studio/linked-devices-zome@0.400.0-rev.2679811ecd7856667c8397af7b1ecf41c8e82d79':
     resolution: {integrity: sha512-AqRcMRmWvfyxBOVPXFnwDFTNR99rOAZl1EfczEnYTJQ9/DQSAlevvdf6uU4dFuPcHRfBkUnooeoxeNoESBpPjQ==}
+
+  '@darksoil-studio/linked-devices-zome@0.400.0-rev.d196a85a27196424465c309afc32f8a4f290714e':
+    resolution: {integrity: sha512-cR03gGcp+S1ipYHjiIgwvEbbCq0US4zAWwmTX/PV6mSTxfpBvOHIVh8BQk632/BpNKVqyqXp3ocEEEToCwkgCg==}
 
   '@darksoil-studio/linked-devices-zome@0.400.0-rev.e85058930c86c486390f0e52c932b0c5065c4b23':
     resolution: {integrity: sha512-bczzlqO5LzSQsgECzq0VBPfaDMXGmjplHlCb4QJCllzynBCcUkfwlDUgvug7ZnyAzAy6j7b5I39se5YNcxPIJQ==}
@@ -3240,6 +3243,26 @@ snapshots:
       kuler: 2.0.0
 
   '@darksoil-studio/linked-devices-zome@0.400.0-rev.2679811ecd7856667c8397af7b1ecf41c8e82d79(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
+    dependencies:
+      '@holochain/client': 0.18.0
+      '@lit/context': 1.1.4
+      '@lit/localize': 0.12.2
+      '@mdi/js': 7.4.47
+      '@msgpack/msgpack': 2.8.0
+      '@shoelace-style/shoelace': 2.20.0(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+      '@tauri-apps/plugin-barcode-scanner': 2.2.0
+      '@tnesh-stack/elements': 0.400.2(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+      '@tnesh-stack/signals': 0.400.0
+      '@tnesh-stack/utils': 0.400.0
+      js-base64: 3.7.7
+      lit: 3.2.1
+    transitivePeerDependencies:
+      - '@floating-ui/utils'
+      - '@types/react'
+      - bufferutil
+      - utf-8-validate
+
+  '@darksoil-studio/linked-devices-zome@0.400.0-rev.d196a85a27196424465c309afc32f8a4f290714e(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
     dependencies:
       '@holochain/client': 0.18.0
       '@lit/context': 1.1.4
