@@ -4,6 +4,62 @@
   "modules": [
     {
       "kind": "javascript-module",
+      "path": "locales/locales.js",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "sourceLocale",
+          "default": "`en`",
+          "description": "The locale code that templates in this source code are written in."
+        },
+        {
+          "kind": "variable",
+          "name": "targetLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ , ]",
+          "description": "The other locale codes that this application is localized into. Sorted\nlexicographically."
+        },
+        {
+          "kind": "variable",
+          "name": "allLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ `en`, ]",
+          "description": "All valid project locale codes. Sorted lexicographically."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "sourceLocale",
+          "declaration": {
+            "name": "sourceLocale",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "targetLocales",
+          "declaration": {
+            "name": "targetLocales",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "allLocales",
+          "declaration": {
+            "name": "allLocales",
+            "module": "locales/locales.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
       "path": "src/context.ts",
       "declarations": [
         {
@@ -172,6 +228,18 @@
             },
             {
               "kind": "method",
+              "name": "updateProfile",
+              "parameters": [
+                {
+                  "name": "profile",
+                  "type": {
+                    "text": "Profile"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
               "name": "addMember",
               "parameters": [
                 {
@@ -287,6 +355,19 @@
                   "text": "Promise<EntryHash>"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "createGroupEvent",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "groupEvent",
+                  "type": {
+                    "text": "GroupEvent"
+                  }
+                }
+              ]
             }
           ]
         }
@@ -986,6 +1067,24 @@
         },
         {
           "kind": "function",
+          "name": "areEqual",
+          "parameters": [
+            {
+              "name": "profile1",
+              "type": {
+                "text": "Profile"
+              }
+            },
+            {
+              "name": "profile2",
+              "type": {
+                "text": "Profile"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
           "name": "mergeMaybeStrings",
           "return": {
             "type": {
@@ -1075,6 +1174,18 @@
               }
             }
           ]
+        },
+        {
+          "kind": "function",
+          "name": "effect",
+          "parameters": [
+            {
+              "name": "callback",
+              "type": {
+                "text": "() => (() => void) | void"
+              }
+            }
+          ]
         }
       ],
       "exports": [
@@ -1099,6 +1210,14 @@
           "name": "mergeStrings",
           "declaration": {
             "name": "mergeStrings",
+            "module": "src/utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "areEqual",
+          "declaration": {
+            "name": "areEqual",
             "module": "src/utils.ts"
           }
         },
@@ -1133,61 +1252,13 @@
             "name": "mergeProfiles",
             "module": "src/utils.ts"
           }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
-      "path": "locales/locales.js",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "sourceLocale",
-          "default": "`en`",
-          "description": "The locale code that templates in this source code are written in."
-        },
-        {
-          "kind": "variable",
-          "name": "targetLocales",
-          "type": {
-            "text": "array"
-          },
-          "default": "[ , ]",
-          "description": "The other locale codes that this application is localized into. Sorted\nlexicographically."
-        },
-        {
-          "kind": "variable",
-          "name": "allLocales",
-          "type": {
-            "text": "array"
-          },
-          "default": "[ `en`, ]",
-          "description": "All valid project locale codes. Sorted lexicographically."
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "sourceLocale",
-          "declaration": {
-            "name": "sourceLocale",
-            "module": "locales/locales.js"
-          }
         },
         {
           "kind": "js",
-          "name": "targetLocales",
+          "name": "effect",
           "declaration": {
-            "name": "targetLocales",
-            "module": "locales/locales.js"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "allLocales",
-          "declaration": {
-            "name": "allLocales",
-            "module": "locales/locales.js"
+            "name": "effect",
+            "module": "src/utils.ts"
           }
         }
       ]
@@ -1550,6 +1621,12 @@
               "privacy": "private",
               "parameters": [
                 {
+                  "name": "currentGroup",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                },
+                {
                   "name": "event",
                   "type": {
                     "text": "SignedEvent<GroupChatEvent>"
@@ -1613,6 +1690,12 @@
               "privacy": "private",
               "parameters": [
                 {
+                  "name": "currentGroup",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                },
+                {
                   "name": "myAgentsB64",
                   "type": {
                     "text": "Array<AgentPubKeyB64>"
@@ -1663,6 +1746,12 @@
               "name": "renderAgentNickname",
               "parameters": [
                 {
+                  "name": "currentGroup",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                },
+                {
                   "name": "agent",
                   "type": {
                     "text": "AgentPubKey"
@@ -1675,6 +1764,12 @@
               "name": "renderMessageSetToMe",
               "privacy": "private",
               "parameters": [
+                {
+                  "name": "currentGroup",
+                  "type": {
+                    "text": "GroupChat"
+                  }
+                },
                 {
                   "name": "messageSet",
                   "type": {
@@ -2246,6 +2341,13 @@
               "name": "linkedDevicesStore",
               "type": {
                 "text": "LinkedDevicesStore"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "profilesProvider",
+              "type": {
+                "text": "ProfilesProvider"
               }
             },
             {

@@ -58,7 +58,10 @@ test('all events get to all the members of the group', async () => {
 			.get(groupHash)
 			.addMember([carol.player.agentPubKey]);
 
-		await linkDevices(bob.linkedDevicesStore, bob2.linkedDevicesStore);
+		await linkDevices(
+			bob.store.linkedDevicesStore,
+			bob2.store.linkedDevicesStore,
+		);
 
 		await groupConsistency(
 			[alice, bob, bob2, carol].map(p => p.store.groupChats.get(groupHash)),

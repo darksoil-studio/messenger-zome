@@ -1,5 +1,6 @@
 import { LinkedDevicesProof } from '@darksoil-studio/linked-devices-zome';
 import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
+import { Profile } from '@darksoil-studio/profiles-provider';
 import {
 	AgentPubKey,
 	AgentPubKeyB64,
@@ -26,6 +27,7 @@ import {
 	CreateGroupChat,
 	GroupChat,
 	GroupChatEntry,
+	GroupChatEvent,
 	GroupEvent,
 	GroupInfo,
 	GroupSettings,
@@ -439,55 +441,35 @@ export class GroupChatStore {
 		);
 	}
 
+	async updateProfile(profile: Profile) {
+		return this.createGroupEvent({ type: 'UpdateProfile', profile });
+	}
+
 	async addMember(newMemberAgents: AgentPubKey[]) {
-		const entries = await toPromise(this.groupChatEntries);
-		return this.messengerStore.client.createGroupChatEvent({
-			group_chat_hash: this.groupChatHash,
-			previous_group_chat_events_hashes:
-				entries.currentEventsHashes.map(decodeHashFromBase64),
-			event: {
-				type: 'AddMember',
-				member_agents: newMemberAgents,
-			},
+		return this.createGroupEvent({
+			type: 'AddMember',
+			member_agents: newMemberAgents,
 		});
 	}
 
 	async promoteMemberToAdmin(memberAgents: AgentPubKey[]) {
-		const entries = await toPromise(this.groupChatEntries);
-		return this.messengerStore.client.createGroupChatEvent({
-			group_chat_hash: this.groupChatHash,
-			previous_group_chat_events_hashes:
-				entries.currentEventsHashes.map(decodeHashFromBase64),
-			event: {
-				type: 'PromoteMemberToAdmin',
-				member_agents: memberAgents,
-			},
+		return this.createGroupEvent({
+			type: 'PromoteMemberToAdmin',
+			member_agents: memberAgents,
 		});
 	}
 
 	async demoteMemberFromAdmin(memberAgents: AgentPubKey[]) {
-		const entries = await toPromise(this.groupChatEntries);
-		return this.messengerStore.client.createGroupChatEvent({
-			group_chat_hash: this.groupChatHash,
-			previous_group_chat_events_hashes:
-				entries.currentEventsHashes.map(decodeHashFromBase64),
-			event: {
-				type: 'DemoteMemberFromAdmin',
-				member_agents: memberAgents,
-			},
+		return this.createGroupEvent({
+			type: 'DemoteMemberFromAdmin',
+			member_agents: memberAgents,
 		});
 	}
 
 	async removeMember(memberAgents: AgentPubKey[]) {
-		const entries = await toPromise(this.groupChatEntries);
-		return this.messengerStore.client.createGroupChatEvent({
-			group_chat_hash: this.groupChatHash,
-			previous_group_chat_events_hashes:
-				entries.currentEventsHashes.map(decodeHashFromBase64),
-			event: {
-				type: 'RemoveMember',
-				member_agents: memberAgents,
-			},
+		return this.createGroupEvent({
+			type: 'RemoveMember',
+			member_agents: memberAgents,
 		});
 	}
 
@@ -495,68 +477,48 @@ export class GroupChatStore {
 		newAgent: AgentPubKey,
 		proofs: Array<LinkedDevicesProof>,
 	) {
-		const entries = await toPromise(this.groupChatEntries);
-		return this.messengerStore.client.createGroupChatEvent({
-			group_chat_hash: this.groupChatHash,
-			previous_group_chat_events_hashes:
-				entries.currentEventsHashes.map(decodeHashFromBase64),
-			event: {
-				type: 'NewAgentForMember',
-				linked_devices_proofs: proofs,
-				new_agent: newAgent,
-			},
+		return this.createGroupEvent({
+			type: 'NewAgentForMember',
+			linked_devices_proofs: proofs,
+			new_agent: newAgent,
 		});
 	}
 
 	async updateGroupChatInfo(groupInfo: GroupInfo): Promise<EntryHash> {
-		const entries = await toPromise(this.groupChatEntries);
-		return this.messengerStore.client.createGroupChatEvent({
-			group_chat_hash: this.groupChatHash,
-			previous_group_chat_events_hashes:
-				entries.currentEventsHashes.map(decodeHashFromBase64),
-			event: {
-				type: 'UpdateGroupInfo',
-				...groupInfo,
-			},
+		return this.createGroupEvent({
+			type: 'UpdateGroupInfo',
+			...groupInfo,
 		});
 	}
 
 	async updateGroupChatSettings(
 		groupSettings: GroupSettings,
 	): Promise<EntryHash> {
-		const entries = await toPromise(this.groupChatEntries);
-		return this.messengerStore.client.createGroupChatEvent({
-			group_chat_hash: this.groupChatHash,
-			previous_group_chat_events_hashes:
-				entries.currentEventsHashes.map(decodeHashFromBase64),
-			event: {
-				type: 'UpdateGroupSettings',
-				...groupSettings,
-			},
+		return this.createGroupEvent({
+			type: 'UpdateGroupSettings',
+			...groupSettings,
 		});
 	}
 
 	async leaveGroup(): Promise<EntryHash> {
-		const entries = await toPromise(this.groupChatEntries);
-		return this.messengerStore.client.createGroupChatEvent({
-			group_chat_hash: this.groupChatHash,
-			previous_group_chat_events_hashes:
-				entries.currentEventsHashes.map(decodeHashFromBase64),
-			event: {
-				type: 'LeaveGroup',
-			},
+		return this.createGroupEvent({
+			type: 'LeaveGroup',
 		});
 	}
 
 	async deleteGroupChat(): Promise<EntryHash> {
+		return this.createGroupEvent({
+			type: 'DeleteGroup',
+		});
+	}
+
+	private async createGroupEvent(groupEvent: GroupEvent) {
 		const entries = await toPromise(this.groupChatEntries);
 		return this.messengerStore.client.createGroupChatEvent({
 			group_chat_hash: this.groupChatHash,
 			previous_group_chat_events_hashes:
 				entries.currentEventsHashes.map(decodeHashFromBase64),
-			event: {
-				type: 'DeleteGroup',
-			},
+			event: groupEvent,
 		});
 	}
 }
@@ -580,6 +542,13 @@ function apply(
 				description: groupEvent.description,
 				name: groupEvent.name,
 			};
+			break;
+		case 'UpdateProfile':
+			groupChat.members.find(member =>
+				member.agents.find(
+					agent => encodeHashToBase64(agent) === encodeHashToBase64(author),
+				),
+			)!.profile = groupEvent.profile;
 			break;
 		case 'UpdateGroupSettings':
 			groupChat.settings = {

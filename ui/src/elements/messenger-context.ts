@@ -3,6 +3,10 @@ import {
 	linkedDevicesStoreContext,
 } from '@darksoil-studio/linked-devices-zome';
 import { LinkedDevicesContext } from '@darksoil-studio/linked-devices-zome/dist/elements/linked-devices-context.js';
+import {
+	ProfilesProvider,
+	profilesProviderContext,
+} from '@darksoil-studio/profiles-provider';
 import { AppClient } from '@holochain/client';
 import { consume, provide } from '@lit/context';
 import { appClientContext } from '@tnesh-stack/elements';
@@ -24,6 +28,9 @@ export class MessengerContext extends LitElement {
 
 	@consume({ context: linkedDevicesStoreContext, subscribe: true })
 	linkedDevicesStore!: LinkedDevicesStore;
+
+	@consume({ context: profilesProviderContext, subscribe: true })
+	profilesProvider!: ProfilesProvider;
 
 	@property()
 	role!: string;
@@ -60,12 +67,22 @@ export class MessengerContext extends LitElement {
 						context.store,
 					);
 				});
+			} else if (e.context === profilesProviderContext) {
+				setTimeout(() => {
+					this.store = new MessengerStore(
+						new MessengerClient(this.client, this.role, this.zome),
+						this.store.linkedDevicesStore,
+						// eslint-disable-next-line
+						(e.target as any).store, // TODO: this is not safe!
+					);
+				});
 			}
 		});
 
 		this.store = new MessengerStore(
 			new MessengerClient(this.client, this.role, this.zome),
 			this.linkedDevicesStore,
+			this.profilesProvider,
 		);
 	}
 
