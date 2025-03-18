@@ -69,8 +69,11 @@ export class MessengerContext extends LitElement {
 					);
 				});
 			} else if (e.context === profilesProviderContext) {
-				// eslint-disable-next-line
-				const context = e.contextTarget as any;
+				const context = e.contextTarget
+					? // eslint-disable-next-line
+						(e.contextTarget as any)
+					: // eslint-disable-next-line
+						(e.target as any);
 				setTimeout(() => {
 					const profilesProvider: ProfilesProvider = context.store; // TODO: this is not safe!
 					this.store = new MessengerStore(
