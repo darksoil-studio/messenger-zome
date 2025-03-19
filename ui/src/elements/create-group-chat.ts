@@ -94,11 +94,11 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 				${onSubmit(fields => this.createGroupChat(fields))}
 				style="gap: 24px; flex: 1"
 			>
-				<div class="row" style="gap: 16px; align-items: center">
+				<div class="row" style="gap: 16px; align-items: start">
 					<select-avatar
 						avatar-width="300"
 						avatar-height="300"
-						label=""
+						.label=${msg('Avatar')}
 						name="avatar"
 						required
 					>
@@ -106,12 +106,12 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 					<sl-input
 						style="flex: 1"
 						required
-						.placeholder=${msg('Name')}
+						.label=${msg('Name')}
 						name="name"
 					></sl-input>
 				</div>
 				<sl-textarea
-					.placeholder=${msg('Description')}
+					.label=${msg('Description')}
 					name="description"
 				></sl-textarea>
 
