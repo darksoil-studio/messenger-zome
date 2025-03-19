@@ -62,6 +62,8 @@ export class MessageInput extends SignalWatcher(LitElement) {
 						) as SlTextarea;
 
 						this.dispatchSendMessage(input.value);
+
+						this.shadowRoot!.querySelector('sl-textarea')!.focus();
 					}}
 				>
 					<sl-icon .src=${wrapPathInSvg(mdiSend)}></sl-icon>
