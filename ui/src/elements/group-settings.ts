@@ -34,11 +34,11 @@ export class GroupSettingsEl extends SignalWatcher(LitElement) {
 		}
 	}
 
-	private renderSettings(iAmAdmin: boolean, settings: GroupSettings) {
+	private renderSettings(iCanEditSettings: boolean, settings: GroupSettings) {
 		return html`
 			<div class="column" style="gap: 16px">
 				<sl-switch
-					.disabled=${!iAmAdmin}
+					.disabled=${!iCanEditSettings}
 					.checked=${settings.only_admins_can_edit_group_info}
 					@sl-change=${(e: CustomEvent) => {
 						this.updateGroupSettings({
@@ -49,7 +49,7 @@ export class GroupSettingsEl extends SignalWatcher(LitElement) {
 					>${msg('Only admins can edit group info')}
 				</sl-switch>
 				<sl-switch
-					.disabled=${!iAmAdmin}
+					.disabled=${!iCanEditSettings}
 					.checked=${settings.only_admins_can_add_members}
 					@sl-change=${(e: CustomEvent) => {
 						this.updateGroupSettings({
@@ -60,7 +60,7 @@ export class GroupSettingsEl extends SignalWatcher(LitElement) {
 					>${msg('Only admins can add members')}
 				</sl-switch>
 				<sl-switch
-					.disabled=${!iAmAdmin}
+					.disabled=${!iCanEditSettings}
 					.checked=${settings.sync_message_history_with_new_members}
 					@sl-change=${(e: CustomEvent) => {
 						this.updateGroupSettings({
@@ -94,14 +94,15 @@ export class GroupSettingsEl extends SignalWatcher(LitElement) {
 					.error=${groupChat.error}
 				></display-error>`;
 			case 'completed':
-				const iAmAdmin = groupChat.value.members.find(m =>
+				const me = groupChat.value.members.find(m =>
 					m.agents.find(
 						a =>
 							encodeHashToBase64(a) ===
 							encodeHashToBase64(this.store.client.client.myPubKey),
 					),
-				)!.admin;
-				return this.renderSettings(iAmAdmin, groupChat.value.settings);
+				)!;
+				const iCanEditSettings = me.admin && !me.removed;
+				return this.renderSettings(iCanEditSettings, groupChat.value.settings);
 		}
 	}
 
