@@ -1,4 +1,4 @@
-import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ as d}from"./tslib.es6.kHcLnhpD.js";import{A as F,S as W,h as Z,i as _,x as h,r as D,m as v,t as V}from"./messenger-client.B7FUcpsY.js";import{c as T,d as j,_ as o,f as w,w as x,s as G,S as L,L as M,g as K,h as N,i as q,j as H,e as E,k as X,r as I,l as z,n as Y,a as ee,o as te,b as se}from"./styles.B3oeT_Sb.js";import{g as ie,F as J,o as ne}from"./select-avatar.iEh6olhM.js";import{o as f,e as oe,n as re,S as le,H as Q,g as ae,f as ue,d as pe,F as de,l as he,a as ce}from"./chunk.UG6RICOR.DzwSIgXM.js";import{S as U}from"./signal-watcher.up8QMDE0.js";import{m as me}from"./context.4V2b8mzb.js";function fe(e){return e!=null&&typeof e=="object"&&"then"in e&&typeof e.then=="function"}function ge(e,t,s){const n=new W.Computed(()=>{const a=[e,...s].map(c=>c.get());let r=a[0];if(r&&r.status){if(r.status==="error")return r;if(r.status==="pending")return r;r=r.value}try{return t(r,...a.slice(1).map(k=>k.value).reverse())}catch(c){return{status:"error",error:c}}});let u;const p=new F(()=>{const a=e.get();return u=void 0,a});return new F(()=>{p.get();const a=n.get();if(a&&a.get&&!a.has){const r=a.get();return r&&r.status?r:{status:"completed",value:r}}else if(fe(a)){u||(u=Z(()=>a));const r=u.get();return r.status==="completed"&&r.value.status?r.value:r}else return a&&a.status?a:{status:"completed",value:a}})}function be(e,t,s,n,u,p,a){let r=e;const c=r.get();return(!c||!(typeof c=="object"&&"status"in c))&&(r=new F(()=>({status:"completed",value:e.get()}))),ge(r,t,[])}var ve=_`
+import{a as i,c as $,p as P,t as A,b as O}from"./property.CdyGxQ3i.js";import{_ as d}from"./tslib.es6.kHcLnhpD.js";import{A as F,S as W,h as Z,i as _,x as h,r as D,m as g,t as V}from"./messenger-client.CJVut2Sl.js";import{c as T,d as j,_ as o,f as w,w as x,s as G,S as L,L as M,g as K,h as N,i as q,j as H,e as E,k as X,r as I,l as z,n as Y,a as ee,o as te,b as se}from"./styles.ChGdpW6H.js";import{g as ie,F as J,o as ne}from"./select-avatar.BIQpEifb.js";import{o as f,e as oe,n as re,S as le,H as Q,g as ae,f as ue,d as pe,F as de,l as he,a as ce}from"./chunk.UG6RICOR.b7ztLsiC.js";import{S as U}from"./signal-watcher.CwHglHdS.js";import{m as me}from"./context.Cfnzkp14.js";function fe(e){return e!=null&&typeof e=="object"&&"then"in e&&typeof e.then=="function"}function ge(e,t,s){const n=new W.Computed(()=>{const a=[e,...s].map(c=>c.get());let r=a[0];if(r&&r.status){if(r.status==="error")return r;if(r.status==="pending")return r;r=r.value}try{return t(r,...a.slice(1).map(k=>k.value).reverse())}catch(c){return{status:"error",error:c}}});let u;const p=new F(()=>{const a=e.get();return u=void 0,a});return new F(()=>{p.get();const a=n.get();if(a&&a.get&&!a.has){const r=a.get();return r&&r.status?r:{status:"completed",value:r}}else if(fe(a)){u||(u=Z(()=>a));const r=u.get();return r.status==="completed"&&r.value.status?r.value:r}else return a&&a.status?a:{status:"completed",value:a}})}function be(e,t,s,n,u,p,a){let r=e;const c=r.get();return(!c||!(typeof c=="object"&&"status"in c))&&(r=new F(()=>({status:"completed",value:e.get()}))),ge(r,t,[])}var ve=_`
   :host {
     display: inline-block;
   }
@@ -243,7 +243,7 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
       >
         <slot name="submenu"></slot>
       </sl-popup>
-    `:h` <slot name="submenu" hidden></slot> `}},b=class extends L{constructor(){super(...arguments),this.localize=new M(this),this.type="normal",this.checked=!1,this.value="",this.loading=!1,this.disabled=!1,this.hasSlotController=new Q(this,"submenu"),this.submenuController=new we(this,this.hasSlotController),this.handleHostClick=e=>{this.disabled&&(e.preventDefault(),e.stopImmediatePropagation())},this.handleMouseOver=e=>{this.focus(),e.stopPropagation()}}connectedCallback(){super.connectedCallback(),this.addEventListener("click",this.handleHostClick),this.addEventListener("mouseover",this.handleMouseOver)}disconnectedCallback(){super.disconnectedCallback(),this.removeEventListener("click",this.handleHostClick),this.removeEventListener("mouseover",this.handleMouseOver)}handleDefaultSlotChange(){const e=this.getTextLabel();if(typeof this.cachedTextLabel>"u"){this.cachedTextLabel=e;return}e!==this.cachedTextLabel&&(this.cachedTextLabel=e,this.emit("slotchange",{bubbles:!0,composed:!1,cancelable:!1}))}handleCheckedChange(){if(this.checked&&this.type!=="checkbox"){this.checked=!1,console.error('The checked attribute can only be used on menu items with type="checkbox"',this);return}this.type==="checkbox"?this.setAttribute("aria-checked",this.checked?"true":"false"):this.removeAttribute("aria-checked")}handleDisabledChange(){this.setAttribute("aria-disabled",this.disabled?"true":"false")}handleTypeChange(){this.type==="checkbox"?(this.setAttribute("role","menuitemcheckbox"),this.setAttribute("aria-checked",this.checked?"true":"false")):(this.setAttribute("role","menuitem"),this.removeAttribute("aria-checked"))}getTextLabel(){return ae(this.defaultSlot)}isSubmenu(){return this.hasSlotController.test("submenu")}render(){const e=this.localize.dir()==="rtl",t=this.submenuController.isExpanded();return h`
+    `:h` <slot name="submenu" hidden></slot> `}},v=class extends L{constructor(){super(...arguments),this.localize=new M(this),this.type="normal",this.checked=!1,this.value="",this.loading=!1,this.disabled=!1,this.hasSlotController=new Q(this,"submenu"),this.submenuController=new we(this,this.hasSlotController),this.handleHostClick=e=>{this.disabled&&(e.preventDefault(),e.stopImmediatePropagation())},this.handleMouseOver=e=>{this.focus(),e.stopPropagation()}}connectedCallback(){super.connectedCallback(),this.addEventListener("click",this.handleHostClick),this.addEventListener("mouseover",this.handleMouseOver)}disconnectedCallback(){super.disconnectedCallback(),this.removeEventListener("click",this.handleHostClick),this.removeEventListener("mouseover",this.handleMouseOver)}handleDefaultSlotChange(){const e=this.getTextLabel();if(typeof this.cachedTextLabel>"u"){this.cachedTextLabel=e;return}e!==this.cachedTextLabel&&(this.cachedTextLabel=e,this.emit("slotchange",{bubbles:!0,composed:!1,cancelable:!1}))}handleCheckedChange(){if(this.checked&&this.type!=="checkbox"){this.checked=!1,console.error('The checked attribute can only be used on menu items with type="checkbox"',this);return}this.type==="checkbox"?this.setAttribute("aria-checked",this.checked?"true":"false"):this.removeAttribute("aria-checked")}handleDisabledChange(){this.setAttribute("aria-disabled",this.disabled?"true":"false")}handleTypeChange(){this.type==="checkbox"?(this.setAttribute("role","menuitemcheckbox"),this.setAttribute("aria-checked",this.checked?"true":"false")):(this.setAttribute("role","menuitem"),this.removeAttribute("aria-checked"))}getTextLabel(){return ae(this.defaultSlot)}isSubmenu(){return this.hasSlotController.test("submenu")}render(){const e=this.localize.dir()==="rtl",t=this.submenuController.isExpanded();return h`
       <div
         id="anchor"
         part="base"
@@ -268,7 +268,7 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
         ${this.submenuController.renderSubmenu()}
         ${this.loading?h` <sl-spinner part="spinner" exportparts="base:spinner__base"></sl-spinner> `:""}
       </div>
-    `}};b.styles=[T,ye];b.dependencies={"sl-icon":X,"sl-popup":j,"sl-spinner":le};o([w("slot:not([name])")],b.prototype,"defaultSlot",2);o([w(".menu-item")],b.prototype,"menuItem",2);o([i()],b.prototype,"type",2);o([i({type:Boolean,reflect:!0})],b.prototype,"checked",2);o([i()],b.prototype,"value",2);o([i({type:Boolean,reflect:!0})],b.prototype,"loading",2);o([i({type:Boolean,reflect:!0})],b.prototype,"disabled",2);o([x("checked")],b.prototype,"handleCheckedChange",1);o([x("disabled")],b.prototype,"handleDisabledChange",1);o([x("type")],b.prototype,"handleTypeChange",1);b.define("sl-menu-item");var _e=_`
+    `}};v.styles=[T,ye];v.dependencies={"sl-icon":X,"sl-popup":j,"sl-spinner":le};o([w("slot:not([name])")],v.prototype,"defaultSlot",2);o([w(".menu-item")],v.prototype,"menuItem",2);o([i()],v.prototype,"type",2);o([i({type:Boolean,reflect:!0})],v.prototype,"checked",2);o([i()],v.prototype,"value",2);o([i({type:Boolean,reflect:!0})],v.prototype,"loading",2);o([i({type:Boolean,reflect:!0})],v.prototype,"disabled",2);o([x("checked")],v.prototype,"handleCheckedChange",1);o([x("disabled")],v.prototype,"handleDisabledChange",1);o([x("type")],v.prototype,"handleTypeChange",1);v.define("sl-menu-item");var _e=_`
   :host {
     display: block;
     position: relative;
@@ -684,7 +684,7 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
         </div>
       </div>
     `}};l.styles=[T,ue,xe];l.dependencies={"sl-icon":X};o([w(".input__control")],l.prototype,"input",2);o([I()],l.prototype,"hasFocus",2);o([i()],l.prototype,"title",2);o([i({reflect:!0})],l.prototype,"type",2);o([i()],l.prototype,"name",2);o([i()],l.prototype,"value",2);o([pe()],l.prototype,"defaultValue",2);o([i({reflect:!0})],l.prototype,"size",2);o([i({type:Boolean,reflect:!0})],l.prototype,"filled",2);o([i({type:Boolean,reflect:!0})],l.prototype,"pill",2);o([i()],l.prototype,"label",2);o([i({attribute:"help-text"})],l.prototype,"helpText",2);o([i({type:Boolean})],l.prototype,"clearable",2);o([i({type:Boolean,reflect:!0})],l.prototype,"disabled",2);o([i()],l.prototype,"placeholder",2);o([i({type:Boolean,reflect:!0})],l.prototype,"readonly",2);o([i({attribute:"password-toggle",type:Boolean})],l.prototype,"passwordToggle",2);o([i({attribute:"password-visible",type:Boolean})],l.prototype,"passwordVisible",2);o([i({attribute:"no-spin-buttons",type:Boolean})],l.prototype,"noSpinButtons",2);o([i({reflect:!0})],l.prototype,"form",2);o([i({type:Boolean,reflect:!0})],l.prototype,"required",2);o([i()],l.prototype,"pattern",2);o([i({type:Number})],l.prototype,"minlength",2);o([i({type:Number})],l.prototype,"maxlength",2);o([i()],l.prototype,"min",2);o([i()],l.prototype,"max",2);o([i()],l.prototype,"step",2);o([i()],l.prototype,"autocapitalize",2);o([i()],l.prototype,"autocorrect",2);o([i()],l.prototype,"autocomplete",2);o([i({type:Boolean})],l.prototype,"autofocus",2);o([i()],l.prototype,"enterkeyhint",2);o([i({type:Boolean,converter:{fromAttribute:e=>!(!e||e==="false"),toAttribute:e=>e?"true":"false"}})],l.prototype,"spellcheck",2);o([i()],l.prototype,"inputmode",2);o([x("disabled",{waitUntilFirstUpdate:!0})],l.prototype,"handleDisabledChange",1);o([x("step",{waitUntilFirstUpdate:!0})],l.prototype,"handleStepChange",1);o([x("value",{waitUntilFirstUpdate:!0})],l.prototype,"handleValueChange",1);l.define("sl-input");let C=class extends U(D){constructor(){super(...arguments),this._searchFilter=new W.State(void 0),this.excludedUsers=[],this._searchProfiles=be(this._searchFilter,t=>this.profilesProvider.search(t))}set searchFilter(t){this._searchFilter.set(t)}get searchFilter(){return this._searchFilter.get()}async onUserSelected(t,s){this.dispatchEvent(new CustomEvent("user-selected",{detail:{agents:t,profile:s},bubbles:!0,composed:!0}))}renderProfileList(){const t=this._searchFilter.get();if(!t||t.length<3)return h`<sl-menu-item disabled
-				>${v("Enter at least 3 chars to search...")}</sl-menu-item
+				>${g("Enter at least 3 chars to search...")}</sl-menu-item
 			>`;const s=this._searchProfiles.get();switch(s.status){case"pending":return Array.from(Array(3)).map(()=>h`
 						<sl-menu-item>
 							<div class="row" style="display:flex; align-items: center">
@@ -703,11 +703,11 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
 					<display-error
 						style="flex: 1; display:flex"
 						tooltip
-						.headline=${v("Error searching profiles")}
+						.headline=${g("Error searching profiles")}
 						.error=${s.error}
 					></display-error>
 				`;case"completed":{let n=s.value;const u=[].concat(...this.excludedUsers.map(p=>p.map(a=>a.toString())));return n=n.filter(p=>!p.agents.find(a=>u.includes(a.toString()))),n.length===0?h`<sl-menu-item disabled>
-						${v("No nicknames match the filter")}
+						${g("No nicknames match the filter")}
 					</sl-menu-item>`:h`
 					${n.map((p,a)=>{var r;return h`
 							<sl-menu-item .value=${a}>
@@ -737,7 +737,7 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
 				:host {
 					display: flex;
 				}
-			`]}};d([i()],C.prototype,"open",void 0);d([$({context:P,subscribe:!0}),i()],C.prototype,"profilesProvider",void 0);d([i()],C.prototype,"excludedUsers",void 0);d([w("#dropdown")],C.prototype,"dropdown",void 0);C=d([z(),A("search-user-dropdown")],C);let g=class extends U(D){constructor(){super(...arguments),this.required=!1,this.disabled=!1,this.clearOnSelect=!1,this.excludedUsers=[],this._controller=new J(this),this.searchFilter=""}reportValidity(){const t=this.required!==!1&&this.value===void 0;return t&&(this._textField.setCustomValidity("This field is required"),this._textField.reportValidity()),!t}async reset(){if(this.value=this.defaultValue,this.defaultValue&&this.defaultValue.length>0){const t=await V(this.profilesProvider.currentProfileForAgent.get(this.defaultValue[0]));t&&(this._textField.value=(t==null?void 0:t.name)||"")}else this._textField.value=""}onUserSelected(t,s){this.value=t,this.clearOnSelect?this._textField.value="":this._textField.value=s.name,this.searchFilter=""}get _label(){let t=this.label?this.label:v("Search User");return this.required!==!1&&(t=`${t} *`),t}render(){return h`
+			`]}};d([i()],C.prototype,"open",void 0);d([$({context:P,subscribe:!0}),i()],C.prototype,"profilesProvider",void 0);d([i()],C.prototype,"excludedUsers",void 0);d([w("#dropdown")],C.prototype,"dropdown",void 0);C=d([z(),A("search-user-dropdown")],C);let b=class extends U(D){constructor(){super(...arguments),this.required=!1,this.disabled=!1,this.clearOnSelect=!1,this.excludedUsers=[],this._controller=new J(this),this.searchFilter=""}reportValidity(){const t=this.required!==!1&&this.value===void 0;return t&&(this._textField.setCustomValidity("This field is required"),this._textField.reportValidity()),!t}async reset(){if(this.value=this.defaultValue,this.defaultValue&&this.defaultValue.length>0){const t=await V(this.profilesProvider.currentProfileForAgent.get(this.defaultValue[0]));t&&(this._textField.value=(t==null?void 0:t.name)||"")}else this._textField.value=""}onUserSelected(t,s){this.value=t,this.clearOnSelect?this._textField.value="":this._textField.value=s.name,this.searchFilter=""}get _label(){let t=this.label?this.label:g("Search User");return this.required!==!1&&(t=`${t} *`),t}render(){return h`
 			<div style="flex: 1; display: flex;">
 				<search-user-dropdown
 					id="dropdown"
@@ -750,7 +750,7 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
 					<sl-input
 						id="textfield"
 						.label=${this._label}
-						.placeholder=${v("At least 3 chars...")}
+						.placeholder=${g("At least 3 chars...")}
 						@input=${t=>{this.searchFilter=t.target.value}}
 					></sl-input>
 				</search-user-dropdown>
@@ -759,10 +759,10 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
 				:host {
 					display: flex;
 				}
-			`]}};d([i()],g.prototype,"name",void 0);d([i(Y("default-value"))],g.prototype,"defaultValue",void 0);d([i()],g.prototype,"required",void 0);d([i()],g.prototype,"disabled",void 0);d([I()],g.prototype,"value",void 0);d([i({type:Boolean,attribute:"clear-on-select"})],g.prototype,"clearOnSelect",void 0);d([$({context:P,subscribe:!0}),i()],g.prototype,"profilesProvider",void 0);d([i()],g.prototype,"excludedUsers",void 0);d([i({type:String,attribute:"label"})],g.prototype,"label",void 0);d([w("#textfield")],g.prototype,"_textField",void 0);d([I()],g.prototype,"searchFilter",void 0);g=d([z(),A("search-user")],g);let y=class extends U(D){constructor(){super(...arguments),this.defaultValue=[],this.required=!1,this.disabled=!1,this.emptyListPlaceholder=v("No users selected yet."),this._controller=new J(this),this.excludedUsers=[],this.value=[]}reportValidity(){return!0}async reset(){this.value=this.defaultValue}render(){return h`
+			`]}};d([i()],b.prototype,"name",void 0);d([i(Y("default-value"))],b.prototype,"defaultValue",void 0);d([i()],b.prototype,"required",void 0);d([i()],b.prototype,"disabled",void 0);d([I()],b.prototype,"value",void 0);d([i({type:Boolean,attribute:"clear-on-select"})],b.prototype,"clearOnSelect",void 0);d([$({context:P,subscribe:!0}),i()],b.prototype,"profilesProvider",void 0);d([i()],b.prototype,"excludedUsers",void 0);d([i({type:String,attribute:"label"})],b.prototype,"label",void 0);d([w("#textfield")],b.prototype,"_textField",void 0);d([I()],b.prototype,"searchFilter",void 0);b=d([z(),A("search-user")],b);let y=class extends U(D){constructor(){super(...arguments),this.defaultValue=[],this.required=!1,this.disabled=!1,this.emptyListPlaceholder=g("No users selected yet."),this._controller=new J(this),this.excludedUsers=[],this.value=[]}reportValidity(){return!0}async reset(){this.value=this.defaultValue}render(){return h`
 			<div class="column" style="gap: 16px">
 				<search-user
-					.label=${this.label?this.label:v("Search Users")}
+					.label=${this.label?this.label:g("Search Users")}
 					clear-on-select
 					@user-selected=${t=>{this.value=[...this.value,t.detail.agents],this.dispatchEvent(new CustomEvent("users-changed",{composed:!0,bubbles:!0,detail:{users:this.value}}))}}
 					.excludedUsers=${this.excludedUsers}
@@ -778,17 +778,17 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
 									></sl-icon-button>
 								</div>`)}
 			</div>
-		`}};y.styles=[O];d([i()],y.prototype,"name",void 0);d([i(Y("default-value"))],y.prototype,"defaultValue",void 0);d([i()],y.prototype,"required",void 0);d([i()],y.prototype,"disabled",void 0);d([i({type:String,attribute:"label"})],y.prototype,"label",void 0);d([i({type:String,attribute:"empty-list-placeholder"})],y.prototype,"emptyListPlaceholder",void 0);d([$({context:P,subscribe:!0}),i()],y.prototype,"profilesProvider",void 0);d([i()],y.prototype,"excludedUsers",void 0);d([I()],y.prototype,"value",void 0);y=d([z(),A("search-users")],y);var ke=Object.defineProperty,Ce=Object.getOwnPropertyDescriptor,B=(e,t,s,n)=>{for(var u=n>1?void 0:n?Ce(t,s):t,p=e.length-1,a;p>=0;p--)(a=e[p])&&(u=(n?a(t,s,u):a(u))||u);return n&&u&&ke(t,s,u),u};let S=class extends U(D){async createGroupChat(e){try{const t=Array.isArray(e.members)?[e.members]:e.members?[[e.members]]:[];let s,n=t.map(p=>({agent:p[0],profile:void 0}));this.profilesProvider.profilesArePublic||(s=await V(this.profilesProvider.currentProfileForAgent.get(this.store.client.client.myPubKey)),n=await Promise.all(n.map(async p=>({profile:await V(this.profilesProvider.currentProfileForAgent.get(p.agent)),agent:p.agent}))));const u=await this.store.client.createGroupChat(s,n,{avatar:e.avatar,description:"",name:e.name},{only_admins_can_add_members:!1,only_admins_can_edit_group_info:!1,sync_message_history_with_new_members:!1});this.dispatchEvent(new CustomEvent("group-chat-created",{bubbles:!0,composed:!0,detail:{groupChatHash:u}}))}catch(t){console.error(t),ce(v("Error creating group chat."))}}render(){return h`
+		`}};y.styles=[O];d([i()],y.prototype,"name",void 0);d([i(Y("default-value"))],y.prototype,"defaultValue",void 0);d([i()],y.prototype,"required",void 0);d([i()],y.prototype,"disabled",void 0);d([i({type:String,attribute:"label"})],y.prototype,"label",void 0);d([i({type:String,attribute:"empty-list-placeholder"})],y.prototype,"emptyListPlaceholder",void 0);d([$({context:P,subscribe:!0}),i()],y.prototype,"profilesProvider",void 0);d([i()],y.prototype,"excludedUsers",void 0);d([I()],y.prototype,"value",void 0);y=d([z(),A("search-users")],y);var ke=Object.defineProperty,Ce=Object.getOwnPropertyDescriptor,B=(e,t,s,n)=>{for(var u=n>1?void 0:n?Ce(t,s):t,p=e.length-1,a;p>=0;p--)(a=e[p])&&(u=(n?a(t,s,u):a(u))||u);return n&&u&&ke(t,s,u),u};let S=class extends U(D){async createGroupChat(e){try{const t=Array.isArray(e.members)?[e.members]:e.members?[[e.members]]:[];let s,n=t.map(p=>({agent:p[0],profile:void 0}));this.profilesProvider.profilesArePublic||(s=await V(this.profilesProvider.currentProfileForAgent.get(this.store.client.client.myPubKey)),n=await Promise.all(n.map(async p=>({profile:await V(this.profilesProvider.currentProfileForAgent.get(p.agent)),agent:p.agent}))));const u=await this.store.client.createGroupChat(s,n,{avatar:e.avatar,description:"",name:e.name},{only_admins_can_add_members:!1,only_admins_can_edit_group_info:!1,sync_message_history_with_new_members:!1});this.dispatchEvent(new CustomEvent("group-chat-created",{bubbles:!0,composed:!0,detail:{groupChatHash:u}}))}catch(t){console.error(t),ce(g("Error creating group chat."))}}render(){return h`
 			<form
 				class="column"
 				${ne(e=>this.createGroupChat(e))}
 				style="gap: 24px; flex: 1"
 			>
-				<div class="row" style="gap: 16px; align-items: center">
+				<div class="row" style="gap: 16px; align-items: start">
 					<select-avatar
 						avatar-width="300"
 						avatar-height="300"
-						label=""
+						.label=${g("Avatar")}
 						name="avatar"
 						required
 					>
@@ -796,17 +796,17 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
 					<sl-input
 						style="flex: 1"
 						required
-						.placeholder=${v("Name")}
+						.label=${g("Name")}
 						name="name"
 					></sl-input>
 				</div>
 				<sl-textarea
-					.placeholder=${v("Description")}
+					.label=${g("Description")}
 					name="description"
 				></sl-textarea>
 
 				<search-users
-					.label=${v("Add Members")}
+					.label=${g("Add Members")}
 					name="members"
 					.excludedUsers=${[[this.store.client.client.myPubKey]]}
 				>
@@ -815,7 +815,7 @@ import{a as i,c as $,p as P,t as A,b as O}from"./property.aM4kGVap.js";import{_ 
 				<div style="flex: 1"></div>
 
 				<sl-button variant="primary" type="submit"
-					>${v("Create Group Chat")}</sl-button
+					>${g("Create Group Chat")}</sl-button
 				>
 			</form>
 		`}};S.styles=[se,_`

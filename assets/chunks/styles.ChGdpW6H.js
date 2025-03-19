@@ -1,4 +1,4 @@
-import{_ as ft}from"./tslib.es6.kHcLnhpD.js";import{a as u,b as Gt,t as Jt,c as ni,p as ai}from"./property.aM4kGVap.js";import{f as Pe,j as li,i as j,r as Rt,x as L,T as ze,o as ci,p as hi,m as Se}from"./messenger-client.B7FUcpsY.js";import{S as di}from"./signal-watcher.up8QMDE0.js";/**
+import{_ as ft}from"./tslib.es6.kHcLnhpD.js";import{a as u,b as Gt,t as Jt,c as ni,p as ai}from"./property.CdyGxQ3i.js";import{f as Pe,j as li,i as j,r as Rt,x as L,T as ze,o as ci,p as hi,m as Se}from"./messenger-client.CJVut2Sl.js";import{S as di}from"./signal-watcher.CwHglHdS.js";/**
  * @license
  * Copyright 2021 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
@@ -461,12 +461,12 @@ import{_ as ft}from"./tslib.es6.kHcLnhpD.js";import{a as u,b as Gt,t as Jt,c as 
       </sl-popup>
     `}};$.styles=[Ct,Fi];$.dependencies={"sl-popup":C};f([lt("slot:not([name])")],$.prototype,"defaultSlot",2);f([lt(".tooltip__body")],$.prototype,"body",2);f([lt("sl-popup")],$.prototype,"popup",2);f([u()],$.prototype,"content",2);f([u()],$.prototype,"placement",2);f([u({type:Boolean,reflect:!0})],$.prototype,"disabled",2);f([u({type:Number})],$.prototype,"distance",2);f([u({type:Boolean,reflect:!0})],$.prototype,"open",2);f([u({type:Number})],$.prototype,"skidding",2);f([u()],$.prototype,"trigger",2);f([u({type:Boolean})],$.prototype,"hoist",2);f([gt("open",{waitUntilFirstUpdate:!0})],$.prototype,"handleOpenChange",1);f([gt(["content","distance","hoist","placement","skidding"])],$.prototype,"handleOptionsChange",1);f([gt("disabled")],$.prototype,"handleDisabledChange",1);ei("tooltip.show",{keyframes:[{opacity:0,scale:.8},{opacity:1,scale:1}],options:{duration:150,easing:"ease"}});ei("tooltip.hide",{keyframes:[{opacity:1,scale:1},{opacity:0,scale:.8}],options:{duration:150,easing:"ease"}});$.define("sl-tooltip");var At=function(t,e,i,o){var r=arguments.length,s=r<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,i):o,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(t,e,i,o);else for(var a=t.length-1;a>=0;a--)(n=t[a])&&(s=(r<3?n(s):r>3?n(e,i,s):n(e,i))||s);return r>3&&s&&Object.defineProperty(e,i,s),s};let at=class extends Rt{constructor(){super(...arguments),this.tooltip=!1}get _iconSize(){return this.iconSize?this.iconSize:this.tooltip!==!1?"32px":"64px"}renderIcon(){return L`
 			<sl-icon
-				style="color: red; height: ${this._iconSize}; width: ${this._iconSize}; margin-bottom: 8px;"
+				style="color: red; height: ${this._iconSize}; width: ${this._iconSize};"
 				src="${He(vi)}"
 			></sl-icon>
-		`}renderFull(){return L` <div class="column center-content" style="flex: 1">
+		`}renderFull(){return L` <div class="column center-content" style="flex: 1; gap: 8px">
 			${this.renderIcon()}
-			<div style="width: 500px; text-align: center" class="column">
+			<div style="max-width: 500px; text-align: center" class="column">
 				${this.headline?L` <span style="margin-bottom: 8px">${this.headline} </span>`:L``}
 				<span class="placeholder"
 					>${typeof this.error=="object"&&"message"in this.error?this.error.message:this.error}
