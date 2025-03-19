@@ -819,7 +819,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 										? html`
 												<sl-dialog
 													id="leave-group-dialog"
-													.label=${msg('leave Group')}
+													.label=${msg('Leave Group')}
 												>
 													<span
 														>${msg(
