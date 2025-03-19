@@ -8,6 +8,7 @@ import {
 	mdiAccountRemove,
 	mdiAccountStar,
 	mdiDelete,
+	mdiInformationOutline,
 	mdiMessage,
 } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
@@ -205,6 +206,19 @@ export class GroupMembers extends SignalWatcher(LitElement) {
 	}
 
 	private renderMembers(groupChat: GroupChat) {
+		if (groupChat.members.length === 0) {
+			return html`<div
+				class="column placeholder"
+				style="flex: 1; align-items: center; justify-content: center; gap: 8px"
+			>
+				<sl-icon
+					.src=${wrapPathInSvg(mdiInformationOutline)}
+					style="font-size: 64px;"
+				></sl-icon>
+				<span>${msg('This group has no members.')}</span>
+			</div>`;
+		}
+
 		const me = groupChat.members.find(m =>
 			m.agents.find(
 				a =>
