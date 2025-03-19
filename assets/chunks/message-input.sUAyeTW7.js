@@ -1,4 +1,4 @@
-import{i as f,x as h,f as c,r as E}from"./messenger-client.B7FUcpsY.js";import{b as z}from"./chunk.UG6RICOR.DzwSIgXM.js";import{c as M,_ as d,S as k,L as I,e as D,a as $,G as B,l as R}from"./styles.B3oeT_Sb.js";import{a as u,b as T,t as C}from"./property.aM4kGVap.js";import{S as O}from"./signal-watcher.up8QMDE0.js";var A=f`
+import{i as f,x as h,f as c,r as E}from"./messenger-client.B7FUcpsY.js";import{b as z}from"./chunk.UG6RICOR.DzwSIgXM.js";import{c as M,_ as d,S as k,L as I,e as D,a as R,G as $,l as B}from"./styles.B3oeT_Sb.js";import{a as u,b as T,t as C}from"./property.aM4kGVap.js";import{S as O}from"./signal-watcher.up8QMDE0.js";var A=f`
   :host {
     display: inline-block;
   }
@@ -111,7 +111,7 @@ import{i as f,x as h,f as c,r as E}from"./messenger-client.B7FUcpsY.js";import{b
   .tag--pill {
     border-radius: var(--sl-border-radius-pill);
   }
-`,o=class extends k{constructor(){super(...arguments),this.localize=new I(this),this.variant="neutral",this.size="medium",this.pill=!1,this.removable=!1}handleRemoveClick(){this.emit("sl-remove")}render(){return h`
+`,l=class extends k{constructor(){super(...arguments),this.localize=new I(this),this.variant="neutral",this.size="medium",this.pill=!1,this.removable=!1}handleRemoveClick(){this.emit("sl-remove")}render(){return h`
       <span
         part="base"
         class=${D({tag:!0,"tag--primary":this.variant==="primary","tag--success":this.variant==="success","tag--neutral":this.variant==="neutral","tag--warning":this.variant==="warning","tag--danger":this.variant==="danger","tag--text":this.variant==="text","tag--small":this.size==="small","tag--medium":this.size==="medium","tag--large":this.size==="large","tag--pill":this.pill,"tag--removable":this.removable})}
@@ -131,8 +131,8 @@ import{i as f,x as h,f as c,r as E}from"./messenger-client.B7FUcpsY.js";import{b
               ></sl-icon-button>
             `:""}
       </span>
-    `}};o.styles=[M,A];o.dependencies={"sl-icon-button":z};d([u({reflect:!0})],o.prototype,"variant",2);d([u({reflect:!0})],o.prototype,"size",2);d([u({type:Boolean,reflect:!0})],o.prototype,"pill",2);d([u({type:Boolean})],o.prototype,"removable",2);o.define("sl-tag");const P=60*1e3*1e3;function W(t,r){const l=[],i=Object.entries(t).sort((a,e)=>e[1].event.timestamp-a[1].event.timestamp);for(const[a,e]of i)if(l.length===0){const s=new Date(e.event.timestamp/1e3);s.setHours(0),s.setMinutes(0),s.setSeconds(0),s.setMilliseconds(0),l.push({eventsSets:[[[a,e]]],day:s})}else{const s=l[l.length-1],g=s.eventsSets[s.eventsSets.length-1],v=g[g.length-1][1],y=r.find(p=>p.find(m=>c(m)===c(v.author))),S=r.find(p=>p.find(m=>c(m)===c(e.author))),x=y===S,w=v.event.timestamp-e.event.timestamp<P,_=e.event.content.type===v.event.content.type,n=new Date(e.event.timestamp/1e3);n.setHours(0),n.setMinutes(0),n.setSeconds(0),n.setMilliseconds(0),n.valueOf()===s.day.valueOf()?x&&w&&_?g.push([a,e]):s.eventsSets.push([[a,e]]):l.push({eventsSets:[[[a,e]]],day:n})}return l}var H=Object.getOwnPropertyDescriptor,L=(t,r,l,i)=>{for(var a=i>1?void 0:i?H(r,l):r,e=t.length-1,s;e>=0;e--)(s=t[e])&&(a=s(a)||a);return a};let b=class extends O(E){dispatchSendMessage(t){if(!t||t==="")return;this.dispatchEvent(new CustomEvent("send-message",{bubbles:!0,composed:!0,detail:{message:{message:t,reply_to:void 0}}}));const r=this.shadowRoot.getElementById("text-input");r.value=""}render(){return h`
-			<div class="row" style="align-items: center;">
+    `}};l.styles=[M,A];l.dependencies={"sl-icon-button":z};d([u({reflect:!0})],l.prototype,"variant",2);d([u({reflect:!0})],l.prototype,"size",2);d([u({type:Boolean,reflect:!0})],l.prototype,"pill",2);d([u({type:Boolean})],l.prototype,"removable",2);l.define("sl-tag");const P=60*1e3*1e3;function N(t,r){const o=[],i=Object.entries(t).sort((a,e)=>e[1].event.timestamp-a[1].event.timestamp);for(const[a,e]of i)if(o.length===0){const s=new Date(e.event.timestamp/1e3);s.setHours(0),s.setMinutes(0),s.setSeconds(0),s.setMilliseconds(0),o.push({eventsSets:[[[a,e]]],day:s})}else{const s=o[o.length-1],g=s.eventsSets[s.eventsSets.length-1],p=g[g.length-1][1],y=r.find(v=>v.find(m=>c(m)===c(p.author))),x=r.find(v=>v.find(m=>c(m)===c(e.author))),S=y===x,w=p.event.timestamp-e.event.timestamp<P,_=e.event.content.type===p.event.content.type,n=new Date(e.event.timestamp/1e3);n.setHours(0),n.setMinutes(0),n.setSeconds(0),n.setMilliseconds(0),n.valueOf()===s.day.valueOf()?S&&w&&_?g.push([a,e]):s.eventsSets.push([[a,e]]):o.push({eventsSets:[[[a,e]]],day:n})}return o}var H=Object.getOwnPropertyDescriptor,L=(t,r,o,i)=>{for(var a=i>1?void 0:i?H(r,o):r,e=t.length-1,s;e>=0;e--)(s=t[e])&&(a=s(a)||a);return a};let b=class extends O(E){dispatchSendMessage(t){if(!t||t==="")return;this.dispatchEvent(new CustomEvent("send-message",{bubbles:!0,composed:!0,detail:{message:{message:t,reply_to:void 0}}}));const r=this.shadowRoot.getElementById("text-input");r.value=""}render(){return h`
+			<div class="row" style="align-items: center; gap: 4px">
 				<sl-textarea
 					type="text"
 					id="text-input"
@@ -145,9 +145,9 @@ import{i as f,x as h,f as c,r as E}from"./messenger-client.B7FUcpsY.js";import{b
 				<sl-button
 					variant="primary"
 					circle
-					@click=${()=>{const t=this.shadowRoot.getElementById("text-input");this.dispatchSendMessage(t.value)}}
+					@click=${()=>{const t=this.shadowRoot.getElementById("text-input");this.dispatchSendMessage(t.value),this.shadowRoot.querySelector("sl-textarea").focus()}}
 				>
-					<sl-icon .src=${$(B)}></sl-icon>
+					<sl-icon .src=${R($)}></sl-icon>
 				</sl-button>
 			</div>
 		`}};b.styles=[T,f`
@@ -157,4 +157,4 @@ import{i as f,x as h,f as c,r as E}from"./messenger-client.B7FUcpsY.js";import{b
 			sl-textarea::part(textarea) {
 				min-height: 38px;
 			}
-		`];b=L([R(),C("message-input")],b);export{W as o};
+		`];b=L([B(),C("message-input")],b);export{N as o};

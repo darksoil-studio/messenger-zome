@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["MessengerEvent","MessengerRemoteSignal","Signal"],"fn":["attempt_commit_awaiting_deps_entries","commit_my_pending_encrypted_messages","query_messenger_event","query_messenger_events","recv_remote_signal","send_events"],"struct":["Message"]};
+window.SIDEBAR_ITEMS = {"enum":["MessengerEvent","MessengerRemoteSignal","Signal"],"fn":["attempt_commit_awaiting_deps_entries","commit_my_pending_encrypted_messages","migrate_from_old_cell","query_messenger_event","query_messenger_events","recv_remote_signal","send_events"],"struct":["Message"]};
