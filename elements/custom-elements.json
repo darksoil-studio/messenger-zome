@@ -2136,7 +2136,7 @@
               "privacy": "private",
               "parameters": [
                 {
-                  "name": "iAmAdmin",
+                  "name": "iCanEditSettings",
                   "type": {
                     "text": "boolean"
                   }
