@@ -33,7 +33,7 @@ export class MessageInput extends SignalWatcher(LitElement) {
 	}
 	render() {
 		return html`
-			<div class="row" style="align-items: center;">
+			<div class="row" style="align-items: center; gap: 4px">
 				<sl-textarea
 					type="text"
 					id="text-input"
