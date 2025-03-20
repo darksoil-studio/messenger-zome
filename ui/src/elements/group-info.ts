@@ -9,6 +9,7 @@ import '@tnesh-stack/elements/dist/elements/display-error.js';
 import { SignalWatcher } from '@tnesh-stack/signals';
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 import { messengerStoreContext } from '../context';
 import { MessengerStore } from '../messenger-store';
@@ -38,7 +39,12 @@ export class GroupInfoEl extends SignalWatcher(LitElement) {
 							style="font-size: 64px; border-radius: 50%; align-self: center; height: 150px"
 							class="placeholder"
 						></sl-icon>`}
-				<div class="row">
+				<div
+					class="row"
+					style=${styleMap({
+						'align-items': info.description ? 'auto' : 'center',
+					})}
+				>
 					<div class="column" style="gap: 8px; flex: 1">
 						<span class="title" style="flex: 1">${info.name}</span>
 						${info.description

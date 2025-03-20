@@ -31,6 +31,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 
 	// eslint-disable-next-line
 	private async createGroupChat(fields: any) {
+		this.shadowRoot!.querySelector('sl-button')!.loading = true;
 		try {
 			const members: AgentPubKey[][] = Array.isArray(fields.members)
 				? [fields.members]
@@ -85,6 +86,7 @@ export class CreateGroupChat extends SignalWatcher(LitElement) {
 			console.error(e);
 			notifyError(msg('Error creating group chat.'));
 		}
+		this.shadowRoot!.querySelector('sl-button')!.loading = false;
 	}
 
 	render() {
