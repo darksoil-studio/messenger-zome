@@ -16,7 +16,7 @@ import {
 import { consume } from '@lit/context';
 import { localized, msg, str } from '@lit/localize';
 import { mdiArrowLeft, mdiClose, mdiDelete, mdiPencil } from '@mdi/js';
-import { SlDialog } from '@shoelace-style/shoelace';
+import { SlButton, SlDialog } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/details/details.js';
@@ -602,6 +602,10 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 	// eslint-disable-next-line
 	async updateGroupInfo(fields: Record<string, any>) {
+		const button = this.shadowRoot!.getElementById(
+			'save-group-info',
+		) as SlButton;
+		button.loading = true;
 		try {
 			await this.store.groupChats.get(this.groupChatHash).updateGroupChatInfo({
 				avatar: fields.avatar === 'null' ? undefined : fields.avatar,
@@ -613,6 +617,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			console.log(e);
 			notifyError(msg("Error updating the group's info."));
 		}
+		button.loading = false;
 	}
 
 	get usersToBeAdded() {
@@ -679,8 +684,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 											variant="primary"
 											.disabled=${this.usersToBeAdded &&
 											this.usersToBeAdded.length === 0}
-											@click=${() => {
-												this.addMembers();
+											@click=${async (e: CustomEvent) => {
+												const button = e.target as SlButton;
+												button.loading = true;
+												this.addMembers().finally(() => {
+													button.loading = false;
+												});
 											}}
 											>${msg('Add members')}
 										</sl-button>
@@ -738,8 +747,8 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 								.value=${info.description}
 							></sl-textarea>
 							<div style="flex: 1"></div>
-							<sl-button type="submit" variant="primary"
-								>${msg('Save')}
+							<sl-button id="save-group-info" type="submit" variant="primary"
+								>${msg('Save Group Info')}
 							</sl-button>
 						</div>
 					</sl-card>
@@ -828,7 +837,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 													</span>
 													<sl-button
 														slot="footer"
-														@click=${async () => {
+														@click=${async (e: CustomEvent) => {
+															const button = e.target as SlButton;
+															button.loading = true;
 															try {
 																await this.store.groupChats
 																	.get(this.groupChatHash)
@@ -837,6 +848,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 																console.log(e);
 																notifyError(msg('Error leaving the group.'));
 															}
+															button.loading = false;
 														}}
 														variant="danger"
 														>${msg('Leave Group')}
@@ -873,7 +885,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 													</span>
 													<sl-button
 														slot="footer"
-														@click=${async () => {
+														@click=${async (e: CustomEvent) => {
+															const button = e.target as SlButton;
+															button.loading = true;
 															try {
 																await this.store.groupChats
 																	.get(this.groupChatHash)
@@ -882,6 +896,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 																console.log(e);
 																notifyError(msg('Error deleting the group.'));
 															}
+															button.loading = false;
 														}}
 														variant="danger"
 														>${msg('Delete Group')}
