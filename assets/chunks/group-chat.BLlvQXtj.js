@@ -1,4 +1,4 @@
-import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as be,S as xe,e as re,k as Ne,_ as g,f as G,w as we,s as Q,L as Ue,h as te,i as V,j as X,p as Fe,g as ve,r as Ke,b as _e,n as ke,a as C,q as Ve,t as Xe,u as Je,v as Qe,x as Ye,o as je,m as Ze,y as et,z as tt,A as Te,B as Ie,C as st,l as it}from"./styles.ChGdpW6H.js";import{i as ce,x as l,r as $e,m as u,f as b,t as at,g as se,j as rt,k as ot}from"./messenger-client.CJVut2Sl.js";import{H as Me,f as lt,d as nt,F as dt,o as Ee,l as ct,b as ht,a as W,n as Be}from"./chunk.UG6RICOR.b7ztLsiC.js";import"./chunk.UJ4C5V3J.VdG0d-v6.js";import{a as Re,o as ut}from"./select-avatar.BIQpEifb.js";import{o as pt}from"./message-input.BZU1VbQz.js";import{S as Ce}from"./signal-watcher.CwHglHdS.js";import{m as Ae}from"./context.Cfnzkp14.js";import"./tslib.es6.kHcLnhpD.js";var ft=ce`
+import{a as y,c as de,t as ye,p as Ne}from"./property.CdyGxQ3i.js";import{c as be,S as xe,e as re,k as Ve,_ as g,f as G,w as we,s as Q,L as Ue,h as te,i as V,j as X,p as Fe,g as ve,r as Ke,b as _e,n as ke,q as je,a as C,t as Xe,u as Je,v as Qe,x as Ye,y as Ze,o as Ge,m as et,z as tt,A as Ie,B as Te,C as st,l as it}from"./styles.CfYYDkJJ.js";import{i as ce,x as l,r as $e,m as u,f as b,t as at,g as se,j as rt,k as ot}from"./messenger-client.CJVut2Sl.js";import{H as Me,f as lt,d as nt,F as dt,o as Ee,l as ct,b as ht,a as W,n as Be}from"./chunk.UG6RICOR.nJOwhAwS.js";import"./chunk.UJ4C5V3J.D2bYaRcf.js";import{a as Re,o as ut}from"./select-avatar.B4s86o7-.js";import{o as pt}from"./message-input.DM4lYPx6.js";import{S as Ce}from"./signal-watcher.CwHglHdS.js";import{m as Ae}from"./context.Cfnzkp14.js";import"./tslib.es6.kHcLnhpD.js";var ft=ce`
   :host {
     --border-color: var(--sl-color-neutral-200);
     --border-radius: var(--sl-border-radius-medium);
@@ -63,7 +63,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
   .card:not(.card--has-footer) .card__footer {
     display: none;
   }
-`,Ge=class extends xe{constructor(){super(...arguments),this.hasSlotController=new Me(this,"footer","header","image")}render(){return l`
+`,qe=class extends xe{constructor(){super(...arguments),this.hasSlotController=new Me(this,"footer","header","image")}render(){return l`
       <div
         part="base"
         class=${re({card:!0,"card--has-footer":this.hasSlotController.test("footer"),"card--has-image":this.hasSlotController.test("image"),"card--has-header":this.hasSlotController.test("header")})}
@@ -73,7 +73,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
         <slot part="body" class="card__body"></slot>
         <slot name="footer" part="footer" class="card__footer"></slot>
       </div>
-    `}};Ge.styles=[be,ft];Ge.define("sl-card");var gt=ce`
+    `}};qe.styles=[be,ft];qe.define("sl-card");var gt=ce`
   :host {
     display: block;
   }
@@ -188,7 +188,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
           <slot part="content" id="content" class="details__content"></slot>
         </div>
       </details>
-    `}};z.styles=[be,gt];z.dependencies={"sl-icon":Ne};g([G(".details")],z.prototype,"details",2);g([G(".details__header")],z.prototype,"header",2);g([G(".details__body")],z.prototype,"body",2);g([G(".details__expand-icon-slot")],z.prototype,"expandIconSlot",2);g([y({type:Boolean,reflect:!0})],z.prototype,"open",2);g([y()],z.prototype,"summary",2);g([y({type:Boolean,reflect:!0})],z.prototype,"disabled",2);g([we("open",{waitUntilFirstUpdate:!0})],z.prototype,"handleOpenChange",1);Q("details.show",{keyframes:[{height:"0",opacity:"0"},{height:"auto",opacity:"1"}],options:{duration:250,easing:"linear"}});Q("details.hide",{keyframes:[{height:"auto",opacity:"1"},{height:"0",opacity:"0"}],options:{duration:250,easing:"linear"}});z.define("sl-details");var mt=ce`
+    `}};z.styles=[be,gt];z.dependencies={"sl-icon":Ve};g([G(".details")],z.prototype,"details",2);g([G(".details__header")],z.prototype,"header",2);g([G(".details__body")],z.prototype,"body",2);g([G(".details__expand-icon-slot")],z.prototype,"expandIconSlot",2);g([y({type:Boolean,reflect:!0})],z.prototype,"open",2);g([y()],z.prototype,"summary",2);g([y({type:Boolean,reflect:!0})],z.prototype,"disabled",2);g([we("open",{waitUntilFirstUpdate:!0})],z.prototype,"handleOpenChange",1);Q("details.show",{keyframes:[{height:"0",opacity:"0"},{height:"auto",opacity:"1"}],options:{duration:250,easing:"linear"}});Q("details.hide",{keyframes:[{height:"auto",opacity:"1"},{height:"0",opacity:"0"}],options:{duration:250,easing:"linear"}});z.define("sl-details");var mt=ce`
   :host {
     display: inline-block;
   }
@@ -399,7 +399,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
           <slot name="help-text">${this.helpText}</slot>
         </div>
       </div>
-    `}};_.styles=[be,lt,mt];g([G('input[type="checkbox"]')],_.prototype,"input",2);g([Ke()],_.prototype,"hasFocus",2);g([y()],_.prototype,"title",2);g([y()],_.prototype,"name",2);g([y()],_.prototype,"value",2);g([y({reflect:!0})],_.prototype,"size",2);g([y({type:Boolean,reflect:!0})],_.prototype,"disabled",2);g([y({type:Boolean,reflect:!0})],_.prototype,"checked",2);g([nt("checked")],_.prototype,"defaultChecked",2);g([y({reflect:!0})],_.prototype,"form",2);g([y({type:Boolean,reflect:!0})],_.prototype,"required",2);g([y({attribute:"help-text"})],_.prototype,"helpText",2);g([we("checked",{waitUntilFirstUpdate:!0})],_.prototype,"handleCheckedChange",1);g([we("disabled",{waitUntilFirstUpdate:!0})],_.prototype,"handleDisabledChange",1);_.define("sl-switch");var p=function(t,e,s){if(!e.has(t))throw new TypeError("attempted to set private field on non-instance");return e.set(t,s),s},n=function(t,e){if(!e.has(t))throw new TypeError("attempted to get private field on non-instance");return e.get(t)},U,q,M,Z,ae,P,D,F,T,I,B,R,O,N,ee,K,ge,j;const vt=function(t){var e=131,s=137,r=0;t+="x";var i=Math.floor(9007199254740991/s);for(let a=0;a<t.length;a++)r>i&&(r=Math.floor(r/s)),r=r*e+t.charCodeAt(a);return r},d="0123456789abcdef".split(""),yt=[-2147483648,8388608,32768,128],S=[24,16,8,0],fe=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298],w=[];class bt{constructor(e=!1,s=!1){U.set(this,void 0),q.set(this,void 0),M.set(this,void 0),Z.set(this,void 0),ae.set(this,void 0),P.set(this,void 0),D.set(this,void 0),F.set(this,void 0),T.set(this,void 0),I.set(this,void 0),B.set(this,void 0),R.set(this,void 0),O.set(this,void 0),N.set(this,void 0),ee.set(this,void 0),K.set(this,void 0),ge.set(this,0),j.set(this,void 0),this.init(e,s)}init(e,s){s?(w[0]=w[16]=w[1]=w[2]=w[3]=w[4]=w[5]=w[6]=w[7]=w[8]=w[9]=w[10]=w[11]=w[12]=w[13]=w[14]=w[15]=0,p(this,q,w)):p(this,q,[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),e?(p(this,P,3238371032),p(this,D,914150663),p(this,F,812702999),p(this,T,4144912697),p(this,I,4290775857),p(this,B,1750603025),p(this,R,1694076839),p(this,O,3204075428)):(p(this,P,1779033703),p(this,D,3144134277),p(this,F,1013904242),p(this,T,2773480762),p(this,I,1359893119),p(this,B,2600822924),p(this,R,528734635),p(this,O,1541459225)),p(this,U,p(this,j,p(this,M,p(this,ee,0)))),p(this,Z,p(this,N,!1)),p(this,ae,!0),p(this,K,e)}update(e){if(n(this,Z))return this;let s;e instanceof ArrayBuffer?s=new Uint8Array(e):s=e;let r=0;const i=s.length,a=n(this,q);for(;r<i;){let o;if(n(this,N)&&(p(this,N,!1),a[0]=n(this,U),a[16]=a[1]=a[2]=a[3]=a[4]=a[5]=a[6]=a[7]=a[8]=a[9]=a[10]=a[11]=a[12]=a[13]=a[14]=a[15]=0),typeof s!="string")for(o=n(this,j);r<i&&o<64;++r)a[o>>2]|=s[r]<<S[o++&3];else for(o=n(this,j);r<i&&o<64;++r){let c=s.charCodeAt(r);c<128?a[o>>2]|=c<<S[o++&3]:c<2048?(a[o>>2]|=(192|c>>6)<<S[o++&3],a[o>>2]|=(128|c&63)<<S[o++&3]):c<55296||c>=57344?(a[o>>2]|=(224|c>>12)<<S[o++&3],a[o>>2]|=(128|c>>6&63)<<S[o++&3],a[o>>2]|=(128|c&63)<<S[o++&3]):(c=65536+((c&1023)<<10|s.charCodeAt(++r)&1023),a[o>>2]|=(240|c>>18)<<S[o++&3],a[o>>2]|=(128|c>>12&63)<<S[o++&3],a[o>>2]|=(128|c>>6&63)<<S[o++&3],a[o>>2]|=(128|c&63)<<S[o++&3])}p(this,ge,o),p(this,M,n(this,M)+(o-n(this,j))),o>=64?(p(this,U,a[16]),p(this,j,o-64),this.hash(),p(this,N,!0)):p(this,j,o)}return n(this,M)>4294967295&&(p(this,ee,n(this,ee)+(n(this,M)/4294967296<<0)),p(this,M,n(this,M)%4294967296)),this}finalize(){if(n(this,Z))return;p(this,Z,!0);const e=n(this,q),s=n(this,ge);e[16]=n(this,U),e[s>>2]|=yt[s&3],p(this,U,e[16]),s>=56&&(n(this,N)||this.hash(),e[0]=n(this,U),e[16]=e[1]=e[2]=e[3]=e[4]=e[5]=e[6]=e[7]=e[8]=e[9]=e[10]=e[11]=e[12]=e[13]=e[14]=e[15]=0),e[14]=n(this,ee)<<3|n(this,M)>>>29,e[15]=n(this,M)<<3,this.hash()}hash(){let e=n(this,P),s=n(this,D),r=n(this,F),i=n(this,T),a=n(this,I),o=n(this,B),c=n(this,R),f=n(this,O);const v=n(this,q);let k,$,H,h,m,A,E,Y,ue,pe;for(let x=16;x<64;++x)h=v[x-15],k=(h>>>7|h<<25)^(h>>>18|h<<14)^h>>>3,h=v[x-2],$=(h>>>17|h<<15)^(h>>>19|h<<13)^h>>>10,v[x]=v[x-16]+k+v[x-7]+$<<0;pe=s&r;for(let x=0;x<64;x+=4)n(this,ae)?(n(this,K)?(E=300032,h=v[0]-1413257819,f=h-150054599<<0,i=h+24177077<<0):(E=704751109,h=v[0]-210244248,f=h-1521486534<<0,i=h+143694565<<0),p(this,ae,!1)):(k=(e>>>2|e<<30)^(e>>>13|e<<19)^(e>>>22|e<<10),$=(a>>>6|a<<26)^(a>>>11|a<<21)^(a>>>25|a<<7),E=e&s,H=E^e&r^pe,A=a&o^~a&c,h=f+$+A+fe[x]+v[x],m=k+H,f=i+h<<0,i=h+m<<0),k=(i>>>2|i<<30)^(i>>>13|i<<19)^(i>>>22|i<<10),$=(f>>>6|f<<26)^(f>>>11|f<<21)^(f>>>25|f<<7),Y=i&e,H=Y^i&s^E,A=f&a^~f&o,h=c+$+A+fe[x+1]+v[x+1],m=k+H,c=r+h<<0,r=h+m<<0,k=(r>>>2|r<<30)^(r>>>13|r<<19)^(r>>>22|r<<10),$=(c>>>6|c<<26)^(c>>>11|c<<21)^(c>>>25|c<<7),ue=r&i,H=ue^r&e^Y,A=c&f^~c&a,h=o+$+A+fe[x+2]+v[x+2],m=k+H,o=s+h<<0,s=h+m<<0,k=(s>>>2|s<<30)^(s>>>13|s<<19)^(s>>>22|s<<10),$=(o>>>6|o<<26)^(o>>>11|o<<21)^(o>>>25|o<<7),pe=s&r,H=pe^s&i^ue,A=o&c^~o&f,h=a+$+A+fe[x+3]+v[x+3],m=k+H,a=e+h<<0,e=h+m<<0;p(this,P,n(this,P)+e<<0),p(this,D,n(this,D)+s<<0),p(this,F,n(this,F)+r<<0),p(this,T,n(this,T)+i<<0),p(this,I,n(this,I)+a<<0),p(this,B,n(this,B)+o<<0),p(this,R,n(this,R)+c<<0),p(this,O,n(this,O)+f<<0)}hex(){this.finalize();const e=n(this,P),s=n(this,D),r=n(this,F),i=n(this,T),a=n(this,I),o=n(this,B),c=n(this,R),f=n(this,O);let v=d[e>>28&15]+d[e>>24&15]+d[e>>20&15]+d[e>>16&15]+d[e>>12&15]+d[e>>8&15]+d[e>>4&15]+d[e&15]+d[s>>28&15]+d[s>>24&15]+d[s>>20&15]+d[s>>16&15]+d[s>>12&15]+d[s>>8&15]+d[s>>4&15]+d[s&15]+d[r>>28&15]+d[r>>24&15]+d[r>>20&15]+d[r>>16&15]+d[r>>12&15]+d[r>>8&15]+d[r>>4&15]+d[r&15]+d[i>>28&15]+d[i>>24&15]+d[i>>20&15]+d[i>>16&15]+d[i>>12&15]+d[i>>8&15]+d[i>>4&15]+d[i&15]+d[a>>28&15]+d[a>>24&15]+d[a>>20&15]+d[a>>16&15]+d[a>>12&15]+d[a>>8&15]+d[a>>4&15]+d[a&15]+d[o>>28&15]+d[o>>24&15]+d[o>>20&15]+d[o>>16&15]+d[o>>12&15]+d[o>>8&15]+d[o>>4&15]+d[o&15]+d[c>>28&15]+d[c>>24&15]+d[c>>20&15]+d[c>>16&15]+d[c>>12&15]+d[c>>8&15]+d[c>>4&15]+d[c&15];return n(this,K)||(v+=d[f>>28&15]+d[f>>24&15]+d[f>>20&15]+d[f>>16&15]+d[f>>12&15]+d[f>>8&15]+d[f>>4&15]+d[f&15]),v}toString(){return this.hex()}digest(){this.finalize();const e=n(this,P),s=n(this,D),r=n(this,F),i=n(this,T),a=n(this,I),o=n(this,B),c=n(this,R),f=n(this,O),v=[e>>24&255,e>>16&255,e>>8&255,e&255,s>>24&255,s>>16&255,s>>8&255,s&255,r>>24&255,r>>16&255,r>>8&255,r&255,i>>24&255,i>>16&255,i>>8&255,i&255,a>>24&255,a>>16&255,a>>8&255,a&255,o>>24&255,o>>16&255,o>>8&255,o&255,c>>24&255,c>>16&255,c>>8&255,c&255];return n(this,K)||v.push(f>>24&255,f>>16&255,f>>8&255,f&255),v}array(){return this.digest()}arrayBuffer(){this.finalize();const e=new ArrayBuffer(n(this,K)?28:32),s=new DataView(e);return s.setUint32(0,n(this,P)),s.setUint32(4,n(this,D)),s.setUint32(8,n(this,F)),s.setUint32(12,n(this,T)),s.setUint32(16,n(this,I)),s.setUint32(20,n(this,B)),s.setUint32(24,n(this,R)),n(this,K)||s.setUint32(28,n(this,O)),e}}U=new WeakMap,q=new WeakMap,M=new WeakMap,Z=new WeakMap,ae=new WeakMap,P=new WeakMap,D=new WeakMap,F=new WeakMap,T=new WeakMap,I=new WeakMap,B=new WeakMap,R=new WeakMap,O=new WeakMap,N=new WeakMap,ee=new WeakMap,K=new WeakMap,ge=new WeakMap,j=new WeakMap;function xt(t){const e=new bt;return e.update(t),parseInt(e.hex().substring(0,8),16)}const wt=function(t){var e="#";return t.forEach(function(s){s<16&&(e+=0),e+=s.toString(16)}),e},_t=function(t,e,s){t/=360;var r=s<.5?s*(1+e):s+e-s*e,i=2*s-r;return[t+1/3,t,t-1/3].map(function(a){return a<0&&a++,a>1&&a--,a<1/6?a=i+(r-i)*6*a:a<.5?a=r:a<2/3?a=i+(r-i)*6*(2/3-a):a=i,Math.round(a*255)})};class Oe{constructor(e={}){const[s,r]=[e.lightness,e.saturation].map(function(i){return i=i!==void 0?i:[.35,.5,.65],Array.isArray(i)?i.concat():[i]});this.L=s,this.S=r,typeof e.hue=="number"&&(e.hue={min:e.hue,max:e.hue}),typeof e.hue=="object"&&!Array.isArray(e.hue)&&(e.hue=[e.hue]),typeof e.hue>"u"&&(e.hue=[]),this.hueRanges=e.hue.map(function(i){return{min:typeof i.min>"u"?0:i.min,max:typeof i.max>"u"?360:i.max}}),this.hash=xt,typeof e.hash=="function"&&(this.hash=e.hash),e.hash==="bkdr"&&(this.hash=vt)}hsl(e){var s,r,i,a=this.hash(e),o=727;if(this.hueRanges.length){const c=this.hueRanges[a%this.hueRanges.length];s=a/this.hueRanges.length%o*(c.max-c.min)/o+c.min}else s=a%359;return a=Math.ceil(a/360),r=this.S[a%this.S.length],a=Math.ceil(a/this.S.length),i=this.L[a%this.L.length],[s,r,i]}rgb(e){var s=this.hsl(e);return _t.apply(this,s)}hex(e){var s=this.rgb(e);return wt(s)}}var kt=Object.defineProperty,$t=Object.getOwnPropertyDescriptor,ze=(t,e,s,r)=>{for(var i=r>1?void 0:r?$t(e,s):e,a=t.length-1,o;a>=0;a--)(o=t[a])&&(i=(r?o(e,s,i):o(i))||i);return r&&i&&kt(e,s,i),i};let oe=class extends Ce($e){renderInfo(t){return l`
+    `}};_.styles=[be,lt,mt];g([G('input[type="checkbox"]')],_.prototype,"input",2);g([Ke()],_.prototype,"hasFocus",2);g([y()],_.prototype,"title",2);g([y()],_.prototype,"name",2);g([y()],_.prototype,"value",2);g([y({reflect:!0})],_.prototype,"size",2);g([y({type:Boolean,reflect:!0})],_.prototype,"disabled",2);g([y({type:Boolean,reflect:!0})],_.prototype,"checked",2);g([nt("checked")],_.prototype,"defaultChecked",2);g([y({reflect:!0})],_.prototype,"form",2);g([y({type:Boolean,reflect:!0})],_.prototype,"required",2);g([y({attribute:"help-text"})],_.prototype,"helpText",2);g([we("checked",{waitUntilFirstUpdate:!0})],_.prototype,"handleCheckedChange",1);g([we("disabled",{waitUntilFirstUpdate:!0})],_.prototype,"handleDisabledChange",1);_.define("sl-switch");var p=function(t,e,s){if(!e.has(t))throw new TypeError("attempted to set private field on non-instance");return e.set(t,s),s},n=function(t,e){if(!e.has(t))throw new TypeError("attempted to get private field on non-instance");return e.get(t)},U,q,M,Z,ae,P,D,F,I,T,B,R,O,N,ee,K,ge,j;const vt=function(t){var e=131,s=137,r=0;t+="x";var i=Math.floor(9007199254740991/s);for(let a=0;a<t.length;a++)r>i&&(r=Math.floor(r/s)),r=r*e+t.charCodeAt(a);return r},d="0123456789abcdef".split(""),yt=[-2147483648,8388608,32768,128],S=[24,16,8,0],fe=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298],w=[];class bt{constructor(e=!1,s=!1){U.set(this,void 0),q.set(this,void 0),M.set(this,void 0),Z.set(this,void 0),ae.set(this,void 0),P.set(this,void 0),D.set(this,void 0),F.set(this,void 0),I.set(this,void 0),T.set(this,void 0),B.set(this,void 0),R.set(this,void 0),O.set(this,void 0),N.set(this,void 0),ee.set(this,void 0),K.set(this,void 0),ge.set(this,0),j.set(this,void 0),this.init(e,s)}init(e,s){s?(w[0]=w[16]=w[1]=w[2]=w[3]=w[4]=w[5]=w[6]=w[7]=w[8]=w[9]=w[10]=w[11]=w[12]=w[13]=w[14]=w[15]=0,p(this,q,w)):p(this,q,[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),e?(p(this,P,3238371032),p(this,D,914150663),p(this,F,812702999),p(this,I,4144912697),p(this,T,4290775857),p(this,B,1750603025),p(this,R,1694076839),p(this,O,3204075428)):(p(this,P,1779033703),p(this,D,3144134277),p(this,F,1013904242),p(this,I,2773480762),p(this,T,1359893119),p(this,B,2600822924),p(this,R,528734635),p(this,O,1541459225)),p(this,U,p(this,j,p(this,M,p(this,ee,0)))),p(this,Z,p(this,N,!1)),p(this,ae,!0),p(this,K,e)}update(e){if(n(this,Z))return this;let s;e instanceof ArrayBuffer?s=new Uint8Array(e):s=e;let r=0;const i=s.length,a=n(this,q);for(;r<i;){let o;if(n(this,N)&&(p(this,N,!1),a[0]=n(this,U),a[16]=a[1]=a[2]=a[3]=a[4]=a[5]=a[6]=a[7]=a[8]=a[9]=a[10]=a[11]=a[12]=a[13]=a[14]=a[15]=0),typeof s!="string")for(o=n(this,j);r<i&&o<64;++r)a[o>>2]|=s[r]<<S[o++&3];else for(o=n(this,j);r<i&&o<64;++r){let c=s.charCodeAt(r);c<128?a[o>>2]|=c<<S[o++&3]:c<2048?(a[o>>2]|=(192|c>>6)<<S[o++&3],a[o>>2]|=(128|c&63)<<S[o++&3]):c<55296||c>=57344?(a[o>>2]|=(224|c>>12)<<S[o++&3],a[o>>2]|=(128|c>>6&63)<<S[o++&3],a[o>>2]|=(128|c&63)<<S[o++&3]):(c=65536+((c&1023)<<10|s.charCodeAt(++r)&1023),a[o>>2]|=(240|c>>18)<<S[o++&3],a[o>>2]|=(128|c>>12&63)<<S[o++&3],a[o>>2]|=(128|c>>6&63)<<S[o++&3],a[o>>2]|=(128|c&63)<<S[o++&3])}p(this,ge,o),p(this,M,n(this,M)+(o-n(this,j))),o>=64?(p(this,U,a[16]),p(this,j,o-64),this.hash(),p(this,N,!0)):p(this,j,o)}return n(this,M)>4294967295&&(p(this,ee,n(this,ee)+(n(this,M)/4294967296<<0)),p(this,M,n(this,M)%4294967296)),this}finalize(){if(n(this,Z))return;p(this,Z,!0);const e=n(this,q),s=n(this,ge);e[16]=n(this,U),e[s>>2]|=yt[s&3],p(this,U,e[16]),s>=56&&(n(this,N)||this.hash(),e[0]=n(this,U),e[16]=e[1]=e[2]=e[3]=e[4]=e[5]=e[6]=e[7]=e[8]=e[9]=e[10]=e[11]=e[12]=e[13]=e[14]=e[15]=0),e[14]=n(this,ee)<<3|n(this,M)>>>29,e[15]=n(this,M)<<3,this.hash()}hash(){let e=n(this,P),s=n(this,D),r=n(this,F),i=n(this,I),a=n(this,T),o=n(this,B),c=n(this,R),f=n(this,O);const v=n(this,q);let k,$,H,h,m,A,E,Y,ue,pe;for(let x=16;x<64;++x)h=v[x-15],k=(h>>>7|h<<25)^(h>>>18|h<<14)^h>>>3,h=v[x-2],$=(h>>>17|h<<15)^(h>>>19|h<<13)^h>>>10,v[x]=v[x-16]+k+v[x-7]+$<<0;pe=s&r;for(let x=0;x<64;x+=4)n(this,ae)?(n(this,K)?(E=300032,h=v[0]-1413257819,f=h-150054599<<0,i=h+24177077<<0):(E=704751109,h=v[0]-210244248,f=h-1521486534<<0,i=h+143694565<<0),p(this,ae,!1)):(k=(e>>>2|e<<30)^(e>>>13|e<<19)^(e>>>22|e<<10),$=(a>>>6|a<<26)^(a>>>11|a<<21)^(a>>>25|a<<7),E=e&s,H=E^e&r^pe,A=a&o^~a&c,h=f+$+A+fe[x]+v[x],m=k+H,f=i+h<<0,i=h+m<<0),k=(i>>>2|i<<30)^(i>>>13|i<<19)^(i>>>22|i<<10),$=(f>>>6|f<<26)^(f>>>11|f<<21)^(f>>>25|f<<7),Y=i&e,H=Y^i&s^E,A=f&a^~f&o,h=c+$+A+fe[x+1]+v[x+1],m=k+H,c=r+h<<0,r=h+m<<0,k=(r>>>2|r<<30)^(r>>>13|r<<19)^(r>>>22|r<<10),$=(c>>>6|c<<26)^(c>>>11|c<<21)^(c>>>25|c<<7),ue=r&i,H=ue^r&e^Y,A=c&f^~c&a,h=o+$+A+fe[x+2]+v[x+2],m=k+H,o=s+h<<0,s=h+m<<0,k=(s>>>2|s<<30)^(s>>>13|s<<19)^(s>>>22|s<<10),$=(o>>>6|o<<26)^(o>>>11|o<<21)^(o>>>25|o<<7),pe=s&r,H=pe^s&i^ue,A=o&c^~o&f,h=a+$+A+fe[x+3]+v[x+3],m=k+H,a=e+h<<0,e=h+m<<0;p(this,P,n(this,P)+e<<0),p(this,D,n(this,D)+s<<0),p(this,F,n(this,F)+r<<0),p(this,I,n(this,I)+i<<0),p(this,T,n(this,T)+a<<0),p(this,B,n(this,B)+o<<0),p(this,R,n(this,R)+c<<0),p(this,O,n(this,O)+f<<0)}hex(){this.finalize();const e=n(this,P),s=n(this,D),r=n(this,F),i=n(this,I),a=n(this,T),o=n(this,B),c=n(this,R),f=n(this,O);let v=d[e>>28&15]+d[e>>24&15]+d[e>>20&15]+d[e>>16&15]+d[e>>12&15]+d[e>>8&15]+d[e>>4&15]+d[e&15]+d[s>>28&15]+d[s>>24&15]+d[s>>20&15]+d[s>>16&15]+d[s>>12&15]+d[s>>8&15]+d[s>>4&15]+d[s&15]+d[r>>28&15]+d[r>>24&15]+d[r>>20&15]+d[r>>16&15]+d[r>>12&15]+d[r>>8&15]+d[r>>4&15]+d[r&15]+d[i>>28&15]+d[i>>24&15]+d[i>>20&15]+d[i>>16&15]+d[i>>12&15]+d[i>>8&15]+d[i>>4&15]+d[i&15]+d[a>>28&15]+d[a>>24&15]+d[a>>20&15]+d[a>>16&15]+d[a>>12&15]+d[a>>8&15]+d[a>>4&15]+d[a&15]+d[o>>28&15]+d[o>>24&15]+d[o>>20&15]+d[o>>16&15]+d[o>>12&15]+d[o>>8&15]+d[o>>4&15]+d[o&15]+d[c>>28&15]+d[c>>24&15]+d[c>>20&15]+d[c>>16&15]+d[c>>12&15]+d[c>>8&15]+d[c>>4&15]+d[c&15];return n(this,K)||(v+=d[f>>28&15]+d[f>>24&15]+d[f>>20&15]+d[f>>16&15]+d[f>>12&15]+d[f>>8&15]+d[f>>4&15]+d[f&15]),v}toString(){return this.hex()}digest(){this.finalize();const e=n(this,P),s=n(this,D),r=n(this,F),i=n(this,I),a=n(this,T),o=n(this,B),c=n(this,R),f=n(this,O),v=[e>>24&255,e>>16&255,e>>8&255,e&255,s>>24&255,s>>16&255,s>>8&255,s&255,r>>24&255,r>>16&255,r>>8&255,r&255,i>>24&255,i>>16&255,i>>8&255,i&255,a>>24&255,a>>16&255,a>>8&255,a&255,o>>24&255,o>>16&255,o>>8&255,o&255,c>>24&255,c>>16&255,c>>8&255,c&255];return n(this,K)||v.push(f>>24&255,f>>16&255,f>>8&255,f&255),v}array(){return this.digest()}arrayBuffer(){this.finalize();const e=new ArrayBuffer(n(this,K)?28:32),s=new DataView(e);return s.setUint32(0,n(this,P)),s.setUint32(4,n(this,D)),s.setUint32(8,n(this,F)),s.setUint32(12,n(this,I)),s.setUint32(16,n(this,T)),s.setUint32(20,n(this,B)),s.setUint32(24,n(this,R)),n(this,K)||s.setUint32(28,n(this,O)),e}}U=new WeakMap,q=new WeakMap,M=new WeakMap,Z=new WeakMap,ae=new WeakMap,P=new WeakMap,D=new WeakMap,F=new WeakMap,I=new WeakMap,T=new WeakMap,B=new WeakMap,R=new WeakMap,O=new WeakMap,N=new WeakMap,ee=new WeakMap,K=new WeakMap,ge=new WeakMap,j=new WeakMap;function xt(t){const e=new bt;return e.update(t),parseInt(e.hex().substring(0,8),16)}const wt=function(t){var e="#";return t.forEach(function(s){s<16&&(e+=0),e+=s.toString(16)}),e},_t=function(t,e,s){t/=360;var r=s<.5?s*(1+e):s+e-s*e,i=2*s-r;return[t+1/3,t,t-1/3].map(function(a){return a<0&&a++,a>1&&a--,a<1/6?a=i+(r-i)*6*a:a<.5?a=r:a<2/3?a=i+(r-i)*6*(2/3-a):a=i,Math.round(a*255)})};class Oe{constructor(e={}){const[s,r]=[e.lightness,e.saturation].map(function(i){return i=i!==void 0?i:[.35,.5,.65],Array.isArray(i)?i.concat():[i]});this.L=s,this.S=r,typeof e.hue=="number"&&(e.hue={min:e.hue,max:e.hue}),typeof e.hue=="object"&&!Array.isArray(e.hue)&&(e.hue=[e.hue]),typeof e.hue>"u"&&(e.hue=[]),this.hueRanges=e.hue.map(function(i){return{min:typeof i.min>"u"?0:i.min,max:typeof i.max>"u"?360:i.max}}),this.hash=xt,typeof e.hash=="function"&&(this.hash=e.hash),e.hash==="bkdr"&&(this.hash=vt)}hsl(e){var s,r,i,a=this.hash(e),o=727;if(this.hueRanges.length){const c=this.hueRanges[a%this.hueRanges.length];s=a/this.hueRanges.length%o*(c.max-c.min)/o+c.min}else s=a%359;return a=Math.ceil(a/360),r=this.S[a%this.S.length],a=Math.ceil(a/this.S.length),i=this.L[a%this.L.length],[s,r,i]}rgb(e){var s=this.hsl(e);return _t.apply(this,s)}hex(e){var s=this.rgb(e);return wt(s)}}var kt=Object.defineProperty,$t=Object.getOwnPropertyDescriptor,ze=(t,e,s,r)=>{for(var i=r>1?void 0:r?$t(e,s):e,a=t.length-1,o;a>=0;a--)(o=t[a])&&(i=(r?o(e,s,i):o(i))||i);return r&&i&&kt(e,s,i),i};let oe=class extends Ce($e){renderInfo(t){return l`
 			<div class="column" style="gap: 16px;">
 				${t.avatar?l`
 							<img
@@ -407,11 +407,14 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 								style="height: 150px; object-fit: cover"
 							/>
 						`:l`<sl-icon
-							.src=${C(Ve)}
+							.src=${C(Xe)}
 							style="font-size: 64px; border-radius: 50%; align-self: center; height: 150px"
 							class="placeholder"
 						></sl-icon>`}
-				<div class="row">
+				<div
+					class="row"
+					style=${je({"align-items":t.description?"auto":"center"})}
+				>
 					<div class="column" style="gap: 8px; flex: 1">
 						<span class="title" style="flex: 1">${t.name}</span>
 						${t.description?l` <span class="placeholder">${t.description}</span> `:l``}
@@ -428,7 +431,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 				`;case"error":return l`<display-error
 					.headline=${u("Error fetching the info for this group")}
 					.error=${t.error}
-				></display-error>`;case"completed":return this.renderInfo(t.value.info)}}};oe.styles=[_e];ze([y(ke("group-chat-hash"))],oe.prototype,"groupChatHash",2);ze([de({context:Ae,subscribe:!0})],oe.prototype,"store",2);oe=ze([ye("group-info")],oe);function*He(t=document.activeElement){t!=null&&(yield t,"shadowRoot"in t&&t.shadowRoot&&t.shadowRoot.mode!=="closed"&&(yield*Xe(He(t.shadowRoot.activeElement))))}function Ct(){return[...He()].pop()}var ie=[],At=class{constructor(t){this.tabDirection="forward",this.handleFocusIn=()=>{this.isActive()&&this.checkFocus()},this.handleKeyDown=e=>{var s;if(e.key!=="Tab"||this.isExternalActivated||!this.isActive())return;const r=Ct();if(this.previousFocus=r,this.previousFocus&&this.possiblyHasTabbableChildren(this.previousFocus))return;e.shiftKey?this.tabDirection="backward":this.tabDirection="forward";const i=Re(this.element);let a=i.findIndex(c=>c===r);this.previousFocus=this.currentFocus;const o=this.tabDirection==="forward"?1:-1;for(;;){a+o>=i.length?a=0:a+o<0?a=i.length-1:a+=o,this.previousFocus=this.currentFocus;const c=i[a];if(this.tabDirection==="backward"&&this.previousFocus&&this.possiblyHasTabbableChildren(this.previousFocus)||c&&this.possiblyHasTabbableChildren(c))return;e.preventDefault(),this.currentFocus=c,(s=this.currentFocus)==null||s.focus({preventScroll:!1});const f=[...He()];if(f.includes(this.currentFocus)||!f.includes(this.previousFocus))break}setTimeout(()=>this.checkFocus())},this.handleKeyUp=()=>{this.tabDirection="forward"},this.element=t,this.elementsWithTabbableControls=["iframe"]}activate(){ie.push(this.element),document.addEventListener("focusin",this.handleFocusIn),document.addEventListener("keydown",this.handleKeyDown),document.addEventListener("keyup",this.handleKeyUp)}deactivate(){ie=ie.filter(t=>t!==this.element),this.currentFocus=null,document.removeEventListener("focusin",this.handleFocusIn),document.removeEventListener("keydown",this.handleKeyDown),document.removeEventListener("keyup",this.handleKeyUp)}isActive(){return ie[ie.length-1]===this.element}activateExternal(){this.isExternalActivated=!0}deactivateExternal(){this.isExternalActivated=!1}checkFocus(){if(this.isActive()&&!this.isExternalActivated){const t=Re(this.element);if(!this.element.matches(":focus-within")){const e=t[0],s=t[t.length-1],r=this.tabDirection==="forward"?e:s;typeof(r==null?void 0:r.focus)=="function"&&(this.currentFocus=r,r.focus({preventScroll:!1}))}}}possiblyHasTabbableChildren(t){return this.elementsWithTabbableControls.includes(t.tagName.toLowerCase())||t.hasAttribute("controls")}},Se=new Set;function Et(){const t=document.documentElement.clientWidth;return Math.abs(window.innerWidth-t)}function St(){const t=Number(getComputedStyle(document.body).paddingRight.replace(/px/,""));return isNaN(t)||!t?0:t}function We(t){if(Se.add(t),!document.documentElement.classList.contains("sl-scroll-lock")){const e=Et()+St();let s=getComputedStyle(document.documentElement).scrollbarGutter;(!s||s==="auto")&&(s="stable"),e<2&&(s=""),document.documentElement.style.setProperty("--sl-scroll-lock-gutter",s),document.documentElement.classList.add("sl-scroll-lock"),document.documentElement.style.setProperty("--sl-scroll-lock-size",`${e}px`)}}function Le(t){Se.delete(t),Se.size===0&&(document.documentElement.classList.remove("sl-scroll-lock"),document.documentElement.style.removeProperty("--sl-scroll-lock-size"))}var Mt=ce`
+				></display-error>`;case"completed":return this.renderInfo(t.value.info)}}};oe.styles=[_e];ze([y(ke("group-chat-hash"))],oe.prototype,"groupChatHash",2);ze([de({context:Ae,subscribe:!0})],oe.prototype,"store",2);oe=ze([ye("group-info")],oe);function*He(t=document.activeElement){t!=null&&(yield t,"shadowRoot"in t&&t.shadowRoot&&t.shadowRoot.mode!=="closed"&&(yield*Je(He(t.shadowRoot.activeElement))))}function Ct(){return[...He()].pop()}var ie=[],At=class{constructor(t){this.tabDirection="forward",this.handleFocusIn=()=>{this.isActive()&&this.checkFocus()},this.handleKeyDown=e=>{var s;if(e.key!=="Tab"||this.isExternalActivated||!this.isActive())return;const r=Ct();if(this.previousFocus=r,this.previousFocus&&this.possiblyHasTabbableChildren(this.previousFocus))return;e.shiftKey?this.tabDirection="backward":this.tabDirection="forward";const i=Re(this.element);let a=i.findIndex(c=>c===r);this.previousFocus=this.currentFocus;const o=this.tabDirection==="forward"?1:-1;for(;;){a+o>=i.length?a=0:a+o<0?a=i.length-1:a+=o,this.previousFocus=this.currentFocus;const c=i[a];if(this.tabDirection==="backward"&&this.previousFocus&&this.possiblyHasTabbableChildren(this.previousFocus)||c&&this.possiblyHasTabbableChildren(c))return;e.preventDefault(),this.currentFocus=c,(s=this.currentFocus)==null||s.focus({preventScroll:!1});const f=[...He()];if(f.includes(this.currentFocus)||!f.includes(this.previousFocus))break}setTimeout(()=>this.checkFocus())},this.handleKeyUp=()=>{this.tabDirection="forward"},this.element=t,this.elementsWithTabbableControls=["iframe"]}activate(){ie.push(this.element),document.addEventListener("focusin",this.handleFocusIn),document.addEventListener("keydown",this.handleKeyDown),document.addEventListener("keyup",this.handleKeyUp)}deactivate(){ie=ie.filter(t=>t!==this.element),this.currentFocus=null,document.removeEventListener("focusin",this.handleFocusIn),document.removeEventListener("keydown",this.handleKeyDown),document.removeEventListener("keyup",this.handleKeyUp)}isActive(){return ie[ie.length-1]===this.element}activateExternal(){this.isExternalActivated=!0}deactivateExternal(){this.isExternalActivated=!1}checkFocus(){if(this.isActive()&&!this.isExternalActivated){const t=Re(this.element);if(!this.element.matches(":focus-within")){const e=t[0],s=t[t.length-1],r=this.tabDirection==="forward"?e:s;typeof(r==null?void 0:r.focus)=="function"&&(this.currentFocus=r,r.focus({preventScroll:!1}))}}}possiblyHasTabbableChildren(t){return this.elementsWithTabbableControls.includes(t.tagName.toLowerCase())||t.hasAttribute("controls")}},Se=new Set;function Et(){const t=document.documentElement.clientWidth;return Math.abs(window.innerWidth-t)}function St(){const t=Number(getComputedStyle(document.body).paddingRight.replace(/px/,""));return isNaN(t)||!t?0:t}function We(t){if(Se.add(t),!document.documentElement.classList.contains("sl-scroll-lock")){const e=Et()+St();let s=getComputedStyle(document.documentElement).scrollbarGutter;(!s||s==="auto")&&(s="stable"),e<2&&(s=""),document.documentElement.style.setProperty("--sl-scroll-lock-gutter",s),document.documentElement.classList.add("sl-scroll-lock"),document.documentElement.style.setProperty("--sl-scroll-lock-size",`${e}px`)}}function Le(t){Se.delete(t),Se.size===0&&(document.documentElement.classList.remove("sl-scroll-lock"),document.documentElement.style.removeProperty("--sl-scroll-lock-size"))}var Mt=ce`
   :host {
     --width: 31rem;
     --header-spacing: var(--sl-spacing-large);
@@ -597,7 +600,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 						style="cursor: pointer; align-items:center; gap: 8px"
 						@click=${async()=>{try{const i=await at(this.store.peerChatsForPeer.get(s.agents[0]));let a;i.length===0?a=await this.store.client.createPeerChat(s.agents[0]):a=i[0],this.dispatchEvent(new CustomEvent("peer-chat-selected",{bubbles:!0,composed:!0,detail:{peerChatHash:a}})),this.shadowRoot.getElementById(r).hide()}catch(i){console.error(i),W(u("Error sending direct message."))}}}
 					>
-						<sl-icon .src=${C(Je)}></sl-icon>
+						<sl-icon .src=${C(Qe)}></sl-icon>
 
 						<span>${u("Send direct message")}</span>
 					</div>
@@ -607,7 +610,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 									style="cursor: pointer; gap: 8px; align-items:center"
 									@click=${async()=>{try{await this.store.groupChats.get(this.groupChatHash).promoteMemberToAdmin(s.agents),this.shadowRoot.getElementById(r).hide()}catch(i){console.error(i),W(u("Error making peer an admin."))}}}
 								>
-									<sl-icon .src=${C(Qe)}></sl-icon>
+									<sl-icon .src=${C(Ye)}></sl-icon>
 									<span>${u("Make admin")}</span>
 								</div>
 							`:l``}
@@ -617,7 +620,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 									style="cursor: pointer; gap: 8px; align-items:center"
 									@click=${async()=>{try{await this.store.groupChats.get(this.groupChatHash).demoteMemberFromAdmin(s.agents),this.shadowRoot.getElementById(r).hide()}catch(i){console.error(i),W(u("Error demoting member from admin."))}}}
 								>
-									<sl-icon .src=${C(Ye)}></sl-icon>
+									<sl-icon .src=${C(Ze)}></sl-icon>
 									<span>${u("Remove admin role")}</span>
 								</div>
 							`:l``}
@@ -627,7 +630,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 									style="cursor: pointer; gap: 8px; align-items:center"
 									@click=${async()=>{try{await this.store.groupChats.get(this.groupChatHash).removeMember(s.agents);const i=this.shadowRoot.getElementById(r);i==null||i.hide()}catch(i){console.error(i),W(u("Error removing member."))}}}
 								>
-									<sl-icon .src=${C(je)}></sl-icon>
+									<sl-icon .src=${C(Ge)}></sl-icon>
 									<span>${u("Remove member")}</span>
 								</div>
 							`:l``}
@@ -661,7 +664,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 				style="flex: 1; align-items: center; justify-content: center; gap: 8px"
 			>
 				<sl-icon
-					.src=${C(Ze)}
+					.src=${C(et)}
 					style="font-size: 64px;"
 				></sl-icon>
 				<span>${u("This group has no members.")}</span>
@@ -675,7 +678,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 								outline
 								@click=${()=>{this.dispatchEvent(new CustomEvent("add-members-clicked",{bubbles:!0,composed:!0}))}}
 							>
-								<sl-icon slot="prefix" .src=${C(et)}>
+								<sl-icon slot="prefix" .src=${C(tt)}>
 								</sl-icon>
 								${u("Add members")}
 							</sl-button>
@@ -720,7 +723,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 				`;case"error":return l`<display-error
 					.headline=${u("Error fetching the settings for this group")}
 					.error=${t.error}
-				></display-error>`;case"completed":const e=t.value.members.find(r=>r.agents.find(i=>b(i)===b(this.store.client.client.myPubKey))),s=e.admin&&!e.removed;return this.renderSettings(s,t.value.settings)}}};ne.styles=[_e];De([y(ke("group-chat-hash"))],ne.prototype,"groupChatHash",2);De([de({context:Ae,subscribe:!0})],ne.prototype,"store",2);ne=De([ye("group-settings")],ne);var Ft=Object.defineProperty,Tt=Object.getOwnPropertyDescriptor,he=(t,e,s,r)=>{for(var i=r>1?void 0:r?Tt(e,s):e,a=t.length-1,o;a>=0;a--)(o=t[a])&&(i=(r?o(e,s,i):o(i))||i);return r&&i&&Ft(e,s,i),i};function me(t,e){return t?t instanceof ShadowRoot?me(t.host,e):t instanceof HTMLElement&&t.matches(e)?t:me(t.parentNode,e):null}let J=class extends Ce($e){constructor(){super(...arguments),this.view="chat"}get shoelaceTheme(){return me(this,".sl-theme-dark")?"dark":"light"}get colorHash(){return this.shoelaceTheme==="dark"?new Oe({lightness:[.7,.8,.9]}):new Oe({lightness:[.1,.2,.3,.4]})}renderEvent(t,e){switch(e.event.content.event.type){case"UpdateGroupInfo":return l`
+				></display-error>`;case"completed":const e=t.value.members.find(r=>r.agents.find(i=>b(i)===b(this.store.client.client.myPubKey))),s=e.admin&&!e.removed;return this.renderSettings(s,t.value.settings)}}};ne.styles=[_e];De([y(ke("group-chat-hash"))],ne.prototype,"groupChatHash",2);De([de({context:Ae,subscribe:!0})],ne.prototype,"store",2);ne=De([ye("group-settings")],ne);var Ft=Object.defineProperty,It=Object.getOwnPropertyDescriptor,he=(t,e,s,r)=>{for(var i=r>1?void 0:r?It(e,s):e,a=t.length-1,o;a>=0;a--)(o=t[a])&&(i=(r?o(e,s,i):o(i))||i);return r&&i&&Ft(e,s,i),i};function me(t,e){return t?t instanceof ShadowRoot?me(t.host,e):t instanceof HTMLElement&&t.matches(e)?t:me(t.parentNode,e):null}let J=class extends Ce($e){constructor(){super(...arguments),this.view="chat"}get shoelaceTheme(){return me(this,".sl-theme-dark")?"dark":"light"}get colorHash(){return this.shoelaceTheme==="dark"?new Oe({lightness:[.7,.8,.9]}):new Oe({lightness:[.1,.2,.3,.4]})}renderEvent(t,e){switch(e.event.content.event.type){case"UpdateGroupInfo":return l`
 					<sl-tag style="align-self: center; margin: 4px 0">
 						${this.renderAgentNickname(t,e.author)}
 						&nbsp;${u(se`updated the group's info.`)}
@@ -866,7 +869,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 			</div>
 		`}renderAgentNickname(t,e){let s=t.members.find(r=>r.agents.find(i=>b(i)===b(e))).profile;if(this.profilesProvider.profilesArePublic&&!s){const r=this.profilesProvider.currentProfileForAgent.get(e).get();if(r.status!=="completed"||!r.value)return l`${u("Profile not found.")}`;s=r.value}return l`
 			<span
-				style=${tt({color:this.colorHash.hex(b(e)),"font-weight":"bold"})}
+				style=${je({color:this.colorHash.hex(b(e)),"font-weight":"bold"})}
 				@click=${()=>{this.dispatchEvent(new CustomEvent("agent-selected",{bubbles:!0,composed:!0,detail:{agentPubKey:e}}))}}
 				>${s.name}</span
 			>
@@ -917,7 +920,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 					</div>
 				`)}
 			</div>
-		</div>`}async sendMessage(t){try{await this.store.groupChats.get(this.groupChatHash).sendMessage(t),this.shadowRoot.getElementById("scrolling-chat").scrollTo({top:0,behavior:"smooth"})}catch(e){console.error(e),W(u("Error sending the message"))}}groupInfo(){const t=this.store.groupChats.get(this.groupChatHash);return ot([t.originalGroupChat.get(),t.currentGroupChat.get(),t.messages.get(),t.events.get(),t.readMessages.get()])}async updateGroupInfo(t){try{await this.store.groupChats.get(this.groupChatHash).updateGroupChatInfo({avatar:t.avatar==="null"?void 0:t.avatar,name:t.name,description:t.description}),this.view="details"}catch(e){console.log(e),W(u("Error updating the group's info."))}}get usersToBeAdded(){var e;const t=(e=this.shadowRoot)==null?void 0:e.getElementById("users");if(t)return t.value}async addMembers(){try{const t=this.usersToBeAdded;for(const e of t)await this.store.groupChats.get(this.groupChatHash).addMember(e);this.view="details"}catch(t){console.log(t),W(u("Error adding members."))}}renderAddMembers(t){return l`
+		</div>`}async sendMessage(t){try{await this.store.groupChats.get(this.groupChatHash).sendMessage(t),this.shadowRoot.getElementById("scrolling-chat").scrollTo({top:0,behavior:"smooth"})}catch(e){console.error(e),W(u("Error sending the message"))}}groupInfo(){const t=this.store.groupChats.get(this.groupChatHash);return ot([t.originalGroupChat.get(),t.currentGroupChat.get(),t.messages.get(),t.events.get(),t.readMessages.get()])}async updateGroupInfo(t){const e=this.shadowRoot.getElementById("save-group-info");e.loading=!0;try{await this.store.groupChats.get(this.groupChatHash).updateGroupChatInfo({avatar:t.avatar==="null"?void 0:t.avatar,name:t.name,description:t.description}),this.view="details"}catch(s){console.log(s),W(u("Error updating the group's info."))}e.loading=!1}get usersToBeAdded(){var e;const t=(e=this.shadowRoot)==null?void 0:e.getElementById("users");if(t)return t.value}async addMembers(){try{const t=this.usersToBeAdded;for(const e of t)await this.store.groupChats.get(this.groupChatHash).addMember(e);this.view="details"}catch(t){console.log(t),W(u("Error adding members."))}}renderAddMembers(t){return l`
 			<div class="column" style="flex: 1">
 				<div
 					part="top-bar"
@@ -925,7 +928,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 					style="gap: 8px; align-items: center"
 				>
 					<sl-icon-button
-						.src=${C(Te)}
+						.src=${C(Ie)}
 						@click=${()=>{this.view="details"}}
 					></sl-icon-button>
 					<span>${u("Add members")}</span>
@@ -950,7 +953,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 										<sl-button
 											variant="primary"
 											.disabled=${this.usersToBeAdded&&this.usersToBeAdded.length===0}
-											@click=${()=>{this.addMembers()}}
+											@click=${async e=>{const s=e.target;s.loading=!0,this.addMembers().finally(()=>{s.loading=!1})}}
 											>${u("Add members")}
 										</sl-button>
 									</div>
@@ -972,7 +975,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 					style="gap: 8px; align-items: center "
 				>
 					<sl-icon-button
-						.src=${C(Ie)}
+						.src=${C(Te)}
 						@click=${()=>{this.view="details"}}
 					></sl-icon-button>
 					<span>${u("Edit group info")}</span>
@@ -1001,8 +1004,8 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 								.value=${t.description}
 							></sl-textarea>
 							<div style="flex: 1"></div>
-							<sl-button type="submit" variant="primary"
-								>${u("Save")}
+							<sl-button id="save-group-info" type="submit" variant="primary"
+								>${u("Save Group Info")}
 							</sl-button>
 						</div>
 					</sl-card>
@@ -1012,7 +1015,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 			<div class="column" style="flex: 1">
 				<div part="top-bar" class="row top-bar" style="align-items: center">
 					<sl-icon-button
-						.src=${C(Te)}
+						.src=${C(Ie)}
 						@click=${()=>{this.view="chat"}}
 					></sl-icon-button>
 					<div style="flex: 1"></div>
@@ -1063,7 +1066,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 													</span>
 													<sl-button
 														slot="footer"
-														@click=${async()=>{try{await this.store.groupChats.get(this.groupChatHash).leaveGroup()}catch(s){console.log(s),W(u("Error leaving the group."))}}}
+														@click=${async s=>{const r=s.target;r.loading=!0;try{await this.store.groupChats.get(this.groupChatHash).leaveGroup()}catch(i){console.log(i),W(u("Error leaving the group."))}r.loading=!1}}
 														variant="danger"
 														>${u("Leave Group")}
 													</sl-button>
@@ -1075,7 +1078,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 												>
 													<sl-icon
 														slot="prefix"
-														.src=${C(Ie)}
+														.src=${C(Te)}
 													>
 													</sl-icon>
 													${u("Leave group")}
@@ -1090,7 +1093,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 													</span>
 													<sl-button
 														slot="footer"
-														@click=${async()=>{try{await this.store.groupChats.get(this.groupChatHash).deleteGroupChat()}catch(s){console.log(s),W(u("Error deleting the group."))}}}
+														@click=${async s=>{const r=s.target;r.loading=!0;try{await this.store.groupChats.get(this.groupChatHash).deleteGroupChat()}catch(i){console.log(i),W(u("Error deleting the group."))}r.loading=!1}}
 														variant="danger"
 														>${u("Delete Group")}
 													</sl-button>
@@ -1102,7 +1105,7 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 												>
 													<sl-icon
 														slot="prefix"
-														.src=${C(je)}
+														.src=${C(Ge)}
 													>
 													</sl-icon>
 													${u("Delete group")}
@@ -1129,4 +1132,4 @@ import{a as y,c as de,t as ye,p as qe}from"./property.CdyGxQ3i.js";import{c as b
 			sl-tag {
 				max-width: 400px;
 			}
-		`];he([y(ke("group-chat-hash"))],J.prototype,"groupChatHash",2);he([de({context:Ae,subscribe:!0})],J.prototype,"store",2);he([Ke()],J.prototype,"view",2);he([de({context:qe,subscribe:!0}),y()],J.prototype,"profilesProvider",2);J=he([it(),ye("group-chat")],J);export{J as GroupChatEl};
+		`];he([y(ke("group-chat-hash"))],J.prototype,"groupChatHash",2);he([de({context:Ae,subscribe:!0})],J.prototype,"store",2);he([Ke()],J.prototype,"view",2);he([de({context:Ne,subscribe:!0}),y()],J.prototype,"profilesProvider",2);J=he([it(),ye("group-chat")],J);export{J as GroupChatEl};

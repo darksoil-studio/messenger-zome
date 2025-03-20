@@ -1,4 +1,4 @@
-import{i as f,x as h,f as c,r as E}from"./messenger-client.CJVut2Sl.js";import{b as z}from"./chunk.UG6RICOR.b7ztLsiC.js";import{c as M,_ as d,S as k,L as I,e as D,a as R,G as $,l as B}from"./styles.ChGdpW6H.js";import{a as u,b as T,t as C}from"./property.CdyGxQ3i.js";import{S as O}from"./signal-watcher.CwHglHdS.js";var A=f`
+import{i as f,x as h,f as c,r as E}from"./messenger-client.CJVut2Sl.js";import{b as z}from"./chunk.UG6RICOR.nJOwhAwS.js";import{c as M,_ as d,S as k,L as I,e as D,a as R,G as $,l as B}from"./styles.CfYYDkJJ.js";import{a as u,b as T,t as C}from"./property.CdyGxQ3i.js";import{S as O}from"./signal-watcher.CwHglHdS.js";var A=f`
   :host {
     display: inline-block;
   }

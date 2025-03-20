@@ -1,4 +1,4 @@
-import{_ as e,S as h,L as l,r as d}from"./styles.ChGdpW6H.js";import{x as p}from"./messenger-client.CJVut2Sl.js";import{a as t}from"./property.CdyGxQ3i.js";var i=class extends h{constructor(){super(...arguments),this.localize=new l(this),this.date=new Date,this.hourFormat="auto"}render(){const o=new Date(this.date),s=this.hourFormat==="auto"?void 0:this.hourFormat==="12";if(!isNaN(o.getMilliseconds()))return p`
+import{_ as e,S as h,L as l,r as d}from"./styles.CfYYDkJJ.js";import{x as p}from"./messenger-client.CJVut2Sl.js";import{a as t}from"./property.CdyGxQ3i.js";var i=class extends h{constructor(){super(...arguments),this.localize=new l(this),this.date=new Date,this.hourFormat="auto"}render(){const o=new Date(this.date),s=this.hourFormat==="auto"?void 0:this.hourFormat==="12";if(!isNaN(o.getMilliseconds()))return p`
       <time datetime=${o.toISOString()}>
         ${this.localize.date(o,{weekday:this.weekday,era:this.era,year:this.year,month:this.month,day:this.day,hour:this.hour,minute:this.minute,second:this.second,timeZoneName:this.timeZoneName,timeZone:this.timeZone,hour12:s})}
       </time>
