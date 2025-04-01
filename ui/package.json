@@ -28,8 +28,8 @@
     "./locales/*": "./locales/*"
   },
   "dependencies": {
-    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.6179ab788aae0e9c9c4959565c41fdd67937a25c",
-    "@darksoil-studio/private-event-sourcing-zome": "0.400.0-rev.c75ae5fc45cd6619211d71154bb54f89e21f4b83",
+    "@darksoil-studio/linked-devices-zome": "0.400.0-rev.681dfa4183284292d9e40832c517a52f2200ba9f",
+    "@darksoil-studio/private-event-sourcing-zome": "0.400.0-rev.2b2d20792c838a1b7e248e09a2f99a2103471708",
     "@darksoil-studio/profiles-provider": "^0.400.3",
     "@holochain/client": "^0.18.0",
     "@lit/context": "^1.0.0",
@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.10.3",
-    "@darksoil-studio/profiles-zome": "0.400.0-rev.08c62aeb8774e3cc45369e278d02b961390247c4",
+    "@darksoil-studio/profiles-zome": "0.400.0-rev.0e6b1cd53ee4182a6e1cb5fd850d7f826f5662db",
     "@lit/localize-tools": "^0.6.3",
     "@types/color-hash": "^2.0.0",
     "@vaadin/virtual-list": "^24.5.3",
