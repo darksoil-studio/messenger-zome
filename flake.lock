@@ -16834,11 +16834,11 @@
         "tnesh-stack": "tnesh-stack_17"
       },
       "locked": {
-        "lastModified": 1743434641,
-        "narHash": "sha256-4gLAptwt8ti9121ckz3DXi4aCa9YBHoW9G5QV1ipNdk=",
+        "lastModified": 1743538291,
+        "narHash": "sha256-hWEhs20/lKkMtMfFRLvil0ZGuUG2f79scloMakMjaMw=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "9e8a41fbeaae0480dbef48f22338eb6f99ce88e2",
+        "rev": "7b57349ba68e47afecf177be5671b0649622a93e",
         "type": "github"
       },
       "original": {
