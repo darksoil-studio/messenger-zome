@@ -1,8 +1,9 @@
-import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@darksoil-studio/holochain-signals';
+import { pause, runScenario } from '@holochain/tryorama';
 import { assert, expect, test } from 'vitest';
 
 import { linkDevices, setup, waitUntil } from './setup.js';
+import { dhtSync } from './sync.js';
 
 test('messages get to all devices', async () => {
 	await runScenario(async scenario => {
@@ -109,6 +110,7 @@ test('add new device while receiving message is reconciled', async () => {
 			[alice.player, bob.player, bob2.player],
 			alice.player.cells[0].cell_id[0],
 		);
+
 		let messages = await toPromise(
 			bob.store.peerChats.get(peerChatHash).messages,
 		);

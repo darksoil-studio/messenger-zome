@@ -5,13 +5,14 @@ import {
 } from '@darksoil-studio/linked-devices-zome';
 import { ProfilesClient, ProfilesStore } from '@darksoil-studio/profiles-zome';
 import { HoloHashB64 } from '@holochain/client';
-import { Scenario, dhtSync, pause } from '@holochain/tryorama';
+import { Scenario, pause } from '@holochain/tryorama';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import { GroupChatStore } from '../../ui/src/group-chat-store.js';
 import { MessengerClient } from '../../ui/src/messenger-client.js';
 import { MessengerStore } from '../../ui/src/messenger-store.js';
+import { dhtSync } from './sync.js';
 
 const testHappUrl =
 	dirname(fileURLToPath(import.meta.url)) +
