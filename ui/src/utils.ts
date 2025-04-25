@@ -1,6 +1,6 @@
 import { Profile } from '@darksoil-studio/profiles-provider';
 import { HoloHash, encodeHashToBase64 } from '@holochain/client';
-import { AsyncState, Signal } from '@tnesh-stack/signals';
+import { AsyncState, Signal } from '@darksoil-studio/holochain-signals';
 
 import { MessengerProfile } from './types';
 

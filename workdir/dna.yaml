@@ -3,7 +3,6 @@ name: messenger_test
 integrity:
   network_seed: null
   properties: null
-  origin_time: 1676140846503210
   zomes:
   - name: messenger_integrity
     hash: null

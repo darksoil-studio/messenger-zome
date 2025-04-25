@@ -3,7 +3,7 @@
 {
   perSystem = { inputs', self', lib, system, ... }: {
     packages.messenger_test_dna =
-      inputs.tnesh-stack.outputs.builders.${system}.dna {
+      inputs.holochain-nix-builders.outputs.builders.${system}.dna {
         dnaManifest = ./dna.yaml;
         zomes = {
           notifications_integrity =

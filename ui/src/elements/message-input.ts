@@ -4,8 +4,8 @@ import { SlTextarea } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/icon/icon.js';
 import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
-import { sharedStyles, wrapPathInSvg } from '@tnesh-stack/elements';
-import { SignalWatcher } from '@tnesh-stack/signals';
+import { sharedStyles, wrapPathInSvg } from '@darksoil-studio/holochain-elements';
+import { SignalWatcher } from '@darksoil-studio/holochain-signals';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
