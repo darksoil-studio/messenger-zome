@@ -1,24 +1,28 @@
+import { Signal, joinAsync } from '@darksoil-studio/holochain-signals';
 import {
 	LinkedDevicesClient,
 	LinkedDevicesStore,
 } from '@darksoil-studio/linked-devices-zome';
 import { ProfilesClient, ProfilesStore } from '@darksoil-studio/profiles-zome';
 import { HoloHashB64 } from '@holochain/client';
-import { Scenario, dhtSync, pause } from '@holochain/tryorama';
-import { Signal, joinAsync } from '@tnesh-stack/signals';
+import { Scenario, pause } from '@holochain/tryorama';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import { GroupChatStore } from '../../ui/src/group-chat-store.js';
 import { MessengerClient } from '../../ui/src/messenger-client.js';
 import { MessengerStore } from '../../ui/src/messenger-store.js';
+import { dhtSync } from './sync.js';
 
 const testHappUrl =
 	dirname(fileURLToPath(import.meta.url)) +
 	'/../../workdir/messenger_test.happ';
 
 async function addPlayer(scenario: Scenario) {
-	const player = await scenario.addPlayerWithApp({ path: testHappUrl });
+	const player = await scenario.addPlayerWithApp({
+		type: 'path',
+		value: testHappUrl,
+	});
 	await player.conductor
 		.adminWs()
 		.authorizeSigningCredentials(player.cells[0].cell_id);

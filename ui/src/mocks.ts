@@ -5,7 +5,7 @@ import {
 	EntryHashB64,
 	encodeHashToBase64,
 } from '@holochain/client';
-import { HashType, ZomeMock, fakeCreateAction, hash } from '@tnesh-stack/utils';
+import { HashType, ZomeMock, fakeCreateAction, hash } from '@darksoil-studio/holochain-utils';
 
 import {
 	CreateGroupChat,

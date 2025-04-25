@@ -19,8 +19,8 @@ import {
 	mapCompleted,
 	toPromise,
 	uniquify,
-} from '@tnesh-stack/signals';
-import { MemoHoloHashMap } from '@tnesh-stack/utils';
+} from '@darksoil-studio/holochain-signals';
+import { MemoHoloHashMap } from '@darksoil-studio/holochain-utils';
 
 import { MessengerStore } from './messenger-store.js';
 import {

@@ -390,7 +390,7 @@ pub fn post_receive_create_peer_chat(
     let im_peer_1 = create_peer_chat
         .peer_1
         .agents
-        .contains(&agent_info()?.agent_latest_pubkey);
+        .contains(&agent_info()?.agent_initial_pubkey);
     let me = if im_peer_1 {
         &create_peer_chat.peer_1
     } else {
@@ -498,7 +498,7 @@ pub fn post_receive_create_peer_chat(
 // }
 
 pub fn peer_chat_recipients(peer_chat: &PeerChat) -> ExternResult<BTreeSet<AgentPubKey>> {
-    let my_pub_key = agent_info()?.agent_latest_pubkey;
+    let my_pub_key = agent_info()?.agent_initial_pubkey;
     if peer_chat.peer_1.agents.contains(&my_pub_key) {
         Ok(peer_chat.peer_2.agents.clone().into_iter().collect())
     } else {
