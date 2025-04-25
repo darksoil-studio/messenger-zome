@@ -1,3 +1,13 @@
+import {
+	AsyncComputed,
+	AsyncResult,
+	Signal,
+	joinAsync,
+	mapCompleted,
+	toPromise,
+	uniquify,
+} from '@darksoil-studio/holochain-signals';
+import { MemoHoloHashMap } from '@darksoil-studio/holochain-utils';
 import { LinkedDevicesProof } from '@darksoil-studio/linked-devices-zome';
 import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import { Profile } from '@darksoil-studio/profiles-provider';
@@ -11,16 +21,6 @@ import {
 } from '@holochain/client';
 import { msg } from '@lit/localize';
 import { decode } from '@msgpack/msgpack';
-import {
-	AsyncComputed,
-	AsyncResult,
-	Signal,
-	joinAsync,
-	mapCompleted,
-	toPromise,
-	uniquify,
-} from '@darksoil-studio/holochain-signals';
-import { MemoHoloHashMap } from '@darksoil-studio/holochain-utils';
 
 import { MessengerStore } from './messenger-store.js';
 import {

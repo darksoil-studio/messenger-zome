@@ -1,12 +1,15 @@
+import {
+	hashProperty,
+	wrapPathInSvg,
+} from '@darksoil-studio/holochain-elements';
+import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
+import { SignalWatcher } from '@darksoil-studio/holochain-signals';
 import { EntryHash } from '@holochain/client';
 import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
 import { mdiImageOffOutline } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
-import { hashProperty, wrapPathInSvg } from '@darksoil-studio/holochain-elements';
-import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
-import { SignalWatcher } from '@darksoil-studio/holochain-signals';
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
