@@ -808,7 +808,7 @@ pub fn query_entries_for_group(
 // }
 
 pub fn group_chat_recipients(group_chat: &GroupChat) -> ExternResult<BTreeSet<AgentPubKey>> {
-    let my_pub_key = agent_info()?.agent_latest_pubkey;
+    let my_pub_key = agent_info()?.agent_initial_pubkey;
     let members: BTreeSet<AgentPubKey> = group_chat
         .members
         .iter()
