@@ -1,3 +1,4 @@
+import { Signal, joinAsync } from '@darksoil-studio/holochain-signals';
 import {
 	LinkedDevicesClient,
 	LinkedDevicesStore,
@@ -5,7 +6,6 @@ import {
 import { ProfilesClient, ProfilesStore } from '@darksoil-studio/profiles-zome';
 import { HoloHashB64 } from '@holochain/client';
 import { Scenario, dhtSync, pause } from '@holochain/tryorama';
-import { Signal, joinAsync } from '@darksoil-studio/holochain-signals';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -18,7 +18,10 @@ const testHappUrl =
 	'/../../workdir/messenger_test.happ';
 
 async function addPlayer(scenario: Scenario) {
-	const player = await scenario.addPlayerWithApp({ path: testHappUrl });
+	const player = await scenario.addPlayerWithApp({
+		type: 'path',
+		value: testHappUrl,
+	});
 	await player.conductor
 		.adminWs()
 		.authorizeSigningCredentials(player.cells[0].cell_id);
