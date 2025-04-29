@@ -129,7 +129,7 @@ export const dhtSync = async (
 	players: Player[],
 	dnaHash: DnaHash,
 	intervalMs = 500,
-	timeoutMs = 60000,
+	timeoutMs = 120000,
 ) => {
 	const conductorCells = playersToConductorCells(players, dnaHash);
 	await conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs);
