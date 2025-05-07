@@ -1,0 +1,12 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/chunks/api-docs.DNHmXKYU.js","assets/chunks/api-viewer-tabs.CX3g7Nrf.js","assets/chunks/tslib.es6.kHcLnhpD.js","assets/chunks/api-demo.HXDE9Rl5.js","assets/chunks/profiles-context.BES9lfZh.js","assets/chunks/property.B87aljMC.js","assets/chunks/messenger-client.BdYAEnCL.js","assets/chunks/context.DCYBbx5q.js","assets/chunks/signal-watcher.BqXN4Q8R.js","assets/chunks/messenger-context.BgwQ_SJ9.js","assets/chunks/context.Bs1IEbUe.js","assets/chunks/context.BAJUE9Qa.js","assets/chunks/create-group-chat.4uvfP1SC.js","assets/chunks/chunk.OSU5LOVZ.2EhFbCRh.js","assets/chunks/styles.BUwkuXrg.js","assets/chunks/chunk.MZCVJT24.DAZyyMW6.js"])))=>i.map(i=>d[i]);
+import{v as r,V as e,c as n,o as l,ag as c,j as p}from"./chunks/framework.Do02_DaK.js";import{d as h,M as d,a as m,b as u,B as g,P as _,c as k,e as f,u as E}from"./chunks/messenger-client.BdYAEnCL.js";const w=JSON.parse('{"title":"<create-group-chat>","description":"","frontmatter":{},"headers":[],"relativePath":"elements/create-group-chat.md","filePath":"elements/create-group-chat.md"}'),b={name:"elements/create-group-chat.md"},x=Object.assign(b,{setup(v){return r(async()=>{await e(()=>import("./chunks/api-docs.DNHmXKYU.js"),__vite__mapDeps([0,1,2])),await e(()=>import("./chunks/api-demo.HXDE9Rl5.js"),__vite__mapDeps([3,1,2])),await e(()=>import("./chunks/profiles-context.BES9lfZh.js"),__vite__mapDeps([4,2,5,6,7,8])),customElements.get("messenger-context")||await e(()=>import("./chunks/messenger-context.BgwQ_SJ9.js"),__vite__mapDeps([9,5,6,7,10,11])),customElements.get("create-group-chat")||await e(()=>import("./chunks/create-group-chat.4uvfP1SC.js"),__vite__mapDeps([12,5,6,13,14,2,8,15,11]));const a=await h(),t=Array.from(a.keys()),s=new d(t[0]),o=new m(s,"messenger_test"),i=new u(o);g(E`
+  <profiles-context .store=${new _(new k(new f(a),"messenger_test"))}>
+    <messenger-context .store=${i}>
+      <api-demo src="custom-elements.json" only="create-group-chat" exclude-knobs="store">
+        <template data-element="create-group-chat" data-target="host">
+          <create-group-chat style="height: 400px; width: 350px"></create-group-chat>
+        </template>
+      </api-demo>
+    </messenger-context>
+  </profiles-context>
+  `,document.querySelector("element-demo"))}),(a,t)=>(l(),n("div",null,t[0]||(t[0]=[c("",12),p("api-docs",{src:"custom-elements.json",only:"create-group-chat"},null,-1)])))}});export{w as __pageData,x as default};
