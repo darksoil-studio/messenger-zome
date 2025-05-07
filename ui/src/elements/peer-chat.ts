@@ -1,4 +1,16 @@
 import {
+	hashProperty,
+	notifyError,
+	sharedStyles,
+} from '@darksoil-studio/holochain-elements';
+import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
+import {
+	AsyncResult,
+	SignalWatcher,
+	joinAsync,
+	toPromise,
+} from '@darksoil-studio/holochain-signals';
+import {
 	LinkedDevicesStore,
 	linkedDevicesStoreContext,
 } from '@darksoil-studio/linked-devices-zome';
@@ -18,14 +30,6 @@ import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
-import { hashProperty, notifyError, sharedStyles } from '@darksoil-studio/holochain-elements';
-import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
-import {
-	AsyncResult,
-	SignalWatcher,
-	joinAsync,
-	toPromise,
-} from '@darksoil-studio/holochain-signals';
 import { LitElement, css, html, render } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

@@ -1,4 +1,14 @@
 import {
+	AsyncComputed,
+	joinAsync,
+	toPromise,
+} from '@darksoil-studio/holochain-signals';
+import {
+	HashType,
+	MemoHoloHashMap,
+	retype,
+} from '@darksoil-studio/holochain-utils';
+import {
 	LinkedDevicesProof,
 	LinkedDevicesStore,
 } from '@darksoil-studio/linked-devices-zome';
@@ -15,8 +25,6 @@ import {
 	encodeHashToBase64,
 } from '@holochain/client';
 import { decode } from '@msgpack/msgpack';
-import { AsyncComputed, joinAsync, toPromise } from '@darksoil-studio/holochain-signals';
-import { HashType, MemoHoloHashMap, retype } from '@darksoil-studio/holochain-utils';
 
 import { GroupChatStore, GroupChatSummary } from './group-chat-store.js';
 import { MessengerClient } from './messenger-client.js';
