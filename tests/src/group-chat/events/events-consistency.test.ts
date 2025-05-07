@@ -117,6 +117,7 @@ test('all events get to all the members of the group', async () => {
 
 		events = await toPromise(carol.store.groupChats.get(groupHash).events);
 		assert.equal(Object.keys(events).length, 6);
+		await pause(100);
 
 		await alice.store.groupChats.get(groupHash).updateGroupChatInfo(info);
 		await bob.store.groupChats.get(groupHash).updateGroupChatInfo(info);

@@ -1,10 +1,8 @@
 import { toPromise } from '@darksoil-studio/holochain-signals';
-import { encodeHashToBase64 } from '@holochain/client';
-import { pause, runScenario } from '@holochain/tryorama';
+import { runScenario } from '@holochain/tryorama';
 import { assert, expect, test } from 'vitest';
 
-import { setup, waitUntil } from './setup.js';
-import { dhtSync } from './sync.js';
+import { eventually, groupConsistency, setup, waitUntil } from './setup.js';
 
 test('create a group chat, send message and read it', async () => {
 	await runScenario(async scenario => {
@@ -30,12 +28,10 @@ test('create a group chat, send message and read it', async () => {
 			},
 		);
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
-		let groupChat = await toPromise(
+		await eventually(
 			bob.store.groupChats.get(groupHash).currentGroupChat,
+			groupChat => assert.equal(groupChat.info.name, 'mygroup'),
 		);
-		assert.equal(groupChat.info.name, 'mygroup');
 
 		const aliceMessageHash = await alice.store.groupChats
 			.get(groupHash)
@@ -44,42 +40,36 @@ test('create a group chat, send message and read it', async () => {
 				reply_to: undefined,
 			});
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
-		let messages = await toPromise(
-			bob.store.groupChats.get(groupHash).messages,
-		);
-		assert.equal(Object.keys(messages).length, 1);
-		assert.equal(
-			Object.values(messages)[0].event.content.message.message,
-			'hey!',
-		);
+		await eventually(bob.store.groupChats.get(groupHash).messages, messages => {
+			assert.equal(Object.keys(messages).length, 1);
+			assert.equal(
+				Object.values(messages)[0].event.content.message.message,
+				'hey!',
+			);
+		});
 
 		await bob.store.groupChats.get(groupHash).sendMessage({
 			message: 'hey yourself!',
 			reply_to: undefined,
 		});
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
-		messages = await toPromise(alice.store.groupChats.get(groupHash).messages);
-		assert.equal(Object.keys(messages).length, 2);
+		await eventually(alice.store.groupChats.get(groupHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 2),
+		);
 
 		await bob.store.groupChats
 			.get(groupHash)
 			.markMessagesAsRead([aliceMessageHash]);
-
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
 		let readMessages = await toPromise(
 			bob.store.groupChats.get(groupHash).readMessages,
 		);
 		assert.equal(readMessages.myReadMessages.length, 1);
 
-		readMessages = await toPromise(
+		await eventually(
 			alice.store.groupChats.get(groupHash).readMessages,
+			readMessages => assert.equal(readMessages.myReadMessages.length, 0),
 		);
-		assert.equal(readMessages.myReadMessages.length, 0);
 	});
 });
 
@@ -109,7 +99,10 @@ test('concurrent updates of groups get reconciled', async () => {
 			},
 		);
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
+		await groupConsistency([
+			alice.store.groupChats.get(groupHash),
+			bob.store.groupChats.get(groupHash),
+		]);
 
 		await alice.store.groupChats.get(groupHash).updateGroupChatInfo({
 			name: 'alicename',
@@ -122,8 +115,6 @@ test('concurrent updates of groups get reconciled', async () => {
 			avatar: undefined,
 			description: 'mydescription',
 		});
-
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
 		await waitUntil(
 			async () =>
@@ -163,20 +154,24 @@ test('members removed from the group cannot send messages anymore', async () => 
 			},
 		);
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
+		await groupConsistency([
+			alice.store.groupChats.get(groupHash),
+			bob.store.groupChats.get(groupHash),
+		]);
 
 		await bob.store.groupChats.get(groupHash).sendMessage({
 			message: 'hey!',
 			reply_to: undefined,
 		});
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
 		await alice.store.groupChats
 			.get(groupHash)
 			.removeMember([bob.player.agentPubKey]);
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
+		await groupConsistency([
+			alice.store.groupChats.get(groupHash),
+			bob.store.groupChats.get(groupHash),
+		]);
 
 		await expect(async () =>
 			bob.store.groupChats.get(groupHash).sendMessage({
