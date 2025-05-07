@@ -1,3 +1,6 @@
+import { wrapPathInSvg } from '@darksoil-studio/holochain-elements';
+import { AsyncResult, SignalWatcher } from '@darksoil-studio/holochain-signals';
+import { EntryRecord } from '@darksoil-studio/holochain-utils';
 import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	Profile,
@@ -19,9 +22,6 @@ import '@shoelace-style/shoelace/dist/components/badge/badge.js';
 import '@shoelace-style/shoelace/dist/components/divider/divider.js';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
-import { wrapPathInSvg } from '@darksoil-studio/holochain-elements';
-import { AsyncResult, SignalWatcher } from '@darksoil-studio/holochain-signals';
-import { EntryRecord } from '@darksoil-studio/holochain-utils';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { join } from 'lit/directives/join.js';

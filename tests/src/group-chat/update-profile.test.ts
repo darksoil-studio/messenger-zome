@@ -1,8 +1,8 @@
-import { Profile, ProfilesProvider } from '@darksoil-studio/profiles-zome';
-import { AgentPubKey, encodeHashToBase64 } from '@holochain/client';
-import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { Signal, toPromise } from '@darksoil-studio/holochain-signals';
 import { MemoHoloHashMap } from '@darksoil-studio/holochain-utils';
+import { Profile, ProfilesProvider } from '@darksoil-studio/profiles-zome';
+import { AgentPubKey, encodeHashToBase64 } from '@holochain/client';
+import { pause, runScenario } from '@holochain/tryorama';
 import { assert, expect, test } from 'vitest';
 
 import { MessengerStore } from '../../../ui/src/messenger-store.js';

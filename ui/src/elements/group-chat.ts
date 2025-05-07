@@ -1,3 +1,12 @@
+import {
+	hashProperty,
+	notifyError,
+	onSubmit,
+	wrapPathInSvg,
+} from '@darksoil-studio/holochain-elements';
+import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
+import '@darksoil-studio/holochain-elements/dist/elements/select-avatar.js';
+import { SignalWatcher, joinAsync } from '@darksoil-studio/holochain-signals';
 import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	ProfilesProvider,
@@ -28,15 +37,6 @@ import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
 import '@shoelace-style/shoelace/dist/components/switch/switch.js';
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
 import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
-import {
-	hashProperty,
-	notifyError,
-	onSubmit,
-	wrapPathInSvg,
-} from '@darksoil-studio/holochain-elements';
-import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
-import '@darksoil-studio/holochain-elements/dist/elements/select-avatar.js';
-import { SignalWatcher, joinAsync } from '@darksoil-studio/holochain-signals';
 import ColorHash from 'color-hash';
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';

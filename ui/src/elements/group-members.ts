@@ -1,3 +1,10 @@
+import {
+	hashProperty,
+	notifyError,
+	wrapPathInSvg,
+} from '@darksoil-studio/holochain-elements';
+import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
+import { SignalWatcher, toPromise } from '@darksoil-studio/holochain-signals';
 import '@darksoil-studio/profiles-provider/dist/elements/profile-list-item-skeleton.js';
 import '@darksoil-studio/profiles-provider/dist/elements/profile-list-item.js';
 import { EntryHash, encodeHashToBase64 } from '@holochain/client';
@@ -17,13 +24,6 @@ import '@shoelace-style/shoelace/dist/components/dialog/dialog.js';
 import SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.js';
 import '@shoelace-style/shoelace/dist/components/icon/icon.js';
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
-import {
-	hashProperty,
-	notifyError,
-	wrapPathInSvg,
-} from '@darksoil-studio/holochain-elements';
-import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
-import { SignalWatcher, toPromise } from '@darksoil-studio/holochain-signals';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 

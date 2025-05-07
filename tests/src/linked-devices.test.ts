@@ -1,9 +1,8 @@
 import { toPromise } from '@darksoil-studio/holochain-signals';
-import { pause, runScenario } from '@holochain/tryorama';
+import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { assert, expect, test } from 'vitest';
 
-import { linkDevices, setup, waitUntil } from './setup.js';
-import { dhtSync } from './sync.js';
+import { eventually, linkDevices, setup, waitUntil } from './setup.js';
 
 test('messages get to all devices', async () => {
 	await runScenario(async scenario => {
@@ -23,38 +22,35 @@ test('messages get to all devices', async () => {
 			bob.player.agentPubKey,
 		);
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player],
-			alice.player.cells[0].cell_id[0],
+		await eventually(bob.store.peerChats.get(peerChatHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 0),
 		);
-
-		let messages = await toPromise(
-			bob.store.peerChats.get(peerChatHash).messages,
-		);
-		assert.equal(Object.keys(messages).length, 0);
 
 		await alice.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey!',
 			reply_to: undefined,
 		});
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player],
-			alice.player.cells[0].cell_id[0],
+		await eventually(
+			bob.store.peerChats.get(peerChatHash).messages,
+			messages => {
+				assert.equal(Object.keys(messages).length, 1);
+				assert.equal(
+					Object.values(messages)[0].event.content.message.message,
+					'hey!',
+				);
+			},
 		);
 
-		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
-		assert.equal(Object.keys(messages).length, 1);
-		assert.equal(
-			Object.values(messages)[0].event.content.message.message,
-			'hey!',
-		);
-
-		messages = await toPromise(bob2.store.peerChats.get(peerChatHash).messages);
-		assert.equal(Object.keys(messages).length, 1);
-		assert.equal(
-			Object.values(messages)[0].event.content.message.message,
-			'hey!',
+		await eventually(
+			bob2.store.peerChats.get(peerChatHash).messages,
+			messages => {
+				assert.equal(Object.keys(messages).length, 1);
+				assert.equal(
+					Object.values(messages)[0].event.content.message.message,
+					'hey!',
+				);
+			},
 		);
 
 		await bob.store.peerChats.get(peerChatHash).sendMessage({
@@ -62,24 +58,19 @@ test('messages get to all devices', async () => {
 			reply_to: undefined,
 		});
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player],
-			alice.player.cells[0].cell_id[0],
+		await eventually(bob.store.peerChats.get(peerChatHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 2),
 		);
 
-		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
-		assert.equal(Object.keys(messages).length, 2);
-		messages = await toPromise(
+		await eventually(
 			alice.store.peerChats.get(peerChatHash).messages,
+			messages => assert.equal(Object.keys(messages).length, 2),
 		);
-		assert.equal(Object.keys(messages).length, 2);
 
-		messages = await toPromise(bob2.store.peerChats.get(peerChatHash).messages);
-		assert.equal(Object.keys(messages).length, 2);
-		messages = await toPromise(
-			alice.store.peerChats.get(peerChatHash).messages,
+		await eventually(
+			bob2.store.peerChats.get(peerChatHash).messages,
+			messages => assert.equal(Object.keys(messages).length, 2),
 		);
-		assert.equal(Object.keys(messages).length, 2);
 	});
 });
 
@@ -106,15 +97,9 @@ test('add new device while receiving message is reconciled', async () => {
 			reply_to: undefined,
 		});
 
-		await dhtSync(
-			[alice.player, bob.player, bob2.player],
-			alice.player.cells[0].cell_id[0],
+		await eventually(bob.store.peerChats.get(peerChatHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 1),
 		);
-
-		let messages = await toPromise(
-			bob.store.peerChats.get(peerChatHash).messages,
-		);
-		assert.equal(Object.keys(messages).length, 1);
 
 		await alice.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey!',
@@ -140,8 +125,9 @@ test('add new device while receiving message is reconciled', async () => {
 			60_000,
 		);
 
-		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
-		assert.equal(Object.keys(messages).length, 2);
+		await eventually(bob.store.peerChats.get(peerChatHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 2),
+		);
 	});
 });
 
@@ -155,25 +141,24 @@ test('messages get synchronized even when offline', async () => {
 			bob.player.agentPubKey,
 		);
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
-		let messages = await toPromise(
-			bob.store.peerChats.get(peerChatHash).messages,
+		await eventually(bob.store.peerChats.get(peerChatHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 0),
 		);
-		assert.equal(Object.keys(messages).length, 0);
 
 		await alice.store.peerChats.get(peerChatHash).sendMessage({
 			message: 'hey!',
 			reply_to: undefined,
 		});
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
-		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
-		assert.equal(Object.keys(messages).length, 1);
-		assert.equal(
-			Object.values(messages)[0].event.content.message.message,
-			'hey!',
+		await eventually(
+			bob.store.peerChats.get(peerChatHash).messages,
+			messages => {
+				assert.equal(Object.keys(messages).length, 1);
+				assert.equal(
+					Object.values(messages)[0].event.content.message.message,
+					'hey!',
+				);
+			},
 		);
 
 		await bob.store.peerChats.get(peerChatHash).sendMessage({
@@ -181,14 +166,13 @@ test('messages get synchronized even when offline', async () => {
 			reply_to: undefined,
 		});
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
-		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
-		assert.equal(Object.keys(messages).length, 2);
-		messages = await toPromise(
-			alice.store.peerChats.get(peerChatHash).messages,
+		await eventually(bob.store.peerChats.get(peerChatHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 2),
 		);
-		assert.equal(Object.keys(messages).length, 2);
+		await eventually(
+			alice.store.peerChats.get(peerChatHash).messages,
+			messages => assert.equal(Object.keys(messages).length, 2),
+		);
 
 		await bob2.startUp();
 
