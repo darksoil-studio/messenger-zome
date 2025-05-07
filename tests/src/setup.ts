@@ -1,18 +1,22 @@
-import { Signal, joinAsync } from '@darksoil-studio/holochain-signals';
+import {
+	AsyncSignal,
+	Signal,
+	joinAsync,
+} from '@darksoil-studio/holochain-signals';
 import {
 	LinkedDevicesClient,
 	LinkedDevicesStore,
 } from '@darksoil-studio/linked-devices-zome';
 import { ProfilesClient, ProfilesStore } from '@darksoil-studio/profiles-zome';
 import { HoloHashB64 } from '@holochain/client';
-import { Scenario, pause } from '@holochain/tryorama';
+import { Scenario, dhtSync, pause } from '@holochain/tryorama';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { assert } from 'vitest';
 
 import { GroupChatStore } from '../../ui/src/group-chat-store.js';
 import { MessengerClient } from '../../ui/src/messenger-client.js';
 import { MessengerStore } from '../../ui/src/messenger-store.js';
-import { dhtSync } from './sync.js';
 
 const testHappUrl =
 	dirname(fileURLToPath(import.meta.url)) +
@@ -167,6 +171,32 @@ function areArrayHashesEqual(
 	}
 
 	return true;
+}
+
+export async function eventually<T>(
+	signal: AsyncSignal<T>,
+	check: (v: T) => void,
+	timeoutMs = 5_000,
+) {
+	return new Promise((resolve, reject) => {
+		let error;
+		setTimeout(() => {
+			reject(error ? error : new Error('Timeout'));
+		}, timeoutMs);
+		effect(() => {
+			const value = signal.get();
+			if (value.status === 'pending') return;
+			if (value.status === 'error') {
+				error = new Error(value.error.toString());
+				return;
+			}
+
+			try {
+				check(value.value);
+				resolve(undefined);
+			} catch (e) {}
+		});
+	});
 }
 
 let needsEnqueue = true;

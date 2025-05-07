@@ -1,8 +1,8 @@
-import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@darksoil-studio/holochain-signals';
+import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { assert, expect, test } from 'vitest';
 
-import { setup } from './setup.js';
+import { eventually, setup } from './setup.js';
 
 test('send message and read it', async () => {
 	await runScenario(async scenario => {
@@ -12,12 +12,9 @@ test('send message and read it', async () => {
 			bob.store.client.client.myPubKey,
 		);
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
-		let messages = await toPromise(
-			bob.store.peerChats.get(peerChatHash).messages,
+		await eventually(bob.store.peerChats.get(peerChatHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 0),
 		);
-		assert.equal(Object.keys(messages).length, 0);
 
 		const aliceMessageHash = await alice.store.peerChats
 			.get(peerChatHash)
@@ -26,13 +23,15 @@ test('send message and read it', async () => {
 				reply_to: undefined,
 			});
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
-		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
-		assert.equal(Object.keys(messages).length, 1);
-		assert.equal(
-			Object.values(messages)[0].event.content.message.message,
-			'hey!',
+		await eventually(
+			bob.store.peerChats.get(peerChatHash).messages,
+			messages => {
+				assert.equal(Object.keys(messages).length, 1);
+				assert.equal(
+					Object.values(messages)[0].event.content.message.message,
+					'hey!',
+				);
+			},
 		);
 
 		await bob.store.peerChats.get(peerChatHash).sendMessage({
@@ -40,16 +39,13 @@ test('send message and read it', async () => {
 			reply_to: undefined,
 		});
 
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
-
-		messages = await toPromise(bob.store.peerChats.get(peerChatHash).messages);
-		assert.equal(Object.keys(messages).length, 2);
-		messages = await toPromise(
-			alice.store.peerChats.get(peerChatHash).messages,
+		await eventually(bob.store.peerChats.get(peerChatHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 2),
 		);
-		assert.equal(Object.keys(messages).length, 2);
-
-		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
+		await eventually(
+			alice.store.peerChats.get(peerChatHash).messages,
+			messages => assert.equal(Object.keys(messages).length, 2),
+		);
 
 		await bob.store.peerChats
 			.get(peerChatHash)
@@ -57,15 +53,17 @@ test('send message and read it', async () => {
 
 		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
-		messages = await toPromise(
+		await eventually(
 			alice.store.peerChats.get(peerChatHash).messages,
+			messages => assert.equal(Object.keys(messages).length, 2),
 		);
-		assert.equal(Object.keys(messages).length, 2);
 
-		let readMessages = await toPromise(
+		await eventually(
 			alice.store.peerChats.get(peerChatHash).readMessages,
+			readMessages => {
+				assert.equal(readMessages.myReadMessages.length, 0);
+				assert.equal(readMessages.theirReadMessages.length, 1);
+			},
 		);
-		assert.equal(readMessages.myReadMessages.length, 0);
-		assert.equal(readMessages.theirReadMessages.length, 1);
 	});
 });

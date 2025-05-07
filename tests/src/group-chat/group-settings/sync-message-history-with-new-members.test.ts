@@ -1,9 +1,8 @@
-import { encodeHashToBase64 } from '@holochain/client';
-import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@darksoil-studio/holochain-signals';
+import { runScenario } from '@holochain/tryorama';
 import { assert, expect, test } from 'vitest';
 
-import { groupConsistency, setup, waitUntil } from '../../setup.js';
+import { eventually, groupConsistency, setup, waitUntil } from '../../setup.js';
 
 test('sync_message_history_with_new_members works appropriately', async () => {
 	await runScenario(async scenario => {
@@ -74,8 +73,9 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
-		messages = await toPromise(carol.store.groupChats.get(groupHash).messages);
-		assert.equal(Object.keys(messages).length, 1);
+		await eventually(carol.store.groupChats.get(groupHash).messages, messages =>
+			assert.equal(Object.keys(messages).length, 1),
+		);
 
 		await alice.store.groupChats.get(groupHash).updateGroupChatSettings({
 			...settings,
