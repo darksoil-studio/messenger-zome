@@ -4,62 +4,6 @@
   "modules": [
     {
       "kind": "javascript-module",
-      "path": "locales/locales.js",
-      "declarations": [
-        {
-          "kind": "variable",
-          "name": "sourceLocale",
-          "default": "`en`",
-          "description": "The locale code that templates in this source code are written in."
-        },
-        {
-          "kind": "variable",
-          "name": "targetLocales",
-          "type": {
-            "text": "array"
-          },
-          "default": "[ , ]",
-          "description": "The other locale codes that this application is localized into. Sorted\nlexicographically."
-        },
-        {
-          "kind": "variable",
-          "name": "allLocales",
-          "type": {
-            "text": "array"
-          },
-          "default": "[ `en`, ]",
-          "description": "All valid project locale codes. Sorted lexicographically."
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "sourceLocale",
-          "declaration": {
-            "name": "sourceLocale",
-            "module": "locales/locales.js"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "targetLocales",
-          "declaration": {
-            "name": "targetLocales",
-            "module": "locales/locales.js"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "allLocales",
-          "declaration": {
-            "name": "allLocales",
-            "module": "locales/locales.js"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
       "path": "src/context.ts",
       "declarations": [
         {
@@ -862,7 +806,7 @@
           ],
           "superclass": {
             "name": "ZomeMock",
-            "package": "@tnesh-stack/utils"
+            "package": "@darksoil-studio/holochain-utils"
           }
         }
       ],
@@ -1265,6 +1209,62 @@
     },
     {
       "kind": "javascript-module",
+      "path": "locales/locales.js",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "sourceLocale",
+          "default": "`en`",
+          "description": "The locale code that templates in this source code are written in."
+        },
+        {
+          "kind": "variable",
+          "name": "targetLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ , ]",
+          "description": "The other locale codes that this application is localized into. Sorted\nlexicographically."
+        },
+        {
+          "kind": "variable",
+          "name": "allLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ `en`, ]",
+          "description": "All valid project locale codes. Sorted lexicographically."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "sourceLocale",
+          "declaration": {
+            "name": "sourceLocale",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "targetLocales",
+          "declaration": {
+            "name": "targetLocales",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "allLocales",
+          "declaration": {
+            "name": "allLocales",
+            "module": "locales/locales.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
       "path": "src/elements/all-chats.ts",
       "declarations": [
         {
@@ -1443,7 +1443,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -1531,7 +1531,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -1920,7 +1920,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -2000,7 +2000,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -2119,7 +2119,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -2192,7 +2192,7 @@
               "privacy": "private",
               "parameters": [
                 {
-                  "name": "iAmAdmin",
+                  "name": "iCanEditSettings",
                   "type": {
                     "text": "boolean"
                   }
@@ -2218,7 +2218,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -2282,7 +2282,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -2586,7 +2586,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
