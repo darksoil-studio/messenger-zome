@@ -24,8 +24,10 @@ const testHappUrl =
 
 async function addPlayer(scenario: Scenario) {
 	const player = await scenario.addPlayerWithApp({
-		type: 'path',
-		value: testHappUrl,
+		appBundleSource: {
+			type: 'path',
+			value: testHappUrl,
+		},
 	});
 	await player.conductor
 		.adminWs()
