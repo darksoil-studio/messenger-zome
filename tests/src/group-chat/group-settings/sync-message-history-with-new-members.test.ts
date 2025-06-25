@@ -40,8 +40,6 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 			reply_to: undefined,
 		});
 
-		await pause(200);
-
 		await groupConsistency(
 			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
