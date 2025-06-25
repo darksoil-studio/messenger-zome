@@ -44,10 +44,9 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 			[alice, bob].map(p => p.store.groupChats.get(groupHash)),
 		);
 
-		let messages = await toPromise(
-			bob.store.groupChats.get(groupHash).messages,
-		);
-		assert.equal(Object.keys(messages).length, 1);
+		await eventually(bob.store.groupChats.get(groupHash).messages, messages => {
+			assert.equal(Object.keys(messages).length, 1);
+		});
 
 		await bob.store.groupChats
 			.get(groupHash)
@@ -57,8 +56,12 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
 		);
 
-		messages = await toPromise(carol.store.groupChats.get(groupHash).messages);
-		assert.equal(Object.keys(messages).length, 0);
+		await eventually(
+			carol.store.groupChats.get(groupHash).messages,
+			messages => {
+				assert.equal(Object.keys(messages).length, 0);
+			},
+		);
 
 		await alice.store.groupChats.get(groupHash).sendMessage({
 			message: 'hey',
@@ -90,7 +93,11 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 			[alice, bob, carol, dave].map(p => p.store.groupChats.get(groupHash)),
 		);
 
-		messages = await toPromise(dave.store.groupChats.get(groupHash).messages);
-		assert.equal(Object.keys(messages).length, 2);
+		await eventually(
+			dave.store.groupChats.get(groupHash).messages,
+			messages => {
+				assert.equal(Object.keys(messages).length, 2);
+			},
+		);
 	});
 });
