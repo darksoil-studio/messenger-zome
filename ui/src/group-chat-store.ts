@@ -9,7 +9,10 @@ import {
 } from '@darksoil-studio/holochain-signals';
 import { MemoHoloHashMap } from '@darksoil-studio/holochain-utils';
 import { LinkedDevicesProof } from '@darksoil-studio/linked-devices-zome';
-import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
+import {
+	SignedEntry,
+	SignedEvent,
+} from '@darksoil-studio/private-event-sourcing-zome';
 import { Profile } from '@darksoil-studio/profiles-provider';
 import {
 	AgentPubKey,
@@ -80,7 +83,7 @@ export class GroupChatStore {
 				}
 			} else if (signal.type === 'NewPrivateEvent') {
 				const event = decode(
-					signal.private_event_entry.event.content,
+					signal.private_event_entry.payload.content.event,
 				) as MessengerEvent;
 				if (
 					event.type === 'GroupMessage' &&
@@ -125,7 +128,7 @@ export class GroupChatStore {
 			groupChatEntries.events,
 		)) {
 			const previousEventsHashes =
-				groupChatEvent.event.content.previous_group_chat_events_hashes;
+				groupChatEvent.payload.content.event.previous_group_chat_events_hashes;
 			if (previousEventsHashes.length === 0) {
 				initialEventsHashes.push(entryHash);
 			} else {
@@ -172,16 +175,16 @@ export class GroupChatStore {
 				}
 
 				const previousEventsHashes =
-					event.event.content.previous_group_chat_events_hashes;
+					event.payload.content.event.previous_group_chat_events_hashes;
 
 				if (previousEventsHashes.length === 0) {
 					const originalGroupChat: GroupChat = initialGroupChat(
-						entries.value.createGroupChat.event.content,
+						entries.value.createGroupChat.payload.content.event,
 					);
 					const groupChat = apply(
 						originalGroupChat,
 						event.author,
-						event.event.content.event,
+						event.payload.content.event.event,
 					);
 					return {
 						status: 'completed',
@@ -211,7 +214,7 @@ export class GroupChatStore {
 				currentGroupChat = apply(
 					currentGroupChat,
 					event.author,
-					event.event.content.event,
+					event.payload.content.event.event,
 				);
 
 				return {
@@ -234,7 +237,9 @@ export class GroupChatStore {
 		if (entries.value.currentEventsHashes.length === 0) {
 			return {
 				status: 'completed' as const,
-				value: initialGroupChat(entries.value.createGroupChat.event.content),
+				value: initialGroupChat(
+					entries.value.createGroupChat.payload.content.event,
+				),
 			};
 		}
 
@@ -285,7 +290,7 @@ export class GroupChatStore {
 			) {
 				myReadMessages = [
 					...myReadMessages,
-					...readMessages.event.content.read_messages_hashes.map(
+					...readMessages.payload.content.event.read_messages_hashes.map(
 						encodeHashToBase64,
 					),
 				];
@@ -297,7 +302,7 @@ export class GroupChatStore {
 				theirReadMessages[author] = Array.from(
 					new Set([
 						...theirReadMessages[author],
-						...readMessages.event.content.read_messages_hashes.map(
+						...readMessages.payload.content.event.read_messages_hashes.map(
 							encodeHashToBase64,
 						),
 					]),
@@ -365,29 +370,29 @@ export class GroupChatStore {
 			)
 			.map(([hash, _]) => hash);
 
-		const allActivity: Array<SignedEvent<GroupChatEntry>> = [
+		const allActivity: Array<SignedEntry<GroupChatEntry>> = [
 			...Object.values(entries.value.messages).map(m => ({
 				...m,
-				event: {
+				payload: {
 					content: {
-						...m.event.content,
+						...m.payload.content.event,
 					},
-					timestamp: m.event.timestamp,
+					timestamp: m.payload.timestamp,
 				},
 			})),
 			{
 				...entries.value.createGroupChat,
-				event: {
+				payload: {
 					content: {
 						type: 'CreateGroupChat' as const,
-						...entries.value.createGroupChat.event.content,
+						...entries.value.createGroupChat.payload.content.event,
 					},
-					timestamp: entries.value.createGroupChat.event.timestamp,
+					timestamp: entries.value.createGroupChat.payload.timestamp,
 				},
 			},
 			...Object.values(entries.value.events)
 				.filter(e => {
-					const type = e.event.content.event.type;
+					const type = e.payload.content.event.event.type;
 					return (
 						type === 'AddMember' ||
 						type === 'RemoveMember' ||
@@ -398,17 +403,17 @@ export class GroupChatStore {
 				})
 				.map(e => ({
 					...e,
-					event: {
+					payload: {
 						content: {
-							...e.event.content,
+							...e.payload.content.event,
 						},
-						timestamp: e.event.timestamp,
+						timestamp: e.payload.timestamp,
 					},
 				})),
 		];
 
 		const lastActivity = allActivity.sort(
-			(m1, m2) => m2.event.timestamp - m1.event.timestamp,
+			(m1, m2) => m2.payload.timestamp - m1.payload.timestamp,
 		)[0];
 
 		return {
@@ -526,7 +531,7 @@ export class GroupChatStore {
 
 export interface GroupChatSummary {
 	groupChatHash: EntryHash;
-	lastActivity: SignedEvent<GroupChatEntry>;
+	lastActivity: SignedEntry<GroupChatEntry>;
 	currentGroup: GroupChat;
 	myUnreadMessages: Array<EntryHashB64>;
 }

@@ -51,7 +51,7 @@ export class MessengerZomeMock extends ZomeMock implements AppClient {
 		const privateentry: SignedEvent<MessengerEvent> = {
 			author: this.myPubKey,
 			signature: new Uint8Array(),
-			event: {
+			payload: {
 				// eslint-disable-next-line
 				content: entry as any,
 				timestamp: Date.now() * 1000,

@@ -231,7 +231,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 		myAgentsB64: AgentPubKeyB64[],
 	) {
 		const lastMessage = messageSet[0];
-		const timestamp = lastMessage[1].event.timestamp / 1000;
+		const timestamp = lastMessage[1].payload.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
@@ -253,7 +253,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 							style="align-items: end; flex-wrap: wrap; gap: 16px;"
 						>
 							<span style="flex: 1; word-break: break-all"
-								>${message.event.content.message.message}</span
+								>${message.payload.content.event.message.message}</span
 							>
 							${i === 0
 								? html`

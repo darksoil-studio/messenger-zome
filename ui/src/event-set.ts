@@ -20,11 +20,11 @@ export function orderInEventSets<T>(
 ): Array<EventSetsInDay<T>> {
 	const eventsSetsInDay: EventSetsInDay<T>[] = [];
 	const orderedDescendingEvents = Object.entries(events).sort(
-		(m1, m2) => m2[1].event.timestamp - m1[1].event.timestamp,
+		(m1, m2) => m2[1].payload.timestamp - m1[1].payload.timestamp,
 	);
 	for (const [eventHash, event] of orderedDescendingEvents) {
 		if (eventsSetsInDay.length === 0) {
-			const date = new Date(event.event.timestamp / 1000);
+			const date = new Date(event.payload.timestamp / 1000);
 			date.setHours(0);
 			date.setMinutes(0);
 			date.setSeconds(0);
@@ -56,15 +56,15 @@ export function orderInEventSets<T>(
 
 			const sameProvenance = lastMessageAgentSet === currentMessageAgentSet;
 			const sameTimeframe =
-				lastEvent.event.timestamp - event.event.timestamp <
+				lastEvent.payload.timestamp - event.payload.timestamp <
 				MESSAGE_SET_TIMEFRAME_INTERVAL;
 			const sameType =
 				// eslint-disable-next-line
-				(event.event.content as any).type ===
+				(event.payload.content.event as any).type ===
 				// eslint-disable-next-line
-				(lastEvent.event.content as any).type;
+				(lastEvent.payload.content.event as any).type;
 
-			const date = new Date(event.event.timestamp / 1000);
+			const date = new Date(event.payload.timestamp / 1000);
 			date.setHours(0);
 			date.setMinutes(0);
 			date.setSeconds(0);

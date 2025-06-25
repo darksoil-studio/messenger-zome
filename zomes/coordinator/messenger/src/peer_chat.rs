@@ -229,7 +229,7 @@ pub fn query_original_peer_chat(peer_chat_hash: &EntryHash) -> ExternResult<Opti
         return Ok(None);
     };
 
-    let MessengerEvent::CreatePeerChat(create_peer_chat) = entry.event.content else {
+    let MessengerEvent::CreatePeerChat(create_peer_chat) = entry.payload.content.event else {
         return Err(wasm_error!(
             "Given peer_chat_hash is not for a CreatePeerChat entry"
         ));
@@ -245,7 +245,7 @@ pub fn query_peer_chat_event(
         return Ok(None);
     };
 
-    let MessengerEvent::PeerChatEvent(peer_chat_event) = entry.event.content else {
+    let MessengerEvent::PeerChatEvent(peer_chat_event) = entry.payload.content.event else {
         return Err(wasm_error!(
             "Given peer_chat_hash is not for a PeerChatEvent entry"
         ));
@@ -326,7 +326,7 @@ pub fn query_current_peer_chat(peer_chat_hash: &EntryHash) -> ExternResult<Optio
     };
 
     for (_entry_hash, entry) in entries {
-        let MessengerEvent::PeerChatEvent(peer_chat_event) = &entry.event.content else {
+        let MessengerEvent::PeerChatEvent(peer_chat_event) = &entry.payload.content.event else {
             continue;
         };
 
