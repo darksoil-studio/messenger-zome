@@ -40459,11 +40459,11 @@
         "scaffolding": "scaffolding_51"
       },
       "locked": {
-        "lastModified": 1750858402,
-        "narHash": "sha256-PIkx7AJsq2kFrITkIEJG6eMqcOwhWbtAAjP6x4w0m6U=",
+        "lastModified": 1750867979,
+        "narHash": "sha256-aMmonoie1RSCtBUvou/msz4Dy3pYHmypWEbDai1sk8Y=",
         "owner": "darksoil-studio",
         "repo": "private-event-sourcing-zome",
-        "rev": "7ce309adb799419bc34300c5ca222b4e8d73273c",
+        "rev": "68261f62790cf721ec6b1bb6a732c6011181e276",
         "type": "github"
       },
       "original": {
