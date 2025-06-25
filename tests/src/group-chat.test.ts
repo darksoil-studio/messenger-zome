@@ -1,5 +1,5 @@
 import { toPromise } from '@darksoil-studio/holochain-signals';
-import { runScenario } from '@holochain/tryorama';
+import { pause, runScenario } from '@holochain/tryorama';
 import { assert, expect, test } from 'vitest';
 
 import { eventually, groupConsistency, setup, waitUntil } from './setup.js';
@@ -43,7 +43,7 @@ test('create a group chat, send message and read it', async () => {
 		await eventually(bob.store.groupChats.get(groupHash).messages, messages => {
 			assert.equal(Object.keys(messages).length, 1);
 			assert.equal(
-				Object.values(messages)[0].event.content.message.message,
+				Object.values(messages)[0].payload.content.event.message.message,
 				'hey!',
 			);
 		});

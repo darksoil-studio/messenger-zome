@@ -226,7 +226,7 @@ pub fn migrate_from_old_cell(old_cell: CellId) -> ExternResult<()> {
     let response = call(
         CallTargetCell::OtherCell(old_cell),
         zome_info()?.name,
-        "query_private_event_entries".into(),
+        "export_event_history".into(),
         None,
         (),
     )?;
@@ -237,10 +237,9 @@ pub fn migrate_from_old_cell(old_cell: CellId) -> ExternResult<()> {
             response
         ));
     };
-    let private_event_entries: BTreeMap<EntryHashB64, PrivateEventEntry> =
-        result.decode().map_err(|err| wasm_error!(err))?;
+    let event_history: EventHistory = result.decode().map_err(|err| wasm_error!(err))?;
 
-    private_event_sourcing::import_events(private_event_entries)?;
+    private_event_sourcing::import_event_history(event_history)?;
 
     Ok(())
 }

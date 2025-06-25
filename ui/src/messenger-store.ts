@@ -119,13 +119,6 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 				}
 			});
 		}
-
-		setTimeout(() => {
-			this.client.commitMyPendingEncryptedMessages();
-		}, 2000);
-		setTimeout(() => {
-			this.client.commitMyPendingEncryptedMessages();
-		}, 4000);
 		if (this.linkedDevicesStore) {
 			this.linkedDevicesStore.client.onSignal(async signal => {
 				if (
@@ -200,7 +193,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 			entryHash: EntryHashB64,
 			messengerEntry: SignedEvent<MessengerEvent>,
 		) => {
-			switch (messengerEntry.event.content.type) {
+			switch (messengerEntry.payload.content.event.type) {
 				case 'CreatePeerChat':
 					initPeerChat(entryHash);
 					messengerEntries.peerChats[entryHash].createPeerChat =
@@ -209,7 +202,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 				case 'PeerChatEvent':
 					const peerChatEvent = messengerEntry as SignedEvent<PeerChatEvent>;
 					const peerChatHash1 = encodeHashToBase64(
-						peerChatEvent.event.content.peer_chat_hash,
+						peerChatEvent.payload.content.event.peer_chat_hash,
 					);
 					initPeerChat(peerChatHash1);
 					messengerEntries.peerChats[peerChatHash1].events[entryHash] =
@@ -219,7 +212,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 					const readPeerMessages =
 						messengerEntry as SignedEvent<ReadPeerMessages>;
 					const peerChatHash2 = encodeHashToBase64(
-						readPeerMessages.event.content.peer_chat_hash,
+						readPeerMessages.payload.content.event.peer_chat_hash,
 					);
 					initPeerChat(peerChatHash2);
 					messengerEntries.peerChats[peerChatHash2].readMessages[entryHash] =
@@ -228,7 +221,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 				case 'PeerMessage':
 					const peerMessage = messengerEntry as SignedEvent<PeerMessage>;
 					const peerChatHash3 = encodeHashToBase64(
-						peerMessage.event.content.peer_chat_hash,
+						peerMessage.payload.content.event.peer_chat_hash,
 					);
 					initPeerChat(peerChatHash3);
 					messengerEntries.peerChats[peerChatHash3].messages[entryHash] =
@@ -246,7 +239,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 						} & GroupChatEvent
 					>;
 					const groupChatHash1 = encodeHashToBase64(
-						groupChatEvent.event.content.group_chat_hash,
+						groupChatEvent.payload.content.event.group_chat_hash,
 					);
 					initGroupChat(groupChatHash1);
 					messengerEntries.groupChats[groupChatHash1].events[entryHash] =
@@ -256,7 +249,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 					const readGroupMessages =
 						messengerEntry as SignedEvent<ReadGroupMessages>;
 					const groupChatHash2 = encodeHashToBase64(
-						readGroupMessages.event.content.group_chat_hash,
+						readGroupMessages.payload.content.event.group_chat_hash,
 					);
 					initGroupChat(groupChatHash2);
 					messengerEntries.groupChats[groupChatHash2].readMessages[entryHash] =
@@ -269,7 +262,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 						} & GroupMessage
 					>;
 					const groupChatHash3 = encodeHashToBase64(
-						groupMessage.event.content.group_chat_hash,
+						groupMessage.payload.content.event.group_chat_hash,
 					);
 					initGroupChat(groupChatHash3);
 					messengerEntries.groupChats[groupChatHash3].messages[entryHash] =
@@ -281,15 +274,20 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 		};
 
 		const orderedEntries = Object.entries(privateMessengerEntries).sort(
-			(e1, e2) => e1[1].event.timestamp - e2[1].event.timestamp,
+			(e1, e2) => e1[1].payload.timestamp - e2[1].payload.timestamp,
 		);
 
 		for (const [entryHash, privateEventEntry] of orderedEntries) {
 			const event = {
 				...privateEventEntry,
-				event: {
-					timestamp: privateEventEntry.event.timestamp,
-					content: decode(privateEventEntry.event.content) as MessengerEvent,
+				payload: {
+					timestamp: privateEventEntry.payload.timestamp,
+					content: {
+						event_type: privateEventEntry.payload.content.event_type,
+						event: decode(
+							privateEventEntry.payload.content.event,
+						) as MessengerEvent,
+					},
 				},
 			};
 			addEntry(entryHash, event);
@@ -303,11 +301,14 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 			const entryHash = encodeHashToBase64(signal.event_hash);
 			const event = {
 				...signal.private_event_entry,
-				event: {
-					timestamp: signal.private_event_entry.event.timestamp,
-					content: decode(
-						signal.private_event_entry.event.content,
-					) as MessengerEvent,
+				payload: {
+					timestamp: signal.private_event_entry.payload.timestamp,
+					content: {
+						event_type: signal.private_event_entry.payload.content.event_type,
+						event: decode(
+							signal.private_event_entry.payload.content.event,
+						) as MessengerEvent,
+					},
 				},
 			};
 			addEntry(entryHash, event);
@@ -395,7 +396,7 @@ export class MessengerStore extends PrivateEventSourcingStore<MessengerEvent> {
 		];
 		const sortedChats = chats.sort(
 			(c1, c2) =>
-				c2.lastActivity.event.timestamp - c1.lastActivity.event.timestamp,
+				c2.lastActivity.payload.timestamp - c1.lastActivity.payload.timestamp,
 		);
 
 		return {

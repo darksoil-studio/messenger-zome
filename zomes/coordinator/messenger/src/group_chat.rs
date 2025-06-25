@@ -2,9 +2,7 @@ use std::collections::BTreeMap;
 
 use hdk::prelude::*;
 use linked_devices_types::{are_agents_linked, LinkedDevicesProof};
-use private_event_sourcing::{
-    create_private_event, send_private_events_to_new_recipients, SignedEvent,
-};
+use private_event_sourcing::{create_private_event, SignedEvent};
 
 use crate::{
     create_peer::{build_create_peer_for_agent, build_my_create_peer},
@@ -468,26 +466,26 @@ pub fn create_group_chat_event(group_chat_event: GroupChatEvent) -> ExternResult
     let content = MessengerEvent::GroupChatEvent(group_chat_event.clone());
     let entry_hash = create_private_event(content)?;
 
-    if let GroupEvent::AddMember { .. } | GroupEvent::NewAgentForMember { .. } =
-        group_chat_event.event
-    {
-        let Some(group_chat) = query_current_group_chat(&group_chat_event.group_chat_hash)? else {
-            return Err(wasm_error!("GroupChat not found."));
-        };
-        let include_messages = group_chat.settings.sync_message_history_with_new_members;
-        let Some(events) =
-            query_entries_for_group(&group_chat_event.group_chat_hash, include_messages)?
-        else {
-            return Err(wasm_error!("GroupChat not found."));
-        };
-        let mut events_hashes: BTreeSet<EntryHash> = events
-            .into_keys()
-            .map(|entry_hash| EntryHash::from(entry_hash))
-            .collect();
-        events_hashes.insert(group_chat_event.group_chat_hash);
+    // if let GroupEvent::AddMember { .. } | GroupEvent::NewAgentForMember { .. } =
+    //     group_chat_event.event
+    // {
+    //     let Some(group_chat) = query_current_group_chat(&group_chat_event.group_chat_hash)? else {
+    //         return Err(wasm_error!("GroupChat not found."));
+    //     };
+    //     let include_messages = group_chat.settings.sync_message_history_with_new_members;
+    //     let Some(events) =
+    //         query_entries_for_group(&group_chat_event.group_chat_hash, include_messages)?
+    //     else {
+    //         return Err(wasm_error!("GroupChat not found."));
+    //     };
+    //     let mut events_hashes: BTreeSet<EntryHash> = events
+    //         .into_keys()
+    //         .map(|entry_hash| EntryHash::from(entry_hash))
+    //         .collect();
+    //     events_hashes.insert(group_chat_event.group_chat_hash);
 
-        send_private_events_to_new_recipients::<MessengerEvent>(events_hashes)?;
-    }
+    //     send_private_events_to_new_recipients::<MessengerEvent>(events_hashes)?;
+    // }
 
     Ok(entry_hash)
 }
@@ -499,7 +497,7 @@ pub fn query_create_group_chat(
         return Ok(None);
     };
 
-    let MessengerEvent::CreateGroupChat(group_chat) = entry.event.content else {
+    let MessengerEvent::CreateGroupChat(group_chat) = entry.payload.content.event else {
         return Err(wasm_error!(
             "Given group_hash is not for a CreateGroupChat entry"
         ));
@@ -521,7 +519,7 @@ pub fn query_group_chat_event(
         return Ok(None);
     };
 
-    let MessengerEvent::GroupChatEvent(group_chat_event) = entry.event.content else {
+    let MessengerEvent::GroupChatEvent(group_chat_event) = entry.payload.content.event else {
         return Err(wasm_error!(
             "Given group_hash is not for a GroupChatEvent entry"
         ));
@@ -698,7 +696,7 @@ pub fn query_entries_for_group(
     else {
         return Ok(None);
     };
-    let MessengerEvent::CreateGroupChat(_) = group_entry.event.content else {
+    let MessengerEvent::CreateGroupChat(_) = group_entry.payload.content.event else {
         return Err(wasm_error!(
             "Given hash does not correspond to a CreateGroupChat entry"
         ));
@@ -710,7 +708,7 @@ pub fn query_entries_for_group(
     entries_for_group.insert(group_hash.clone().into(), group_entry.clone());
 
     for (entry_hash, entry) in private_messenger_entries {
-        match &entry.event.content {
+        match &entry.payload.content.event {
             MessengerEvent::GroupChatEvent(group_chat_event) => {
                 if group_chat_event.group_chat_hash.eq(group_hash) {
                     entries_for_group.insert(entry_hash, entry);
@@ -839,7 +837,7 @@ pub fn query_group_chat_events(
     let mut group_chat_events: BTreeMap<EntryHash, GroupChatEvent> = BTreeMap::new();
 
     for (entry_hash, entry) in existing_entries {
-        let MessengerEvent::GroupChatEvent(event) = &entry.event.content else {
+        let MessengerEvent::GroupChatEvent(event) = &entry.payload.content.event else {
             continue;
         };
 

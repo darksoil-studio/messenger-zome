@@ -7,7 +7,10 @@ import {
 import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
 import '@darksoil-studio/holochain-elements/dist/elements/select-avatar.js';
 import { SignalWatcher, joinAsync } from '@darksoil-studio/holochain-signals';
-import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
+import {
+	SignedEntry,
+	SignedEvent,
+} from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	ProfilesProvider,
 	profilesProviderContext,
@@ -114,7 +117,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		currentGroup: GroupChat,
 		event: SignedEvent<GroupChatEvent>,
 	) {
-		switch (event.event.content.event.type) {
+		switch (event.payload.content.event.event.type) {
 			case 'UpdateGroupInfo':
 				return html`
 					<sl-tag style="align-self: center; margin: 4px 0">
@@ -127,7 +130,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					<sl-tag style="align-self: center; margin: 4px 0">
 						${this.renderAgentNickname(
 							currentGroup,
-							event.event.content.event.member_agents[0],
+							event.payload.content.event.event.member_agents[0],
 						)}&nbsp;${msg(str`was added to the group.`)}
 					</sl-tag>
 				`;
@@ -137,7 +140,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 						${this.renderAgentNickname(currentGroup, event.author)}
 						&nbsp;${msg('removed')}&nbsp;${this.renderAgentNickname(
 							currentGroup,
-							event.event.content.event.member_agents[0],
+							event.payload.content.event.event.member_agents[0],
 						)}&nbsp;${msg('from the group.')}
 					</sl-tag>
 				`;
@@ -218,7 +221,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 		const relevantEvents = Object.entries(events)
 			.filter(e => {
-				const type = e[1].event.content.event.type;
+				const type = e[1].payload.content.event.event.type;
 				return (
 					type === 'UpdateGroupInfo' ||
 					type === 'AddMember' ||
@@ -340,7 +343,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		return html`
 			<div class="column" style="gap: 8px; flex-direction: column-reverse">
 				${eventsSets.map(eventSet =>
-					eventSet[0][1].event.content.type === 'GroupMessage'
+					eventSet[0][1].payload.content.event.type === 'GroupMessage'
 						? myAgentsB64.includes(encodeHashToBase64(eventSet[0][1].author))
 							? this.renderMessageSetFromMe(eventSet as EventSet<GroupMessage>)
 							: this.renderMessageSetToMe(
@@ -410,7 +413,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 
 	private renderMessageSetFromMe(messageSet: EventSet<GroupMessage>) {
 		const lastMessage = messageSet[0][1];
-		const timestamp = lastMessage.event.timestamp / 1000;
+		const timestamp = lastMessage.payload.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
@@ -423,7 +426,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 							style="align-items: end; flex-wrap: wrap; gap: 16px;"
 						>
 							<span style="flex: 1; word-break: break-all"
-								>${message.event.content.message.message}</span
+								>${message.payload.content.event.message.message}</span
 							>
 							${i === 0
 								? html`
@@ -505,7 +508,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		messageSet: EventSet<GroupMessage>,
 	) {
 		const lastMessage = messageSet[0][1];
-		const timestamp = lastMessage.event.timestamp / 1000;
+		const timestamp = lastMessage.payload.timestamp / 1000;
 		const date = new Date(timestamp);
 		const lessThanAMinuteAgo = Date.now() - timestamp < 60 * 1000;
 		const moreThanAnHourAgo = Date.now() - timestamp > 46 * 60 * 1000;
@@ -530,7 +533,7 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 								style="gap: 16px; align-items: end; flex-wrap: wrap; "
 							>
 								<span style="flex: 1; word-break: break-all"
-									>${message.event.content.message.message}</span
+									>${message.payload.content.event.message.message}</span
 								>
 								${
 									i === 0

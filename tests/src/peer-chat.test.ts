@@ -28,7 +28,7 @@ test('send message and read it', async () => {
 			messages => {
 				assert.equal(Object.keys(messages).length, 1);
 				assert.equal(
-					Object.values(messages)[0].event.content.message.message,
+					Object.values(messages)[0].payload.content.event.message.message,
 					'hey!',
 				);
 			},
