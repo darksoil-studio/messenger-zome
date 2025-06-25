@@ -13,4 +13,4 @@ serde = { workspace = true }
 hdi = { workspace = true }
 
 linked_devices_types = { git = "https://github.com/darksoil-studio/linked-devices-zome", branch = "main-0.5" }
-private_event_sourcing_integrity = { git = "https://github.com/darksoil-studio/private-event-sourcing-zome", branch = "main-0.5" }
+private_event_sourcing_integrity = { git = "https://github.com/darksoil-studio/private-event-sourcing-zome", branch = "develop" }

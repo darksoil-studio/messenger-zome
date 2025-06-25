@@ -140,6 +140,7 @@ export async function groupConsistency(
 				groups.map(group => group.events.get()),
 			);
 			if (currentEventsHashes.status !== 'completed') return;
+			if (currentEventsHashes.value.length === 0) return;
 
 			let eh = Object.keys(currentEventsHashes.value[0]);
 

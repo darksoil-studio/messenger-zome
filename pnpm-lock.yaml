@@ -123,8 +123,8 @@ importers:
         specifier: ^0.500.0
         version: 0.500.0
       '@darksoil-studio/linked-devices-zome':
-        specifier: ^0.500.0-rev
-        version: 0.500.0-rev.5a9b78aed28fcc3a2cfcb62441440301ab9b80fb(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
+        specifier: 0.500.0-rev.704b36ed3a672354446909c5ff77a347cf0edeac
+        version: 0.500.0-rev.704b36ed3a672354446909c5ff77a347cf0edeac(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/private-event-sourcing-zome':
         specifier: ^0.500.0-rev
         version: 0.500.0-rev.84548e166f6cb36b4df7a7b43f4570171d4b31fd(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
@@ -387,9 +387,6 @@ packages:
 
   '@darksoil-studio/holochain-utils@0.500.0':
     resolution: {integrity: sha512-E966Km27pimvxpSfpcCG8rjt+qBYTRJOhxe7LcJ4aS0HJuDQqb+m1VD/woDy6BPQ1UTEziYiw/ocnQ1YW4fgVA==}
-
-  '@darksoil-studio/linked-devices-zome@0.500.0-rev.5a9b78aed28fcc3a2cfcb62441440301ab9b80fb':
-    resolution: {integrity: sha512-kvEQdzvH0ZfhB4MPLni0JMi9lkwPS62IPCxjfXJarVudUNa4zpoSqMcsdaG7zdiVhxjXlNrEi3VPJVINsJkw5Q==}
 
   '@darksoil-studio/linked-devices-zome@0.500.0-rev.704b36ed3a672354446909c5ff77a347cf0edeac':
     resolution: {integrity: sha512-Ar4CYgB3Gv28Tn/RR3+IECRoPT3+a+on8voI0x0ucbUa82/NQpwujF77XDmRDp0aKR3+XDDIY8OmZGs+i4Mc0Q==}
@@ -3304,26 +3301,6 @@ snapshots:
       lodash-es: 4.17.21
       sort-keys: 5.1.0
     transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@darksoil-studio/linked-devices-zome@0.500.0-rev.5a9b78aed28fcc3a2cfcb62441440301ab9b80fb(@floating-ui/utils@0.2.9)(@types/react@19.0.10)':
-    dependencies:
-      '@darksoil-studio/holochain-elements': 0.500.0(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
-      '@darksoil-studio/holochain-signals': 0.500.0
-      '@darksoil-studio/holochain-utils': 0.500.0
-      '@holochain/client': 0.19.0
-      '@lit/context': 1.1.4
-      '@lit/localize': 0.12.2
-      '@mdi/js': 7.4.47
-      '@msgpack/msgpack': 2.8.0
-      '@shoelace-style/shoelace': 2.20.0(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
-      '@tauri-apps/plugin-barcode-scanner': 2.2.0
-      js-base64: 3.7.7
-      lit: 3.2.1
-    transitivePeerDependencies:
-      - '@floating-ui/utils'
-      - '@types/react'
       - bufferutil
       - utf-8-validate
 

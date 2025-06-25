@@ -1,5 +1,5 @@
 import { toPromise } from '@darksoil-studio/holochain-signals';
-import { runScenario } from '@holochain/tryorama';
+import { pause, runScenario } from '@holochain/tryorama';
 import { assert, expect, test } from 'vitest';
 
 import { eventually, groupConsistency, setup, waitUntil } from './setup.js';
