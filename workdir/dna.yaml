@@ -24,6 +24,11 @@ integrity:
     bundled: <NIX_PACKAGE>
     dependencies: null
     dylib: null
+  - name: encrypted_links_integrity
+    hash: null
+    bundled: <NIX_PACKAGE>
+    dependencies: null
+    dylib: null
 coordinator:
   zomes:
   - name: messenger
@@ -49,4 +54,10 @@ coordinator:
     bundled: <NIX_PACKAGE>
     dependencies:
     - name: notifications_integrity
+    dylib: null
+  - name: encrypted_links
+    hash: null
+    bundled: <NIX_PACKAGE>
+    dependencies:
+    - name: encrypted_links_integrity
     dylib: null

@@ -1,7 +1,10 @@
 import { wrapPathInSvg } from '@darksoil-studio/holochain-elements';
 import { AsyncResult, SignalWatcher } from '@darksoil-studio/holochain-signals';
 import { EntryRecord } from '@darksoil-studio/holochain-utils';
-import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
+import {
+	SignedEntry,
+	SignedEvent,
+} from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	Profile,
 	ProfilesProvider,
@@ -54,7 +57,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 	profilesProvider!: ProfilesProvider;
 
 	private renderPeerChat(chat: PeerChatSummary) {
-		const lastActivityContent = chat.lastActivity.event.content;
+		const lastActivityContent = chat.lastActivity.payload.content;
 		return html`<div
 			class="row"
 			style="gap: 8px; cursor: pointer;"
@@ -84,7 +87,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 			<div class="column" style="gap: 2px; justify-content: end">
 				<div class="placeholder time" style="display: contents">
-					${this.renderTime(chat.lastActivity.event.timestamp)}
+					${this.renderTime(chat.lastActivity.payload.timestamp)}
 				</div>
 				<div style="flex: 1">
 					${chat.myUnreadMessages.length !== 0
@@ -235,7 +238,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 	renderGroupLastActivity(
 		groupChat: GroupChat,
-		groupMessengerEntry: SignedEvent<GroupChatEntry>,
+		groupMessengerEntry: SignedEntry<GroupChatEntry>,
 	) {
 		const author = groupChat.members.find(
 			m =>
@@ -245,26 +248,26 @@ export class AllChats extends SignalWatcher(LitElement) {
 						encodeHashToBase64(groupMessengerEntry.author),
 				),
 		)!;
-		if (groupMessengerEntry.event.content.type === 'CreateGroupChat') {
+		if (groupMessengerEntry.payload.content.type === 'CreateGroupChat') {
 			return html`<span
 				>${this.renderAgentNickname(
 					groupMessengerEntry.author,
 					author.profile,
 				)}&nbsp;${msg('created the group.')}
 			</span>`;
-		} else if (groupMessengerEntry.event.content.type === 'GroupMessage') {
+		} else if (groupMessengerEntry.payload.content.type === 'GroupMessage') {
 			return html`<span
 				>${this.renderAgentNickname(
 					groupMessengerEntry.author,
 					author.profile,
 				)}:
-				${groupMessengerEntry.event.content.message.message}</span
+				${groupMessengerEntry.payload.content.message.message}</span
 			>`;
-		} else if (groupMessengerEntry.event.content.type === 'GroupChatEvent') {
+		} else if (groupMessengerEntry.payload.content.type === 'GroupChatEvent') {
 			return this.renderGroupEventLastActivity(
 				groupChat,
 				groupMessengerEntry.author,
-				groupMessengerEntry.event.content.event,
+				groupMessengerEntry.payload.content.event,
 			);
 		}
 	}
@@ -304,7 +307,7 @@ export class AllChats extends SignalWatcher(LitElement) {
 
 			<div class="column" style="gap: 2px; align-items: end">
 				<div class="placeholder time" style="display: contents">
-					${this.renderTime(groupChatSummary.lastActivity.event.timestamp)}
+					${this.renderTime(groupChatSummary.lastActivity.payload.timestamp)}
 				</div>
 				<div style="flex: 1"></div>
 				${groupChatSummary.myUnreadMessages.length !== 0

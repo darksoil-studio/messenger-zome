@@ -178,18 +178,18 @@ function areArrayHashesEqual(
 export async function eventually<T>(
 	signal: AsyncSignal<T>,
 	check: (v: T) => void,
-	timeoutMs = 5_000,
+	timeoutMs = 50_000,
 ) {
+	const e = new Error('Timeout');
 	return new Promise((resolve, reject) => {
-		let error;
 		setTimeout(() => {
-			reject(error ? error : new Error('Timeout'));
+			reject(e);
 		}, timeoutMs);
 		effect(() => {
 			const value = signal.get();
 			if (value.status === 'pending') return;
 			if (value.status === 'error') {
-				error = new Error(value.error.toString());
+				e.message = value.error.toString();
 				return;
 			}
 

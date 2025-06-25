@@ -19,6 +19,13 @@
           # This overrides all the "bundled" properties for the DNA manifest
           messenger_integrity = self'.packages.messenger_integrity;
           messenger = self'.packages.messenger;
+
+          encrypted_links_integrity =
+            inputs'.private-event-sourcing-zome.packages.encrypted_links_integrity;
+          encrypted_links =
+            inputs'.private-event-sourcing-zome.builders.encrypted_links {
+              private_event_sourcing_zome_name = "messenger";
+            };
         };
       };
   };

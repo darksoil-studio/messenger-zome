@@ -9,7 +9,10 @@ import {
 } from '@darksoil-studio/holochain-signals';
 import { MemoHoloHashMap } from '@darksoil-studio/holochain-utils';
 import { LinkedDevicesProof } from '@darksoil-studio/linked-devices-zome';
-import { SignedEvent } from '@darksoil-studio/private-event-sourcing-zome';
+import {
+	SignedEntry,
+	SignedEvent,
+} from '@darksoil-studio/private-event-sourcing-zome';
 import {
 	AgentPubKey,
 	EntryHash,
@@ -54,7 +57,7 @@ export class PeerChatStore {
 				}
 			} else if (signal.type === 'NewPrivateEvent') {
 				const event = decode(
-					signal.private_event_entry.event.content,
+					signal.private_event_entry.payload.content.event,
 				) as MessengerEvent;
 				if (
 					event.type === 'PeerMessage' &&
@@ -90,7 +93,7 @@ export class PeerChatStore {
 			peerChatEntries.events,
 		)) {
 			const previousEventsHashes =
-				peerChatEvent.event.content.previous_peer_chat_events_hashes;
+				peerChatEvent.payload.content.event.previous_peer_chat_events_hashes;
 			if (previousEventsHashes.length === 0) {
 				initialEventsHashes.push(entryHash);
 			} else {
@@ -137,13 +140,13 @@ export class PeerChatStore {
 				const event = entries.value.events[eventHashB64];
 
 				const previousEventsHashes =
-					event.event.content.previous_peer_chat_events_hashes;
+					event.payload.content.event.previous_peer_chat_events_hashes;
 
 				if (previousEventsHashes.length === 0) {
 					const peerChat = apply(
-						initialPeerChat(entries.value.createPeerChat.event.content),
+						initialPeerChat(entries.value.createPeerChat.payload.content.event),
 						event.author,
-						event.event.content.event,
+						event.payload.content.event.event,
 					);
 					return {
 						status: 'completed',
@@ -169,7 +172,7 @@ export class PeerChatStore {
 				currentPeerChat = apply(
 					currentPeerChat,
 					event.author,
-					event.event.content.event,
+					event.payload.content.event.event,
 				);
 
 				return {
@@ -192,7 +195,7 @@ export class PeerChatStore {
 		if (entries.value.currentEventsHashes.length === 0) {
 			return {
 				status: 'completed',
-				value: entries.value.createPeerChat.event.content,
+				value: entries.value.createPeerChat.payload.content.event,
 			};
 		}
 
@@ -248,14 +251,14 @@ export class PeerChatStore {
 			) {
 				myReadMessages = [
 					...myReadMessages,
-					...readMessages.event.content.read_messages_hashes.map(
+					...readMessages.payload.content.event.read_messages_hashes.map(
 						encodeHashToBase64,
 					),
 				];
 			} else {
 				theirReadMessages = [
 					...theirReadMessages,
-					...readMessages.event.content.read_messages_hashes.map(
+					...readMessages.payload.content.event.read_messages_hashes.map(
 						encodeHashToBase64,
 					),
 				];
@@ -307,25 +310,25 @@ export class PeerChatStore {
 			)
 			.map(([hash, _]) => hash);
 
-		const allActivity: Array<SignedEvent<PeerChatEntry>> = [
+		const allActivity: Array<SignedEntry<PeerChatEntry>> = [
 			...Object.values(entries.value.messages).map(m => ({
 				...m,
-				event: {
+				payload: {
 					content: {
 						type: 'PeerMessage' as const,
-						...m.event.content,
+						...m.payload.content.event,
 					},
-					timestamp: m.event.timestamp,
+					timestamp: m.payload.timestamp,
 				},
 			})),
 			{
 				...entries.value.createPeerChat,
-				event: {
+				payload: {
 					content: {
 						type: 'CreatePeerChat' as const,
-						...entries.value.createPeerChat.event.content,
+						...entries.value.createPeerChat.payload.content.event,
 					},
-					timestamp: entries.value.createPeerChat.event.timestamp,
+					timestamp: entries.value.createPeerChat.payload.timestamp,
 				},
 			},
 			// ...Object.values(entries.value.events).map(e => ({
@@ -341,7 +344,7 @@ export class PeerChatStore {
 		];
 
 		const lastActivity = allActivity.sort(
-			(m1, m2) => m2.event.timestamp - m1.event.timestamp,
+			(m1, m2) => m2.payload.timestamp - m1.payload.timestamp,
 		)[0];
 
 		return {
@@ -460,6 +463,6 @@ export interface PeerChatSummary {
 	me: Peer;
 	peer: Peer;
 
-	lastActivity: SignedEvent<PeerChatEntry>;
+	lastActivity: SignedEntry<PeerChatEntry>;
 	myUnreadMessages: Array<EntryHashB64>;
 }
