@@ -876,15 +876,11 @@
 <a href="#875" id="875">875</a>
 <a href="#876" id="876">876</a>
 <a href="#877" id="877">877</a>
-<a href="#878" id="878">878</a>
-<a href="#879" id="879">879</a>
-<a href="#880" id="880">880</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
+<a href="#878" id="878">878</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">use </span>hdk::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>linked_devices_types::{are_agents_linked, LinkedDevicesProof};
-<span class="kw">use </span>private_event_sourcing::{
-    create_private_event, send_private_events_to_new_recipients, SignedEvent,
-};
+<span class="kw">use </span>private_event_sourcing::{create_private_event, SignedEvent};
 
 <span class="kw">use crate</span>::{
     create_peer::{build_create_peer_for_agent, build_my_create_peer},
@@ -1348,28 +1344,28 @@
     <span class="kw">let </span>content = MessengerEvent::GroupChatEvent(group_chat_event.clone());
     <span class="kw">let </span>entry_hash = create_private_event(content)<span class="question-mark">?</span>;
 
-    <span class="kw">if let </span>GroupEvent::AddMember { .. } | GroupEvent::NewAgentForMember { .. } =
-        group_chat_event.event
-    {
-        <span class="kw">let </span><span class="prelude-val">Some</span>(group_chat) = query_current_group_chat(<span class="kw-2">&amp;</span>group_chat_event.group_chat_hash)<span class="question-mark">? </span><span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">wasm_error!</span>(<span class="string">"GroupChat not found."</span>));
-        };
-        <span class="kw">let </span>include_messages = group_chat.settings.sync_message_history_with_new_members;
-        <span class="kw">let </span><span class="prelude-val">Some</span>(events) =
-            query_entries_for_group(<span class="kw-2">&amp;</span>group_chat_event.group_chat_hash, include_messages)<span class="question-mark">?
-        </span><span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">wasm_error!</span>(<span class="string">"GroupChat not found."</span>));
-        };
-        <span class="kw">let </span><span class="kw-2">mut </span>events_hashes: BTreeSet&lt;EntryHash&gt; = events
-            .into_keys()
-            .map(|entry_hash| EntryHash::from(entry_hash))
-            .collect();
-        events_hashes.insert(group_chat_event.group_chat_hash);
+    <span class="comment">// if let GroupEvent::AddMember { .. } | GroupEvent::NewAgentForMember { .. } =
+    //     group_chat_event.event
+    // {
+    //     let Some(group_chat) = query_current_group_chat(&amp;group_chat_event.group_chat_hash)? else {
+    //         return Err(wasm_error!("GroupChat not found."));
+    //     };
+    //     let include_messages = group_chat.settings.sync_message_history_with_new_members;
+    //     let Some(events) =
+    //         query_entries_for_group(&amp;group_chat_event.group_chat_hash, include_messages)?
+    //     else {
+    //         return Err(wasm_error!("GroupChat not found."));
+    //     };
+    //     let mut events_hashes: BTreeSet&lt;EntryHash&gt; = events
+    //         .into_keys()
+    //         .map(|entry_hash| EntryHash::from(entry_hash))
+    //         .collect();
+    //     events_hashes.insert(group_chat_event.group_chat_hash);
 
-        send_private_events_to_new_recipients::&lt;MessengerEvent&gt;(events_hashes)<span class="question-mark">?</span>;
-    }
+    //     send_private_events_to_new_recipients::&lt;MessengerEvent&gt;(events_hashes)?;
+    // }
 
-    <span class="prelude-val">Ok</span>(entry_hash)
+    </span><span class="prelude-val">Ok</span>(entry_hash)
 }
 
 <span class="kw">pub fn </span>query_create_group_chat(
@@ -1379,7 +1375,7 @@
         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
     };
 
-    <span class="kw">let </span>MessengerEvent::CreateGroupChat(group_chat) = entry.event.content <span class="kw">else </span>{
+    <span class="kw">let </span>MessengerEvent::CreateGroupChat(group_chat) = entry.payload.content.event <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">wasm_error!</span>(
             <span class="string">"Given group_hash is not for a CreateGroupChat entry"
         </span>));
@@ -1401,7 +1397,7 @@
         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
     };
 
-    <span class="kw">let </span>MessengerEvent::GroupChatEvent(group_chat_event) = entry.event.content <span class="kw">else </span>{
+    <span class="kw">let </span>MessengerEvent::GroupChatEvent(group_chat_event) = entry.payload.content.event <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">wasm_error!</span>(
             <span class="string">"Given group_hash is not for a GroupChatEvent entry"
         </span>));
@@ -1578,7 +1574,7 @@
     <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
     };
-    <span class="kw">let </span>MessengerEvent::CreateGroupChat(<span class="kw">_</span>) = group_entry.event.content <span class="kw">else </span>{
+    <span class="kw">let </span>MessengerEvent::CreateGroupChat(<span class="kw">_</span>) = group_entry.payload.content.event <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">wasm_error!</span>(
             <span class="string">"Given hash does not correspond to a CreateGroupChat entry"
         </span>));
@@ -1590,7 +1586,7 @@
     entries_for_group.insert(group_hash.clone().into(), group_entry.clone());
 
     <span class="kw">for </span>(entry_hash, entry) <span class="kw">in </span>private_messenger_entries {
-        <span class="kw">match </span><span class="kw-2">&amp;</span>entry.event.content {
+        <span class="kw">match </span><span class="kw-2">&amp;</span>entry.payload.content.event {
             MessengerEvent::GroupChatEvent(group_chat_event) =&gt; {
                 <span class="kw">if </span>group_chat_event.group_chat_hash.eq(group_hash) {
                     entries_for_group.insert(entry_hash, entry);
@@ -1719,7 +1715,7 @@
     </span><span class="kw">let </span><span class="kw-2">mut </span>group_chat_events: BTreeMap&lt;EntryHash, GroupChatEvent&gt; = BTreeMap::new();
 
     <span class="kw">for </span>(entry_hash, entry) <span class="kw">in </span>existing_entries {
-        <span class="kw">let </span>MessengerEvent::GroupChatEvent(event) = <span class="kw-2">&amp;</span>entry.event.content <span class="kw">else </span>{
+        <span class="kw">let </span>MessengerEvent::GroupChatEvent(event) = <span class="kw-2">&amp;</span>entry.payload.content.event <span class="kw">else </span>{
             <span class="kw">continue</span>;
         };
 

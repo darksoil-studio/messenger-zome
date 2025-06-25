@@ -759,7 +759,7 @@
         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
     };
 
-    <span class="kw">let </span>MessengerEvent::CreatePeerChat(create_peer_chat) = entry.event.content <span class="kw">else </span>{
+    <span class="kw">let </span>MessengerEvent::CreatePeerChat(create_peer_chat) = entry.payload.content.event <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">wasm_error!</span>(
             <span class="string">"Given peer_chat_hash is not for a CreatePeerChat entry"
         </span>));
@@ -775,7 +775,7 @@
         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
     };
 
-    <span class="kw">let </span>MessengerEvent::PeerChatEvent(peer_chat_event) = entry.event.content <span class="kw">else </span>{
+    <span class="kw">let </span>MessengerEvent::PeerChatEvent(peer_chat_event) = entry.payload.content.event <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">wasm_error!</span>(
             <span class="string">"Given peer_chat_hash is not for a PeerChatEvent entry"
         </span>));
@@ -856,7 +856,7 @@
     };
 
     <span class="kw">for </span>(_entry_hash, entry) <span class="kw">in </span>entries {
-        <span class="kw">let </span>MessengerEvent::PeerChatEvent(peer_chat_event) = <span class="kw-2">&amp;</span>entry.event.content <span class="kw">else </span>{
+        <span class="kw">let </span>MessengerEvent::PeerChatEvent(peer_chat_event) = <span class="kw-2">&amp;</span>entry.payload.content.event <span class="kw">else </span>{
             <span class="kw">continue</span>;
         };
 
