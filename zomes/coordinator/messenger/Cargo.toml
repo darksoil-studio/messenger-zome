@@ -10,6 +10,7 @@ name = "messenger"
 [dependencies]
 hdk = { workspace = true }
 
+holochain_serialized_bytes = { workspace = true }
 serde = { workspace = true }
 
 messenger_integrity = { path = "../../integrity/messenger", package = "messenger_integrity" }
