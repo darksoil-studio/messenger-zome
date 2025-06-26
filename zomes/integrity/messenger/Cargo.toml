@@ -9,6 +9,7 @@ name = "messenger_integrity"
 
 [dependencies]
 
+holochain_serialized_bytes = { workspace = true }
 serde = { workspace = true }
 hdi = { workspace = true }
 

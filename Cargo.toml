@@ -11,5 +11,6 @@ resolver = "2"
 [workspace.dependencies]
 hdi = "0.6"
 hdk = { version = "0.5", features = [ "unstable-functions" ] }
+holochain_serialized_bytes = "*"
 serde = "1"
 
