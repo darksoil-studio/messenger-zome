@@ -4,6 +4,7 @@ use hdk::prelude::*;
 
 mod create_peer;
 mod group_chat;
+mod notifications;
 use group_chat::*;
 mod peer_chat;
 use peer_chat::*;

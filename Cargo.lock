@@ -3,6 +3,15 @@
 version = 4
 
 [[package]]
+name = "aho-corasick"
+version = "1.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "android-tzdata"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -614,9 +623,9 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "indexmap"
-version = "2.9.0"
+version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cea70ddb795996207ad57735b50c5982d8844f38ba9ee5f1aedcfb708a2aa11e"
+checksum = "fe4cd85333e22411419a0bcae1297d25e58c9443848b11dc6a86fefe8c78a661"
 dependencies = [
  "equivalent",
  "hashbrown",
@@ -667,6 +676,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
+name = "md-icons"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92a8a34ce0ef8669a642689265130eeb3b3522e1b092b43a5f769dd2d7e514a5"
+dependencies = [
+ "md-icons-helper",
+]
+
+[[package]]
+name = "md-icons-helper"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "834ea50ceffebd87377a1e6f2f0bdfe3355289c3903a412feca280709661d392"
+dependencies = [
+ "regex",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -676,12 +703,16 @@ checksum = "32a282da65faaf38286cf3be983213fcf1d2e2a58700e808f83f4ea9a4804bc0"
 name = "messenger"
 version = "0.0.1"
 dependencies = [
+ "hc_zome_traits",
  "hdk",
  "holochain_serialized_bytes",
  "linked_devices_types",
+ "md-icons",
  "messenger_integrity",
+ "notifications_zome_trait",
  "private_event_sourcing",
  "serde",
+ "xliff",
 ]
 
 [[package]]
@@ -692,6 +723,17 @@ dependencies = [
  "holochain_serialized_bytes",
  "linked_devices_types",
  "private_event_sourcing_integrity",
+ "serde",
+]
+
+[[package]]
+name = "notifications_zome_trait"
+version = "0.1.0"
+source = "git+https://github.com/darksoil-studio/notifications-zome-trait?branch=main-0.5#15501f2d42bf7f833811f9c418d8bc06ca809b8c"
+dependencies = [
+ "hc_zome_traits",
+ "hdk",
+ "holochain_serialized_bytes",
  "serde",
 ]
 
@@ -731,7 +773,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 [[package]]
 name = "private_event_proc_macro"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#44b80850aa4c8860dbc0229ca9998689abefb547"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#d23b2f3d9b9d6497f5b9b5102b0842468bff51d4"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -743,7 +785,7 @@ dependencies = [
 [[package]]
 name = "private_event_sourcing"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#44b80850aa4c8860dbc0229ca9998689abefb547"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#d23b2f3d9b9d6497f5b9b5102b0842468bff51d4"
 dependencies = [
  "hdk",
  "holochain_serialized_bytes",
@@ -758,7 +800,7 @@ dependencies = [
 [[package]]
 name = "private_event_sourcing_integrity"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#44b80850aa4c8860dbc0229ca9998689abefb547"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#d23b2f3d9b9d6497f5b9b5102b0842468bff51d4"
 dependencies = [
  "hdi",
  "holochain_serialized_bytes",
@@ -769,7 +811,7 @@ dependencies = [
 [[package]]
 name = "private_event_sourcing_types"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#44b80850aa4c8860dbc0229ca9998689abefb547"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#d23b2f3d9b9d6497f5b9b5102b0842468bff51d4"
 dependencies = [
  "hdk",
  "holochain_serialized_bytes",
@@ -810,6 +852,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "quick-xml"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe1e430bdcf30c9fdc25053b9c459bb1a4672af4617b6c783d7d91dc17c6bbb0"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -817,6 +868,35 @@ checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "regex"
+version = "1.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b544ef1b4eac5dc2db33ea63606ae9ffcfac26c1416a2806ae0bf5f56b201191"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "regex-automata",
+ "regex-syntax",
+]
+
+[[package]]
+name = "regex-automata"
+version = "0.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "809e8dc61f6de73b46c85f4c96486310fe304c434cfa43669d7b40f711150908"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "regex-syntax",
+]
+
+[[package]]
+name = "regex-syntax"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
 name = "rmp"
@@ -870,7 +950,7 @@ checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
 [[package]]
 name = "send_async_message_zome_trait"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#44b80850aa4c8860dbc0229ca9998689abefb547"
+source = "git+https://github.com/darksoil-studio/private-event-sourcing-zome?branch=main-0.5#d23b2f3d9b9d6497f5b9b5102b0842468bff51d4"
 dependencies = [
  "hc_zome_traits",
  "hdk",
@@ -1305,3 +1385,12 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+
+[[package]]
+name = "xliff"
+version = "0.3.0-alpha.4"
+source = "git+https://github.com/kkostov/hb-rs-xliff?branch=master#9c9b356781a269c18240216f731947c27d02a6ef"
+dependencies = [
+ "quick-xml",
+ "wasm-bindgen",
+]

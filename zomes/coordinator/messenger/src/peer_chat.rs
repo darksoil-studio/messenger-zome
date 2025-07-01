@@ -111,7 +111,7 @@ pub struct PeerMessage {
     pub peer_chat_hash: EntryHash,
     pub current_peer_chat_events_hashes: Vec<EntryHash>,
 
-    pub message: Message,
+    pub message: crate::Message,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
