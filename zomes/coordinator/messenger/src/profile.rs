@@ -1,18 +1,8 @@
 use std::collections::BTreeMap;
 
-use hdk::prelude::*;
+pub use profiles_provider_zome_trait::Profile;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct MessengerProfile {
-    pub name: String,
-    pub avatar: Option<String>,
-    pub fields: BTreeMap<String, String>,
-}
-
-pub fn merge_profiles(
-    profile_1: Option<MessengerProfile>,
-    profile_2: Option<MessengerProfile>,
-) -> Option<MessengerProfile> {
+pub fn merge_profiles(profile_1: Option<Profile>, profile_2: Option<Profile>) -> Option<Profile> {
     match (profile_1, profile_2) {
         (Some(p1), Some(p2)) => {
             let name = merge_strings(p1.name, p2.name);
@@ -24,7 +14,7 @@ pub fn merge_profiles(
             };
             let fields = merge_maps(p1.fields, p2.fields);
 
-            Some(MessengerProfile {
+            Some(Profile {
                 name,
                 avatar,
                 fields,

@@ -711,6 +711,7 @@ dependencies = [
  "messenger_integrity",
  "notifications_zome_trait",
  "private_event_sourcing",
+ "profiles_provider_zome_trait",
  "serde",
  "xliff",
 ]
@@ -849,6 +850,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02b3e5e68a3a1a02aad3ec490a98007cbc13c37cbe84a3cd7b8e406d76e7f778"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "profiles_provider_zome_trait"
+version = "0.1.0"
+source = "git+https://github.com/darksoil-studio/profiles-zome?branch=main-0.5#90038e84a498a060c4fb76ea845ccface938a5a6"
+dependencies = [
+ "hc_zome_traits",
+ "hdk",
+ "holochain_serialized_bytes",
+ "serde",
 ]
 
 [[package]]

@@ -17,6 +17,8 @@ messenger_integrity = { path = "../../integrity/messenger", package = "messenger
 linked_devices_types = { git = "https://github.com/darksoil-studio/linked-devices-zome", branch = "main-0.5" }
 private_event_sourcing = { git = "https://github.com/darksoil-studio/private-event-sourcing-zome", branch = "main-0.5" }
 
+profiles_provider_zome_trait = { git = "https://github.com/darksoil-studio/profiles-zome", branch = "main-0.5" }
+
 # Notifications handling
 notifications_zome_trait = { git = "https://github.com/darksoil-studio/notifications-zome-trait", branch = "main-0.5" }
 hc_zome_traits = { git = "https://github.com/holochain-open-dev/zome-traits", branch = "main" }
