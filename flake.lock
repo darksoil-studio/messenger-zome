@@ -42159,11 +42159,11 @@
         "tauri-plugin-holochain": "tauri-plugin-holochain_16"
       },
       "locked": {
-        "lastModified": 1751450697,
-        "narHash": "sha256-UC97KXOysHUhfquGspiSzXOLOcvQr3sW4F4vdErFupg=",
+        "lastModified": 1751455730,
+        "narHash": "sha256-/9plN/iDqK4i4Bu61hXqGjgTowDqDjaLneh9FM3Rtc0=",
         "owner": "darksoil-studio",
         "repo": "profiles-zome",
-        "rev": "9d0be0e918fa2b7094a4a7dbebce75850708f912",
+        "rev": "90038e84a498a060c4fb76ea845ccface938a5a6",
         "type": "github"
       },
       "original": {

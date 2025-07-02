@@ -23,9 +23,7 @@
           encrypted_links_integrity =
             inputs'.private-event-sourcing-zome.packages.encrypted_links_integrity;
           encrypted_links =
-            inputs'.private-event-sourcing-zome.builders.encrypted_links {
-              private_event_sourcing_zome_name = "messenger";
-            };
+            inputs'.private-event-sourcing-zome.packages.encrypted_links;
         };
       };
   };
