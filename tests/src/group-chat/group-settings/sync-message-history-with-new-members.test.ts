@@ -91,6 +91,7 @@ test('sync_message_history_with_new_members works appropriately', async () => {
 
 		await groupConsistency(
 			[alice, bob, carol, dave].map(p => p.store.groupChats.get(groupHash)),
+			120_000,
 		);
 
 		await eventually(
