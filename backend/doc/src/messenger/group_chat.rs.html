@@ -781,102 +781,7 @@
 <a href="#780" id="780">780</a>
 <a href="#781" id="781">781</a>
 <a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a>
-<a href="#791" id="791">791</a>
-<a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a>
-<a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
-<a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
-<a href="#800" id="800">800</a>
-<a href="#801" id="801">801</a>
-<a href="#802" id="802">802</a>
-<a href="#803" id="803">803</a>
-<a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
-<a href="#807" id="807">807</a>
-<a href="#808" id="808">808</a>
-<a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a>
-<a href="#811" id="811">811</a>
-<a href="#812" id="812">812</a>
-<a href="#813" id="813">813</a>
-<a href="#814" id="814">814</a>
-<a href="#815" id="815">815</a>
-<a href="#816" id="816">816</a>
-<a href="#817" id="817">817</a>
-<a href="#818" id="818">818</a>
-<a href="#819" id="819">819</a>
-<a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
-<a href="#822" id="822">822</a>
-<a href="#823" id="823">823</a>
-<a href="#824" id="824">824</a>
-<a href="#825" id="825">825</a>
-<a href="#826" id="826">826</a>
-<a href="#827" id="827">827</a>
-<a href="#828" id="828">828</a>
-<a href="#829" id="829">829</a>
-<a href="#830" id="830">830</a>
-<a href="#831" id="831">831</a>
-<a href="#832" id="832">832</a>
-<a href="#833" id="833">833</a>
-<a href="#834" id="834">834</a>
-<a href="#835" id="835">835</a>
-<a href="#836" id="836">836</a>
-<a href="#837" id="837">837</a>
-<a href="#838" id="838">838</a>
-<a href="#839" id="839">839</a>
-<a href="#840" id="840">840</a>
-<a href="#841" id="841">841</a>
-<a href="#842" id="842">842</a>
-<a href="#843" id="843">843</a>
-<a href="#844" id="844">844</a>
-<a href="#845" id="845">845</a>
-<a href="#846" id="846">846</a>
-<a href="#847" id="847">847</a>
-<a href="#848" id="848">848</a>
-<a href="#849" id="849">849</a>
-<a href="#850" id="850">850</a>
-<a href="#851" id="851">851</a>
-<a href="#852" id="852">852</a>
-<a href="#853" id="853">853</a>
-<a href="#854" id="854">854</a>
-<a href="#855" id="855">855</a>
-<a href="#856" id="856">856</a>
-<a href="#857" id="857">857</a>
-<a href="#858" id="858">858</a>
-<a href="#859" id="859">859</a>
-<a href="#860" id="860">860</a>
-<a href="#861" id="861">861</a>
-<a href="#862" id="862">862</a>
-<a href="#863" id="863">863</a>
-<a href="#864" id="864">864</a>
-<a href="#865" id="865">865</a>
-<a href="#866" id="866">866</a>
-<a href="#867" id="867">867</a>
-<a href="#868" id="868">868</a>
-<a href="#869" id="869">869</a>
-<a href="#870" id="870">870</a>
-<a href="#871" id="871">871</a>
-<a href="#872" id="872">872</a>
-<a href="#873" id="873">873</a>
-<a href="#874" id="874">874</a>
-<a href="#875" id="875">875</a>
-<a href="#876" id="876">876</a>
-<a href="#877" id="877">877</a>
-<a href="#878" id="878">878</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
+<a href="#783" id="783">783</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">use </span>hdk::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>linked_devices_types::{are_agents_linked, LinkedDevicesProof};
@@ -884,7 +789,7 @@
 
 <span class="kw">use crate</span>::{
     create_peer::{build_create_peer_for_agent, build_my_create_peer},
-    profile::{merge_profiles, MessengerProfile},
+    profile::{merge_profiles, Profile},
     query_messenger_event, query_messenger_events, Message, MessengerEvent,
 };
 
@@ -892,7 +797,7 @@
 </span><span class="kw">pub struct </span>CreateGroupPeer {
     <span class="kw">pub </span>agents: BTreeSet&lt;AgentPubKey&gt;,
     <span class="kw">pub </span>proofs: Vec&lt;LinkedDevicesProof&gt;,
-    <span class="kw">pub </span>profile: <span class="prelude-ty">Option</span>&lt;MessengerProfile&gt;,
+    <span class="kw">pub </span>profile: <span class="prelude-ty">Option</span>&lt;Profile&gt;,
 }
 
 <span class="attr">#[derive(Serialize, Deserialize, Debug, Clone)]
@@ -1190,7 +1095,7 @@
     <span class="kw">pub </span>agents: BTreeSet&lt;AgentPubKey&gt;,
     <span class="kw">pub </span>admin: bool,
     <span class="kw">pub </span>removed: bool,
-    <span class="kw">pub </span>profile: <span class="prelude-ty">Option</span>&lt;MessengerProfile&gt;,
+    <span class="kw">pub </span>profile: <span class="prelude-ty">Option</span>&lt;Profile&gt;,
 }
 
 <span class="attr">#[derive(Serialize, Deserialize, Debug, Clone)]
@@ -1200,10 +1105,10 @@
     UpdateGroupSettings(GroupSettings),
     AddMember {
         member_agents: BTreeSet&lt;AgentPubKey&gt;,
-        profile: <span class="prelude-ty">Option</span>&lt;MessengerProfile&gt;,
+        profile: <span class="prelude-ty">Option</span>&lt;Profile&gt;,
     },
     UpdateProfile {
-        profile: MessengerProfile,
+        profile: Profile,
     },
     RemoveMember {
         member_agents: BTreeSet&lt;AgentPubKey&gt;,
@@ -1247,13 +1152,13 @@
 
 <span class="attr">#[derive(Serialize, Deserialize, Debug, Clone)]
 </span><span class="kw">pub struct </span>AgentWithProfile {
-    <span class="kw">pub </span>profile: <span class="prelude-ty">Option</span>&lt;MessengerProfile&gt;,
+    <span class="kw">pub </span>profile: <span class="prelude-ty">Option</span>&lt;Profile&gt;,
     <span class="kw">pub </span>agent: AgentPubKey,
 }
 
 <span class="attr">#[derive(Serialize, Deserialize, Debug, Clone)]
 </span><span class="kw">pub struct </span>CreateGroupChatInput {
-    <span class="kw">pub </span>my_profile: <span class="prelude-ty">Option</span>&lt;MessengerProfile&gt;,
+    <span class="kw">pub </span>my_profile: <span class="prelude-ty">Option</span>&lt;Profile&gt;,
     <span class="kw">pub </span>others: Vec&lt;AgentWithProfile&gt;,
     <span class="kw">pub </span>info: GroupInfo,
     <span class="kw">pub </span>settings: GroupSettings,
@@ -1344,28 +1249,7 @@
     <span class="kw">let </span>content = MessengerEvent::GroupChatEvent(group_chat_event.clone());
     <span class="kw">let </span>entry_hash = create_private_event(content)<span class="question-mark">?</span>;
 
-    <span class="comment">// if let GroupEvent::AddMember { .. } | GroupEvent::NewAgentForMember { .. } =
-    //     group_chat_event.event
-    // {
-    //     let Some(group_chat) = query_current_group_chat(&amp;group_chat_event.group_chat_hash)? else {
-    //         return Err(wasm_error!("GroupChat not found."));
-    //     };
-    //     let include_messages = group_chat.settings.sync_message_history_with_new_members;
-    //     let Some(events) =
-    //         query_entries_for_group(&amp;group_chat_event.group_chat_hash, include_messages)?
-    //     else {
-    //         return Err(wasm_error!("GroupChat not found."));
-    //     };
-    //     let mut events_hashes: BTreeSet&lt;EntryHash&gt; = events
-    //         .into_keys()
-    //         .map(|entry_hash| EntryHash::from(entry_hash))
-    //         .collect();
-    //     events_hashes.insert(group_chat_event.group_chat_hash);
-
-    //     send_private_events_to_new_recipients::&lt;MessengerEvent&gt;(events_hashes)?;
-    // }
-
-    </span><span class="prelude-val">Ok</span>(entry_hash)
+    <span class="prelude-val">Ok</span>(entry_hash)
 }
 
 <span class="kw">pub fn </span>query_create_group_chat(
@@ -1609,81 +1493,7 @@
     <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries_for_group))
 }
 
-<span class="comment">// pub fn post_receive_group_chat_entry(
-//     private_event_entry: PrivateEventEntry,
-//     group_chat_hash: &amp;EntryHash,
-//     current_group_chat_events_hashes: &amp;Vec&lt;EntryHash&gt;,
-// ) -&gt; ExternResult&lt;()&gt; {
-//     // If we have linked a device at the same time that a peer sent us a message
-//     // we need to re-propagate this message to our newly linked device
-//     let missed_events =
-//         query_missed_group_chat_events(&amp;group_chat_hash, &amp;current_group_chat_events_hashes)?;
-
-//     for (event_hash, group_chat_event) in missed_events {
-//         let new_agents = match group_chat_event.event {
-//             GroupEvent::AddMember { member_agents, .. } =&gt; member_agents,
-//             GroupEvent::NewAgentForMember { new_agent, .. } =&gt; {
-//                 vec![new_agent].into_iter().collect()
-//             }
-//             _ =&gt; {
-//                 continue;
-//             }
-//         };
-
-//         send_remote_signal(
-//             PrivateEventSourcingRemoteSignal::NewPrivateEvent(private_event_entry.clone()),
-//             new_agents.clone().into_iter().collect(),
-//         )?;
-
-//         for agent in new_agents {
-//             create_encrypted_message(
-//                 agent.clone(),
-//                 event_hash.clone(),
-//                 private_event_entry.clone(),
-//             )?;
-//         }
-//     }
-//     Ok(())
-// }
-
-// pub fn query_missed_group_chat_events(
-//     group_chat_hash: &amp;EntryHash,
-//     current_group_chat_events_hashes: &amp;Vec&lt;EntryHash&gt;,
-// ) -&gt; ExternResult&lt;BTreeMap&lt;EntryHash, GroupChatEvent&gt;&gt; {
-//     let group_chat_events = query_group_chat_events(group_chat_hash)?;
-
-//     // Get all ascendents for current events hashes
-//     let mut all_ascendents: BTreeSet&lt;EntryHash&gt; = current_group_chat_events_hashes
-//         .clone()
-//         .into_iter()
-//         .collect();
-//     let mut current_event_hashes: Vec&lt;EntryHash&gt; = current_group_chat_events_hashes.clone();
-
-//     while let Some(current_event_hash) = current_event_hashes.pop() {
-//         let Some(current_event) = group_chat_events.get(&amp;current_event_hash) else {
-//             return Err(wasm_error!(
-//                 "Previous group event was not found: {:?}",
-//                 current_event_hash
-//             ));
-//         };
-
-//         for previous_event_hash in &amp;current_event.previous_group_chat_events_hashes {
-//             if !all_ascendents.contains(previous_event_hash) {
-//                 all_ascendents.insert(previous_event_hash.clone());
-//                 current_event_hashes.push(previous_event_hash.clone());
-//             }
-//         }
-//     }
-
-//     // Filter all existing with ascendents
-//     let missing_group_events: BTreeMap&lt;EntryHash, GroupChatEvent&gt; = group_chat_events
-//         .into_iter()
-//         .filter(|(hash, _event)| !all_ascendents.contains(hash))
-//         .collect();
-//     Ok(missing_group_events)
-// }
-
-</span><span class="kw">pub fn </span>group_chat_recipients(group_chat: <span class="kw-2">&amp;</span>GroupChat) -&gt; ExternResult&lt;BTreeSet&lt;AgentPubKey&gt;&gt; {
+<span class="kw">pub fn </span>group_chat_recipients(group_chat: <span class="kw-2">&amp;</span>GroupChat) -&gt; ExternResult&lt;BTreeSet&lt;AgentPubKey&gt;&gt; {
     <span class="kw">let </span>my_pub_key = agent_info()<span class="question-mark">?</span>.agent_initial_pubkey;
     <span class="kw">let </span>members: BTreeSet&lt;AgentPubKey&gt; = group_chat
         .members
