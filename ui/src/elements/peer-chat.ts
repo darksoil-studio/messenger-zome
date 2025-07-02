@@ -2,6 +2,7 @@ import {
 	hashProperty,
 	notifyError,
 	sharedStyles,
+	wrapPathInSvg,
 } from '@darksoil-studio/holochain-elements';
 import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
 import {
@@ -26,6 +27,7 @@ import {
 } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
+import { mdiCheck } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/avatar/avatar.js';
 import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js';
@@ -47,6 +49,7 @@ import {
 	PeerMessage,
 } from '../types.js';
 import './message-input.js';
+import { seenStatus } from './seen-status.js';
 
 @localized()
 @customElement('peer-chat')
@@ -117,6 +120,12 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 		peerChat: PeerChat,
 		messages: Record<EntryHashB64, SignedEvent<PeerMessage>>,
 		myReadMessages: Array<EntryHashB64>,
+		theirReadMessages: Array<EntryHashB64>,
+		eventsSentToRecipients: Record<
+			EntryHashB64,
+			Record<AgentPubKeyB64, number>
+		>,
+		acknowledgements: Record<EntryHashB64, Record<AgentPubKeyB64, number>>,
 	) {
 		const peerIsTyping = this.store.peerChats
 			.get(this.peerChatHash)
@@ -180,6 +189,9 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 									myAgentsB64,
 									messageSetInDay.day,
 									messageSetInDay.eventsSets,
+									eventsSentToRecipients,
+									acknowledgements,
+									theirReadMessages,
 								),
 							)}
 							<div class="row" style="justify-content: center">
@@ -207,11 +219,23 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 		myAgentsB64: Array<AgentPubKeyB64>,
 		day: Date,
 		eventsSets: Array<EventSet<PeerMessage>>,
+		eventsSentToRecipients: Record<
+			EntryHashB64,
+			Record<AgentPubKeyB64, number>
+		>,
+		acknowledgements: Record<EntryHashB64, Record<AgentPubKeyB64, number>>,
+		theirReadMessages: Array<EntryHashB64>,
 	) {
 		return html`
 			<div class="column" style="gap: 8px; flex-direction: column-reverse">
 				${eventsSets.map(eventSet =>
-					this.renderMessageSet(eventSet, myAgentsB64),
+					this.renderMessageSet(
+						eventSet,
+						myAgentsB64,
+						eventsSentToRecipients,
+						acknowledgements,
+						theirReadMessages,
+					),
 				)}
 				<div style="align-self: center">
 					<sl-tag>
@@ -229,6 +253,12 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 	private renderMessageSet(
 		messageSet: EventSet<PeerMessage>,
 		myAgentsB64: AgentPubKeyB64[],
+		eventsSentToRecipients: Record<
+			EntryHashB64,
+			Record<AgentPubKeyB64, number>
+		>,
+		acknowledgements: Record<EntryHashB64, Record<AgentPubKeyB64, number>>,
+		theirReadMessages: Array<EntryHashB64>,
 	) {
 		const lastMessage = messageSet[0];
 		const timestamp = lastMessage[1].payload.timestamp / 1000;
@@ -250,7 +280,7 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 					([messageHash, message], i) => html`
 						<div
 							class="message row"
-							style="align-items: end; flex-wrap: wrap; gap: 16px;"
+							style="align-items: end; flex-wrap: wrap; gap: 8px;"
 						>
 							<span style="flex: 1; word-break: break-all"
 								>${message.payload.content.event.message.message}</span
@@ -282,6 +312,14 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 															</sl-relative-time>
 														`}
 										</div>
+										${fromMe
+											? this.seenStatus(
+													eventsSentToRecipients,
+													acknowledgements,
+													theirReadMessages,
+													messageHash,
+												)
+											: html``}
 									`
 								: html``}
 						</div>
@@ -289,6 +327,21 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 				)}
 			</div>
 		`;
+	}
+
+	seenStatus(
+		eventsSentToRecipients: Record<
+			EntryHashB64,
+			Record<AgentPubKeyB64, number>
+		>,
+		acknowledgements: Record<EntryHashB64, Record<AgentPubKeyB64, number>>,
+		theirReadMessages: Array<EntryHashB64>,
+		messageHash: EntryHashB64,
+	) {
+		if (theirReadMessages.includes(messageHash)) return seenStatus('seen');
+		if (acknowledgements[messageHash]) return seenStatus('received');
+		if (eventsSentToRecipients[messageHash]) return seenStatus('sent');
+		return html``;
 	}
 
 	async sendMessage(message: Message) {
@@ -314,6 +367,8 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 			this.peerChatStore.currentPeerChat.get(),
 			this.peerChatStore.messages.get(),
 			this.peerChatStore.readMessages.get(),
+			this.store.eventsSentToRecipients.get(),
+			this.store.acknowledgements.get(),
 		]);
 		return chatInfo;
 	}
@@ -335,8 +390,16 @@ export class PeerChatEl extends SignalWatcher(LitElement) {
 					.error=${chatInfo.error}
 				></display-error>`;
 			case 'completed':
-				const [peerChat, messages, readMessages] = chatInfo.value;
-				return this.renderChat(peerChat, messages, readMessages.myReadMessages);
+				const [peerChat, messages, readMessages, eventsSent, acknowledgements] =
+					chatInfo.value;
+				return this.renderChat(
+					peerChat,
+					messages,
+					readMessages.myReadMessages,
+					readMessages.theirReadMessages,
+					eventsSent,
+					acknowledgements,
+				);
 		}
 	}
 
