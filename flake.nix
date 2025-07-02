@@ -15,8 +15,6 @@
       "github:darksoil-studio/tauri-plugin-holochain/main-0.5";
 
     profiles-zome.url = "github:darksoil-studio/profiles-zome/main-0.5";
-    notifications-zome.url =
-      "github:darksoil-studio/notifications-zome/main-0.5";
     linked-devices-zome.url =
       "github:darksoil-studio/linked-devices-zome/main-0.5";
     private-event-sourcing-zome.url =
