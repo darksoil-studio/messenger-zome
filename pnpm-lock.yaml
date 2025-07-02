@@ -123,7 +123,7 @@ importers:
         specifier: ^0.500.0
         version: 0.500.0
       '@darksoil-studio/linked-devices-zome':
-        specifier: 0.500.0-rev.8180713ce1e0569ee151602c1dfa0e29d7f593f1
+        specifier: ^0.500.0-rev
         version: 0.500.0-rev.8180713ce1e0569ee151602c1dfa0e29d7f593f1(@floating-ui/utils@0.2.9)(@types/react@19.0.10)
       '@darksoil-studio/private-event-sourcing-zome':
         specifier: ^0.501.0-rev
