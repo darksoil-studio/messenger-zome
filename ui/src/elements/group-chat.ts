@@ -62,6 +62,7 @@ import './group-info.js';
 import './group-members.js';
 import './group-settings.js';
 import './message-input.js';
+import { seenStatus } from './seen-status.js';
 
 function closestPassShadow(node: Node | null, selector: string) {
 	if (!node) {
@@ -199,6 +200,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			SignedEvent<{ type: 'GroupChatEvent' } & GroupChatEvent>
 		>,
 		myReadMessages: EntryHashB64[],
+		eventsSentToRecipients: Record<
+			EntryHashB64,
+			Record<AgentPubKeyB64, number>
+		>,
+		acknowledgements: Record<EntryHashB64, Record<AgentPubKeyB64, number>>,
+		theirReadMessages: Record<AgentPubKeyB64, Array<EntryHashB64>>,
 	) {
 		const me = currentGroup.members.find(
 			m =>
@@ -297,6 +304,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 									myAgentsB64,
 									eventSetsInDay.day,
 									eventSetsInDay.eventsSets,
+									eventsSentToRecipients,
+									acknowledgements,
+									theirReadMessages,
 								),
 							)}
 							<div class="row" style="justify-content: center">
@@ -339,13 +349,24 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				| ({ type: 'GroupMessage' } & GroupMessage)
 			>
 		>,
+		eventsSentToRecipients: Record<
+			EntryHashB64,
+			Record<AgentPubKeyB64, number>
+		>,
+		acknowledgements: Record<EntryHashB64, Record<AgentPubKeyB64, number>>,
+		theirReadMessages: Record<AgentPubKeyB64, Array<EntryHashB64>>,
 	) {
 		return html`
 			<div class="column" style="gap: 8px; flex-direction: column-reverse">
 				${eventsSets.map(eventSet =>
 					eventSet[0][1].payload.content.event.type === 'GroupMessage'
 						? myAgentsB64.includes(encodeHashToBase64(eventSet[0][1].author))
-							? this.renderMessageSetFromMe(eventSet as EventSet<GroupMessage>)
+							? this.renderMessageSetFromMe(
+									eventsSentToRecipients,
+									acknowledgements,
+									theirReadMessages,
+									eventSet as EventSet<GroupMessage>,
+								)
 							: this.renderMessageSetToMe(
 									currentGroup,
 									eventSet as EventSet<GroupMessage>,
@@ -411,7 +432,15 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 		`;
 	}
 
-	private renderMessageSetFromMe(messageSet: EventSet<GroupMessage>) {
+	private renderMessageSetFromMe(
+		eventsSentToRecipients: Record<
+			EntryHashB64,
+			Record<AgentPubKeyB64, number>
+		>,
+		acknowledgements: Record<EntryHashB64, Record<AgentPubKeyB64, number>>,
+		theirReadMessages: Record<AgentPubKeyB64, Array<EntryHashB64>>,
+		messageSet: EventSet<GroupMessage>,
+	) {
 		const lastMessage = messageSet[0][1];
 		const timestamp = lastMessage.payload.timestamp / 1000;
 		const date = new Date(timestamp);
@@ -456,6 +485,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 															</sl-relative-time>
 														`}
 										</div>
+										${this.seenStatus(
+											eventsSentToRecipients,
+											acknowledgements,
+											theirReadMessages,
+											messageHash,
+										)}
 									`
 								: html``}
 						</div>
@@ -463,6 +498,22 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 				)}
 			</div>
 		`;
+	}
+
+	seenStatus(
+		eventsSentToRecipients: Record<
+			EntryHashB64,
+			Record<AgentPubKeyB64, number>
+		>,
+		acknowledgements: Record<EntryHashB64, Record<AgentPubKeyB64, number>>,
+		theirReadMessages: Record<AgentPubKeyB64, Array<EntryHashB64>>,
+		messageHash: EntryHashB64,
+	) {
+		if (Object.values(theirReadMessages).find(rm => rm.includes(messageHash)))
+			return seenStatus('seen');
+		if (acknowledgements[messageHash]) return seenStatus('received');
+		if (eventsSentToRecipients[messageHash]) return seenStatus('sent');
+		return html``;
 	}
 
 	renderAgentNickname(currentGroup: GroupChat, agent: AgentPubKey) {
@@ -600,6 +651,8 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			groupStore.messages.get(),
 			groupStore.events.get(),
 			groupStore.readMessages.get(),
+			groupStore.messengerStore.eventsSentToRecipients.get(),
+			groupStore.messengerStore.acknowledgements.get(),
 		]);
 	}
 
@@ -944,6 +997,12 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 			SignedEvent<{ type: 'GroupChatEvent' } & GroupChatEvent>
 		>,
 		myReadMessages: EntryHashB64[],
+		eventsSentToRecipients: Record<
+			EntryHashB64,
+			Record<AgentPubKeyB64, number>
+		>,
+		acknowledgements: Record<EntryHashB64, Record<AgentPubKeyB64, number>>,
+		theirReadMessages: Record<AgentPubKeyB64, Array<EntryHashB64>>,
 	) {
 		switch (this.view) {
 			case 'chat':
@@ -953,6 +1012,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					messages,
 					events,
 					myReadMessages,
+					eventsSentToRecipients,
+					acknowledgements,
+					theirReadMessages,
 				);
 			case 'details':
 				return this.renderDetails(currentGroup);
@@ -985,6 +1047,8 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					messages,
 					events,
 					readMessages,
+					eventsSentToRecipients,
+					acknowledgements,
 				] = groupInfo.value;
 				return this.renderView(
 					createGroupChat,
@@ -992,6 +1056,9 @@ export class GroupChatEl extends SignalWatcher(LitElement) {
 					messages,
 					events,
 					readMessages.myReadMessages,
+					eventsSentToRecipients,
+					acknowledgements,
+					readMessages.theirReadMessages,
 				);
 		}
 	}
