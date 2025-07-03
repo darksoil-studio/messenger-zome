@@ -6,9 +6,6 @@
       inputs.holochain-nix-builders.outputs.builders.${system}.dna {
         dnaManifest = ./dna.yaml;
         zomes = {
-          notifications_integrity =
-            inputs'.notifications-zome.packages.notifications_integrity;
-          notifications = inputs'.notifications-zome.packages.notifications;
           linked_devices_integrity =
             inputs'.linked-devices-zome.packages.linked_devices_integrity;
           linked_devices = inputs'.linked-devices-zome.packages.linked_devices;
@@ -23,9 +20,7 @@
           encrypted_links_integrity =
             inputs'.private-event-sourcing-zome.packages.encrypted_links_integrity;
           encrypted_links =
-            inputs'.private-event-sourcing-zome.builders.encrypted_links {
-              private_event_sourcing_zome_name = "messenger";
-            };
+            inputs'.private-event-sourcing-zome.packages.encrypted_links;
         };
       };
   };

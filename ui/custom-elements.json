@@ -1681,6 +1681,24 @@
                   "type": {
                     "text": "EntryHashB64[]"
                   }
+                },
+                {
+                  "name": "eventsSentToRecipients",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tRecord<AgentPubKeyB64, number>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "acknowledgements",
+                  "type": {
+                    "text": "Record<EntryHashB64, Record<AgentPubKeyB64, number>>"
+                  }
+                },
+                {
+                  "name": "theirReadMessages",
+                  "type": {
+                    "text": "Record<AgentPubKeyB64, Array<EntryHashB64>>"
+                  }
                 }
               ]
             },
@@ -1712,6 +1730,24 @@
                   "type": {
                     "text": "Array<\n\t\t\tEventSet<\n\t\t\t\t| ({ type: 'GroupChatEvent' } & GroupChatEvent)\n\t\t\t\t| ({ type: 'GroupMessage' } & GroupMessage)\n\t\t\t>\n\t\t>"
                   }
+                },
+                {
+                  "name": "eventsSentToRecipients",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tRecord<AgentPubKeyB64, number>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "acknowledgements",
+                  "type": {
+                    "text": "Record<EntryHashB64, Record<AgentPubKeyB64, number>>"
+                  }
+                },
+                {
+                  "name": "theirReadMessages",
+                  "type": {
+                    "text": "Record<AgentPubKeyB64, Array<EntryHashB64>>"
+                  }
                 }
               ]
             },
@@ -1734,9 +1770,57 @@
               "privacy": "private",
               "parameters": [
                 {
+                  "name": "eventsSentToRecipients",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tRecord<AgentPubKeyB64, number>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "acknowledgements",
+                  "type": {
+                    "text": "Record<EntryHashB64, Record<AgentPubKeyB64, number>>"
+                  }
+                },
+                {
+                  "name": "theirReadMessages",
+                  "type": {
+                    "text": "Record<AgentPubKeyB64, Array<EntryHashB64>>"
+                  }
+                },
+                {
                   "name": "messageSet",
                   "type": {
                     "text": "EventSet<GroupMessage>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "seenStatus",
+              "parameters": [
+                {
+                  "name": "eventsSentToRecipients",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tRecord<AgentPubKeyB64, number>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "acknowledgements",
+                  "type": {
+                    "text": "Record<EntryHashB64, Record<AgentPubKeyB64, number>>"
+                  }
+                },
+                {
+                  "name": "theirReadMessages",
+                  "type": {
+                    "text": "Record<AgentPubKeyB64, Array<EntryHashB64>>"
+                  }
+                },
+                {
+                  "name": "messageHash",
+                  "type": {
+                    "text": "EntryHashB64"
                   }
                 }
               ]
@@ -1887,6 +1971,24 @@
                   "name": "myReadMessages",
                   "type": {
                     "text": "EntryHashB64[]"
+                  }
+                },
+                {
+                  "name": "eventsSentToRecipients",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tRecord<AgentPubKeyB64, number>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "acknowledgements",
+                  "type": {
+                    "text": "Record<EntryHashB64, Record<AgentPubKeyB64, number>>"
+                  }
+                },
+                {
+                  "name": "theirReadMessages",
+                  "type": {
+                    "text": "Record<AgentPubKeyB64, Array<EntryHashB64>>"
                   }
                 }
               ]
@@ -2498,6 +2600,24 @@
                   "type": {
                     "text": "Array<EntryHashB64>"
                   }
+                },
+                {
+                  "name": "theirReadMessages",
+                  "type": {
+                    "text": "Array<EntryHashB64>"
+                  }
+                },
+                {
+                  "name": "eventsSentToRecipients",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tRecord<AgentPubKeyB64, number>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "acknowledgements",
+                  "type": {
+                    "text": "Record<EntryHashB64, Record<AgentPubKeyB64, number>>"
+                  }
                 }
               ]
             },
@@ -2523,6 +2643,24 @@
                   "type": {
                     "text": "Array<EventSet<PeerMessage>>"
                   }
+                },
+                {
+                  "name": "eventsSentToRecipients",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tRecord<AgentPubKeyB64, number>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "acknowledgements",
+                  "type": {
+                    "text": "Record<EntryHashB64, Record<AgentPubKeyB64, number>>"
+                  }
+                },
+                {
+                  "name": "theirReadMessages",
+                  "type": {
+                    "text": "Array<EntryHashB64>"
+                  }
                 }
               ]
             },
@@ -2541,6 +2679,54 @@
                   "name": "myAgentsB64",
                   "type": {
                     "text": "AgentPubKeyB64[]"
+                  }
+                },
+                {
+                  "name": "eventsSentToRecipients",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tRecord<AgentPubKeyB64, number>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "acknowledgements",
+                  "type": {
+                    "text": "Record<EntryHashB64, Record<AgentPubKeyB64, number>>"
+                  }
+                },
+                {
+                  "name": "theirReadMessages",
+                  "type": {
+                    "text": "Array<EntryHashB64>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "seenStatus",
+              "parameters": [
+                {
+                  "name": "eventsSentToRecipients",
+                  "type": {
+                    "text": "Record<\n\t\t\tEntryHashB64,\n\t\t\tRecord<AgentPubKeyB64, number>\n\t\t>"
+                  }
+                },
+                {
+                  "name": "acknowledgements",
+                  "type": {
+                    "text": "Record<EntryHashB64, Record<AgentPubKeyB64, number>>"
+                  }
+                },
+                {
+                  "name": "theirReadMessages",
+                  "type": {
+                    "text": "Array<EntryHashB64>"
+                  }
+                },
+                {
+                  "name": "messageHash",
+                  "type": {
+                    "text": "EntryHashB64"
                   }
                 }
               ]
@@ -2612,6 +2798,34 @@
           "declaration": {
             "name": "PeerChatEl",
             "module": "src/elements/peer-chat.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/seen-status.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "seenStatus",
+          "parameters": [
+            {
+              "name": "status",
+              "type": {
+                "text": "'sent' | 'received' | 'seen'"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "seenStatus",
+          "declaration": {
+            "name": "seenStatus",
+            "module": "src/elements/seen-status.ts"
           }
         }
       ]

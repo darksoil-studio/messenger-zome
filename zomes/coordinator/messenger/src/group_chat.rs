@@ -6,7 +6,7 @@ use private_event_sourcing::{create_private_event, SignedEvent};
 
 use crate::{
     create_peer::{build_create_peer_for_agent, build_my_create_peer},
-    profile::{merge_profiles, MessengerProfile},
+    profile::{merge_profiles, Profile},
     query_messenger_event, query_messenger_events, Message, MessengerEvent,
 };
 
@@ -14,7 +14,7 @@ use crate::{
 pub struct CreateGroupPeer {
     pub agents: BTreeSet<AgentPubKey>,
     pub proofs: Vec<LinkedDevicesProof>,
-    pub profile: Option<MessengerProfile>,
+    pub profile: Option<Profile>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -312,7 +312,7 @@ pub struct GroupMember {
     pub agents: BTreeSet<AgentPubKey>,
     pub admin: bool,
     pub removed: bool,
-    pub profile: Option<MessengerProfile>,
+    pub profile: Option<Profile>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -322,10 +322,10 @@ pub enum GroupEvent {
     UpdateGroupSettings(GroupSettings),
     AddMember {
         member_agents: BTreeSet<AgentPubKey>,
-        profile: Option<MessengerProfile>,
+        profile: Option<Profile>,
     },
     UpdateProfile {
-        profile: MessengerProfile,
+        profile: Profile,
     },
     RemoveMember {
         member_agents: BTreeSet<AgentPubKey>,
@@ -369,13 +369,13 @@ pub struct ReadGroupMessages {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AgentWithProfile {
-    pub profile: Option<MessengerProfile>,
+    pub profile: Option<Profile>,
     pub agent: AgentPubKey,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateGroupChatInput {
-    pub my_profile: Option<MessengerProfile>,
+    pub my_profile: Option<Profile>,
     pub others: Vec<AgentWithProfile>,
     pub info: GroupInfo,
     pub settings: GroupSettings,
@@ -465,27 +465,6 @@ pub fn validate_create_group_chat(
 pub fn create_group_chat_event(group_chat_event: GroupChatEvent) -> ExternResult<EntryHash> {
     let content = MessengerEvent::GroupChatEvent(group_chat_event.clone());
     let entry_hash = create_private_event(content)?;
-
-    // if let GroupEvent::AddMember { .. } | GroupEvent::NewAgentForMember { .. } =
-    //     group_chat_event.event
-    // {
-    //     let Some(group_chat) = query_current_group_chat(&group_chat_event.group_chat_hash)? else {
-    //         return Err(wasm_error!("GroupChat not found."));
-    //     };
-    //     let include_messages = group_chat.settings.sync_message_history_with_new_members;
-    //     let Some(events) =
-    //         query_entries_for_group(&group_chat_event.group_chat_hash, include_messages)?
-    //     else {
-    //         return Err(wasm_error!("GroupChat not found."));
-    //     };
-    //     let mut events_hashes: BTreeSet<EntryHash> = events
-    //         .into_keys()
-    //         .map(|entry_hash| EntryHash::from(entry_hash))
-    //         .collect();
-    //     events_hashes.insert(group_chat_event.group_chat_hash);
-
-    //     send_private_events_to_new_recipients::<MessengerEvent>(events_hashes)?;
-    // }
 
     Ok(entry_hash)
 }
@@ -730,80 +709,6 @@ pub fn query_entries_for_group(
 
     Ok(Some(entries_for_group))
 }
-
-// pub fn post_receive_group_chat_entry(
-//     private_event_entry: PrivateEventEntry,
-//     group_chat_hash: &EntryHash,
-//     current_group_chat_events_hashes: &Vec<EntryHash>,
-// ) -> ExternResult<()> {
-//     // If we have linked a device at the same time that a peer sent us a message
-//     // we need to re-propagate this message to our newly linked device
-//     let missed_events =
-//         query_missed_group_chat_events(&group_chat_hash, &current_group_chat_events_hashes)?;
-
-//     for (event_hash, group_chat_event) in missed_events {
-//         let new_agents = match group_chat_event.event {
-//             GroupEvent::AddMember { member_agents, .. } => member_agents,
-//             GroupEvent::NewAgentForMember { new_agent, .. } => {
-//                 vec![new_agent].into_iter().collect()
-//             }
-//             _ => {
-//                 continue;
-//             }
-//         };
-
-//         send_remote_signal(
-//             PrivateEventSourcingRemoteSignal::NewPrivateEvent(private_event_entry.clone()),
-//             new_agents.clone().into_iter().collect(),
-//         )?;
-
-//         for agent in new_agents {
-//             create_encrypted_message(
-//                 agent.clone(),
-//                 event_hash.clone(),
-//                 private_event_entry.clone(),
-//             )?;
-//         }
-//     }
-//     Ok(())
-// }
-
-// pub fn query_missed_group_chat_events(
-//     group_chat_hash: &EntryHash,
-//     current_group_chat_events_hashes: &Vec<EntryHash>,
-// ) -> ExternResult<BTreeMap<EntryHash, GroupChatEvent>> {
-//     let group_chat_events = query_group_chat_events(group_chat_hash)?;
-
-//     // Get all ascendents for current events hashes
-//     let mut all_ascendents: BTreeSet<EntryHash> = current_group_chat_events_hashes
-//         .clone()
-//         .into_iter()
-//         .collect();
-//     let mut current_event_hashes: Vec<EntryHash> = current_group_chat_events_hashes.clone();
-
-//     while let Some(current_event_hash) = current_event_hashes.pop() {
-//         let Some(current_event) = group_chat_events.get(&current_event_hash) else {
-//             return Err(wasm_error!(
-//                 "Previous group event was not found: {:?}",
-//                 current_event_hash
-//             ));
-//         };
-
-//         for previous_event_hash in &current_event.previous_group_chat_events_hashes {
-//             if !all_ascendents.contains(previous_event_hash) {
-//                 all_ascendents.insert(previous_event_hash.clone());
-//                 current_event_hashes.push(previous_event_hash.clone());
-//             }
-//         }
-//     }
-
-//     // Filter all existing with ascendents
-//     let missing_group_events: BTreeMap<EntryHash, GroupChatEvent> = group_chat_events
-//         .into_iter()
-//         .filter(|(hash, _event)| !all_ascendents.contains(hash))
-//         .collect();
-//     Ok(missing_group_events)
-// }
 
 pub fn group_chat_recipients(group_chat: &GroupChat) -> ExternResult<BTreeSet<AgentPubKey>> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
