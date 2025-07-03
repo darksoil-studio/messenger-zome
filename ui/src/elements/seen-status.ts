@@ -34,11 +34,11 @@ export function seenStatus(status: 'sent' | 'received' | 'seen') {
 			return html`
 				<div class="row">
 					<sl-icon
-						style="border-radius: 50%; border: 1px solid; font-size: 12px; margin-right: -7px; background-color: var(--sl-color-neutral-100, white); color: var(--sl-color-primary-500, blue)"
+						style="border-radius: 50%; border: 1px solid; font-size: 12px; margin-right: -7px; background-color: white; color: var(--sl-color-primary-500, blue)"
 						.src=${wrapPathInSvg(mdiCheck)}
 					></sl-icon>
 					<sl-icon
-						style="border-radius: 50%; border: 1px solid; font-size: 12px; background-color: var(--sl-color-neutral-100, white); color: var(--sl-color-primary-500, blue)"
+						style="border-radius: 50%; border: 1px solid; font-size: 12px; background-color: white; color: var(--sl-color-primary-500, blue)"
 						.src=${wrapPathInSvg(mdiCheck)}
 					></sl-icon>
 				</div>
