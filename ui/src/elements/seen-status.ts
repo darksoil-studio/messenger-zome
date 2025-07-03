@@ -1,12 +1,7 @@
-import {
-	sharedStyles,
-	wrapPathInSvg,
-} from '@darksoil-studio/holochain-elements';
-import { SignalWatcher } from '@darksoil-studio/holochain-signals';
+import { wrapPathInSvg } from '@darksoil-studio/holochain-elements';
 import { mdiCheck } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/icon/icon.js';
 import { LitElement, css, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
 
 export function seenStatus(status: 'sent' | 'received' | 'seen') {
 	switch (status) {
