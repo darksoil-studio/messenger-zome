@@ -131,7 +131,7 @@ import{i as x,x as c,f as p,r as k}from"./messenger-client.CV9csWrB.js";import{b
               ></sl-icon-button>
             `:""}
       </span>
-    `}};l.styles=[$,H];l.dependencies={"sl-icon-button":M};g([v({reflect:!0})],l.prototype,"variant",2);g([v({reflect:!0})],l.prototype,"size",2);g([v({type:Boolean,reflect:!0})],l.prototype,"pill",2);g([v({type:Boolean})],l.prototype,"removable",2);l.define("sl-tag");const P=60*1e3*1e3;function W(e,a){const o=[],u=Object.entries(e).sort((s,t)=>t[1].payload.timestamp-s[1].payload.timestamp);for(const[s,t]of u)if(o.length===0){const r=new Date(t.payload.timestamp/1e3);r.setHours(0),r.setMinutes(0),r.setSeconds(0),r.setMilliseconds(0),o.push({eventsSets:[[[s,t]]],day:r})}else{const r=o[o.length-1],m=r.eventsSets[r.eventsSets.length-1],h=m[m.length-1][1],w=a.find(b=>b.find(y=>p(y)===p(h.author))),S=a.find(b=>b.find(y=>p(y)===p(t.author))),_=w===S,z=h.payload.timestamp-t.payload.timestamp<P,E=t.payload.content.event.type===h.payload.content.event.type,i=new Date(t.payload.timestamp/1e3);i.setHours(0),i.setMinutes(0),i.setSeconds(0),i.setMilliseconds(0),i.valueOf()===r.day.valueOf()?_&&z&&E?m.push([s,t]):r.eventsSets.push([[s,t]]):o.push({eventsSets:[[[s,t]]],day:i})}return o}var L=Object.getOwnPropertyDescriptor,j=(e,a,o,u)=>{for(var s=u>1?void 0:u?L(a,o):a,t=e.length-1,r;t>=0;t--)(r=e[t])&&(s=r(s)||s);return s};let f=class extends A(k){dispatchSendMessage(e){if(!e||e==="")return;this.dispatchEvent(new CustomEvent("send-message",{bubbles:!0,composed:!0,detail:{message:{message:e,reply_to:void 0}}}));const a=this.shadowRoot.getElementById("text-input");a.value=""}render(){return c`
+    `}};l.styles=[$,H];l.dependencies={"sl-icon-button":M};g([v({reflect:!0})],l.prototype,"variant",2);g([v({reflect:!0})],l.prototype,"size",2);g([v({type:Boolean,reflect:!0})],l.prototype,"pill",2);g([v({type:Boolean})],l.prototype,"removable",2);l.define("sl-tag");const P=60*1e3*1e3;function W(e,a){const o=[],u=Object.entries(e).sort((r,t)=>t[1].payload.timestamp-r[1].payload.timestamp);for(const[r,t]of u)if(o.length===0){const s=new Date(t.payload.timestamp/1e3);s.setHours(0),s.setMinutes(0),s.setSeconds(0),s.setMilliseconds(0),o.push({eventsSets:[[[r,t]]],day:s})}else{const s=o[o.length-1],m=s.eventsSets[s.eventsSets.length-1],h=m[m.length-1][1],w=a.find(b=>b.find(y=>p(y)===p(h.author))),S=a.find(b=>b.find(y=>p(y)===p(t.author))),_=w===S,z=h.payload.timestamp-t.payload.timestamp<P,E=t.payload.content.event.type===h.payload.content.event.type,i=new Date(t.payload.timestamp/1e3);i.setHours(0),i.setMinutes(0),i.setSeconds(0),i.setMilliseconds(0),i.valueOf()===s.day.valueOf()?_&&z&&E?m.push([r,t]):s.eventsSets.push([[r,t]]):o.push({eventsSets:[[[r,t]]],day:i})}return o}var L=Object.getOwnPropertyDescriptor,j=(e,a,o,u)=>{for(var r=u>1?void 0:u?L(a,o):a,t=e.length-1,s;t>=0;t--)(s=e[t])&&(r=s(r)||r);return r};let f=class extends A(k){dispatchSendMessage(e){if(!e||e==="")return;this.dispatchEvent(new CustomEvent("send-message",{bubbles:!0,composed:!0,detail:{message:{message:e,reply_to:void 0}}}));const a=this.shadowRoot.getElementById("text-input");a.value=""}render(){return c`
 			<div class="row" style="align-items: center; gap: 4px">
 				<sl-textarea
 					type="text"
@@ -176,11 +176,11 @@ import{i as x,x as c,f as p,r as k}from"./messenger-client.CV9csWrB.js";import{b
 			`;case"seen":return c`
 				<div class="row">
 					<sl-icon
-						style="border-radius: 50%; border: 1px solid; font-size: 12px; margin-right: -7px; background-color: var(--sl-color-neutral-100, white); color: var(--sl-color-primary-500, blue)"
+						style="border-radius: 50%; border: 1px solid; font-size: 12px; margin-right: -7px; background-color: white; color: var(--sl-color-primary-500, blue)"
 						.src=${n(d)}
 					></sl-icon>
 					<sl-icon
-						style="border-radius: 50%; border: 1px solid; font-size: 12px; background-color: var(--sl-color-neutral-100, white); color: var(--sl-color-primary-500, blue)"
+						style="border-radius: 50%; border: 1px solid; font-size: 12px; background-color: white; color: var(--sl-color-primary-500, blue)"
 						.src=${n(d)}
 					></sl-icon>
 				</div>
