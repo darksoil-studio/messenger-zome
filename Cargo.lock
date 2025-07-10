@@ -709,6 +709,7 @@ dependencies = [
  "linked_devices_types",
  "md-icons",
  "messenger_integrity",
+ "migration_zome_trait",
  "notifications_zome_trait",
  "private_event_sourcing",
  "profiles_provider_zome_trait",
@@ -724,6 +725,17 @@ dependencies = [
  "holochain_serialized_bytes",
  "linked_devices_types",
  "private_event_sourcing_integrity",
+ "serde",
+]
+
+[[package]]
+name = "migration_zome_trait"
+version = "0.1.0"
+source = "git+https://github.com/darksoil-studio/migration-zome-trait?branch=main-0.5#3878bc57d81258915b1f3aa5c30dba42f247959e"
+dependencies = [
+ "hc_zome_traits",
+ "hdk",
+ "holochain_serialized_bytes",
  "serde",
 ]
 
