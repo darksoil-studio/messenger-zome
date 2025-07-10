@@ -7,8 +7,7 @@ use notifications_zome_trait::*;
 use private_event_sourcing::{query_all_my_agents, query_private_event};
 
 use crate::{
-    query_group_chat_at_events, utils::find_zomes_with_zome_trait, GroupChat, GroupChatEvent,
-    GroupEvent, MessengerEvent,
+    query_group_chat_at_events, utils::find_zomes_with_zome_trait, GroupEvent, MessengerEvent,
 };
 
 pub struct MessengerNotifications;
