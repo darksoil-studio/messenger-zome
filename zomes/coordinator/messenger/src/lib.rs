@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use hc_zome_traits::{implement_zome_trait_as_externs, implemented_zome_traits};
 use hdk::prelude::*;
 
 mod create_peer;
@@ -8,11 +9,20 @@ mod notifications;
 mod utils;
 use group_chat::*;
 mod peer_chat;
+use migration_zome_trait::MigrationZomeTrait;
+use notifications::MessengerNotifications;
+use notifications_zome_trait::*;
 use peer_chat::*;
 mod profile;
 mod typing_indicator;
 
 use private_event_sourcing::*;
+
+#[implemented_zome_traits]
+pub enum ZomeTraits {
+    Migration(MessengerMigration),
+    Notification(MessengerNotifications),
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Message {
@@ -223,25 +233,29 @@ pub fn recv_remote_signal(signal_bytes: SerializedBytes) -> ExternResult<()> {
     }
 }
 
-#[hdk_extern]
-pub fn migrate_from_old_cell(old_cell: CellId) -> ExternResult<()> {
-    let response = call(
-        CallTargetCell::OtherCell(old_cell),
-        zome_info()?.name,
-        "export_event_history".into(),
-        None,
-        (),
-    )?;
+struct MessengerMigration;
 
-    let ZomeCallResponse::Ok(result) = response else {
-        return Err(wasm_error!(
-            "Error quering the old private event entries: {:?}.",
-            response
-        ));
-    };
-    let event_history: EventHistory = result.decode().map_err(|err| wasm_error!(err))?;
+#[implement_zome_trait_as_externs]
+impl MigrationZomeTrait for MessengerMigration {
+    fn migrate(old_cell_id: CellId) -> ExternResult<()> {
+        let response = call(
+            CallTargetCell::OtherCell(old_cell_id),
+            zome_info()?.name,
+            "export_event_history".into(),
+            None,
+            (),
+        )?;
 
-    private_event_sourcing::import_event_history(event_history)?;
+        let ZomeCallResponse::Ok(result) = response else {
+            return Err(wasm_error!(
+                "Error quering the old private event entries: {:?}.",
+                response
+            ));
+        };
+        let event_history: EventHistory = result.decode().map_err(|err| wasm_error!(err))?;
 
-    Ok(())
+        private_event_sourcing::import_event_history(event_history)?;
+
+        Ok(())
+    }
 }

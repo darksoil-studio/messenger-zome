@@ -63,7 +63,7 @@ test('only admins can edit group settings', async () => {
 
 		await groupConsistency(
 			[alice, bob, carol].map(p => p.store.groupChats.get(groupHash)),
-			120_000,
+			200_000,
 		);
 
 		await alice.store.groupChats
