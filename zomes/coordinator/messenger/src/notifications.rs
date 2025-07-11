@@ -45,8 +45,11 @@ impl NotificationsZomeTrait for MessengerNotifications {
                         "data:image/svg+xml;charset=utf-8,{}",
                         md_icons::filled::ICON_PERSON
                     )),
-                    url_path_to_navigate_to_on_click: None,
-                    group: Some(format!("/peer-chat/{}", peer_message.peer_chat_hash)),
+                    url_path_to_navigate_to_on_click: Some(format!(
+                        "/peer-chat/{}",
+                        peer_message.peer_chat_hash
+                    )),
+                    group: Some(format!("{}", peer_message.peer_chat_hash)),
                 }))
             }
             MessengerEvent::CreateGroupChat(create_group_chat) => Ok(Some(Notification {
