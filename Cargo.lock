@@ -742,7 +742,7 @@ dependencies = [
 [[package]]
 name = "notifications_zome_trait"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/notifications-zome-trait?branch=main-0.5#cba087a457c02b2d1dfdc240249666d4a9939172"
+source = "git+https://github.com/darksoil-studio/notifications-zome-trait?branch=main-0.5#c90799b5ae4910b08e335ddbbc8231dbee93e1a6"
 dependencies = [
  "hc_zome_traits",
  "hdk",
