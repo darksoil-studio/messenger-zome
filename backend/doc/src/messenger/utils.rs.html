@@ -56,67 +56,53 @@
 <a href="#55" id="55">55</a>
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
-<a href="#58" id="58">58</a>
-<a href="#59" id="59">59</a>
-<a href="#60" id="60">60</a>
-<a href="#61" id="61">61</a>
-<a href="#62" id="62">62</a>
-<a href="#63" id="63">63</a>
-<a href="#64" id="64">64</a>
-<a href="#65" id="65">65</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
-
-<span class="kw">use </span>hdk::prelude::<span class="kw-2">*</span>;
+<a href="#58" id="58">58</a></pre></div><pre class="rust"><code><span class="kw">use </span>hdk::prelude::<span class="kw-2">*</span>;
 
 <span class="kw">pub fn </span>find_zomes_with_zome_trait(zome_trait_hash: [u8; <span class="number">32</span>]) -&gt; ExternResult&lt;Vec&lt;ZomeName&gt;&gt; {
-    <span class="kw">let </span>all_traits = all_implemented_traits()<span class="question-mark">?</span>;
+    <span class="kw">let </span>coordinators = local_cell_coordinator_zomes()<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>zomes: Vec&lt;ZomeName&gt; = all_traits
+    <span class="kw">let </span>zomes: Vec&lt;ZomeName&gt; = coordinators
         .into_iter()
-        .filter(|(<span class="kw">_</span>, traits)| traits.iter().any(|t| t.eq(<span class="kw-2">&amp;</span>zome_trait_hash)))
-        .map(|(z, <span class="kw">_</span>)| z)
+        .filter(|zome| {
+            <span class="kw">let </span><span class="prelude-val">Ok</span>(traits) = implemented_traits(CallTargetCell::Local, zome.clone()) <span class="kw">else </span>{
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            };
+
+            traits.iter().any(|t| t.eq(<span class="kw-2">&amp;</span>zome_trait_hash))
+        })
         .collect();
 
     <span class="prelude-val">Ok</span>(zomes)
 }
 
-<span class="kw">fn </span>all_implemented_traits() -&gt; ExternResult&lt;BTreeMap&lt;ZomeName, Vec&lt;[u8; <span class="number">32</span>]&gt;&gt;&gt; {
-    <span class="kw">let </span>coordinator_zomes = coordinator_zomes()<span class="question-mark">?</span>;
+<span class="kw">fn </span>implemented_traits(cell: CallTargetCell, zome_name: ZomeName) -&gt; ExternResult&lt;Vec&lt;[u8; <span class="number">32</span>]&gt;&gt; {
+    <span class="kw">let </span><span class="prelude-val">Ok</span>(response) = call(
+        cell,
+        zome_name,
+        <span class="string">"__implemented_zome_traits"</span>.into(),
+        <span class="prelude-val">None</span>,
+        (),
+    ) <span class="kw">else </span>{
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[]);
+    };
+    <span class="kw">let </span>ZomeCallResponse::Ok(r) = response <span class="kw">else </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">wasm_error!</span>(
+            <span class="string">"Failed to call __implemented_zome_traits: {:?}."</span>,
+            response
+        ));
+    };
+    <span class="kw">let </span>decode_result = r.decode::&lt;Vec&lt;[u8; <span class="number">32</span>]&gt;&gt;();
+    <span class="kw">let </span><span class="prelude-val">Ok</span>(zome_traits) = decode_result <span class="kw">else </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">wasm_error!</span>(
+            <span class="string">"Invalid __implemented_zome_traits result type: {:?}."</span>,
+            decode_result
+        ));
+    };
 
-    <span class="kw">let </span>call_input = coordinator_zomes
-        .clone()
-        .into_iter()
-        .map(|z| {
-            Call::new(
-                CallTarget::ConductorCell(CallTargetCell::Local),
-                z,
-                <span class="string">"__implemented_zome_traits"</span>.into(),
-                <span class="prelude-val">None</span>,
-                ExternIO::encode(()).unwrap(),
-            )
-        })
-        .collect();
-
-    <span class="kw">let </span>call_results = HDK.with(|hdk| hdk.borrow().call(call_input))<span class="question-mark">?</span>;
-
-    <span class="kw">let </span>implemented_traits: BTreeMap&lt;ZomeName, Vec&lt;[u8; <span class="number">32</span>]&gt;&gt; = call_results
-        .into_iter()
-        .zip(coordinator_zomes)
-        .filter_map(|(r, zome_name)| {
-            <span class="kw">let </span>ZomeCallResponse::Ok(r) = r <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">None</span>;
-            };
-            <span class="kw">let </span><span class="prelude-val">Ok</span>(zome_traits) = r.decode::&lt;Vec&lt;[u8; <span class="number">32</span>]&gt;&gt;() <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">None</span>;
-            };
-
-            <span class="prelude-val">Some</span>((zome_name, zome_traits))
-        })
-        .collect();
-
-    <span class="prelude-val">Ok</span>(implemented_traits)
+    <span class="prelude-val">Ok</span>(zome_traits)
 }
 
-<span class="kw">fn </span>coordinator_zomes() -&gt; ExternResult&lt;Vec&lt;ZomeName&gt;&gt; {
+<span class="kw">fn </span>local_cell_coordinator_zomes() -&gt; ExternResult&lt;Vec&lt;ZomeName&gt;&gt; {
     <span class="kw">let </span>zome_names = dna_info()<span class="question-mark">?</span>.zome_names;
 
     <span class="prelude-val">Ok</span>(zome_names
