@@ -19,6 +19,10 @@ impl NotificationsZomeTrait for MessengerNotifications {
             .map_err(|_err| wasm_error!("Failed to convert notification id to EntryHash."))?;
         let Some(private_event) = query_private_event::<MessengerEvent>(event_hash.clone().into())?
         else {
+            warn!(
+                "Event for notification id {} not found.",
+                input.notification_id
+            );
             return Ok(None);
         };
 
