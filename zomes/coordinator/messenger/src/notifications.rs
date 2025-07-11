@@ -45,11 +45,7 @@ impl NotificationsZomeTrait for MessengerNotifications {
                         "data:image/svg+xml;charset=utf-8,{}",
                         md_icons::filled::ICON_PERSON
                     )),
-                    url_path_to_navigate_to_on_click: Some(format!(
-                        "/peer-chat/{}",
-                        peer_message.peer_chat_hash
-                    )),
-                    group: Some(format!("{}", peer_message.peer_chat_hash)),
+                    group: Some(format!("peer-chat/{}", peer_message.peer_chat_hash)),
                 }))
             }
             MessengerEvent::CreateGroupChat(create_group_chat) => Ok(Some(Notification {
@@ -59,8 +55,7 @@ impl NotificationsZomeTrait for MessengerNotifications {
                     "data:image/svg+xml;charset=utf-8,{}",
                     md_icons::filled::ICON_GROUP
                 )),
-                group: Some(format!("{}", event_hash)),
-                url_path_to_navigate_to_on_click: Some(format!("/group-chat/{}", event_hash)),
+                group: Some(format!("group-chat/{}", event_hash)),
             })),
             MessengerEvent::GroupMessage(group_message) => {
                 let Some(group_chat) = query_group_chat_at_events(
@@ -95,11 +90,7 @@ impl NotificationsZomeTrait for MessengerNotifications {
                         "data:image/svg+xml;charset=utf-8,{}",
                         md_icons::filled::ICON_GROUPS
                     )),
-                    group: Some(format!("{}", group_message.group_chat_hash)),
-                    url_path_to_navigate_to_on_click: Some(format!(
-                        "/group-chat/{}",
-                        group_message.group_chat_hash
-                    )),
+                    group: Some(format!("group-chat/{}", group_message.group_chat_hash)),
                 }))
             }
             MessengerEvent::GroupChatEvent(event) => match event.event {
@@ -130,11 +121,7 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             "data:image/svg+xml;charset=utf-8,{}",
                             md_icons::filled::ICON_GROUP
                         )),
-                        group: Some(format!("{}", event.group_chat_hash)),
-                        url_path_to_navigate_to_on_click: Some(format!(
-                            "/group-chat/{}",
-                            event.group_chat_hash
-                        )),
+                        group: Some(format!("group-chat/{}", event.group_chat_hash)),
                     }))
                 }
                 GroupEvent::RemoveMember { member_agents } => {
@@ -182,11 +169,7 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             "data:image/svg+xml;charset=utf-8,{}",
                             md_icons::filled::ICON_GROUP
                         )),
-                        group: Some(format!("{}", event.group_chat_hash)),
-                        url_path_to_navigate_to_on_click: Some(format!(
-                            "/group-chat/{}",
-                            event.group_chat_hash
-                        )),
+                        group: Some(format!("group-chat/{}", event.group_chat_hash)),
                     }))
                 }
                 GroupEvent::LeaveGroup => {
@@ -222,11 +205,7 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             "data:image/svg+xml;charset=utf-8,{}",
                             md_icons::filled::ICON_GROUP
                         )),
-                        group: Some(format!("{}", event.group_chat_hash)),
-                        url_path_to_navigate_to_on_click: Some(format!(
-                            "/group-chat/{}",
-                            event.group_chat_hash
-                        )),
+                        group: Some(format!("group-chat/{}", event.group_chat_hash)),
                     }))
                 }
                 GroupEvent::DeleteGroup => {
@@ -266,11 +245,7 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             "data:image/svg+xml;charset=utf-8,{}",
                             md_icons::filled::ICON_GROUP
                         )),
-                        group: Some(format!("{}", event.group_chat_hash)),
-                        url_path_to_navigate_to_on_click: Some(format!(
-                            "/group-chat/{}",
-                            event.group_chat_hash
-                        )),
+                        group: Some(format!("group-chat/{}", event.group_chat_hash)),
                     }))
                 }
                 _ => Ok(None),
