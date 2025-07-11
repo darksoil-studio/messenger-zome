@@ -40,22 +40,28 @@ impl NotificationsZomeTrait for MessengerNotifications {
 
                 Ok(Some(Notification {
                     title: profile.name,
-                    body: peer_message.message.message,
+                    body: peer_message.message.message.clone(),
+                    large_body: Some(peer_message.message.message),
                     icon_src: profile.avatar.unwrap_or(format!(
                         "data:image/svg+xml;charset=utf-8,{}",
                         md_icons::filled::ICON_PERSON
                     )),
                     group: Some(format!("peer-chat/{}", peer_message.peer_chat_hash)),
+                    group_summary: true,
+                    summary: None,
                 }))
             }
             MessengerEvent::CreateGroupChat(create_group_chat) => Ok(Some(Notification {
                 title: create_group_chat.info.name,
                 body: t(&input.locale, "You were added to the group."),
+                large_body: Some(t(&input.locale, "You were added to the group.")),
                 icon_src: create_group_chat.info.avatar.unwrap_or(format!(
                     "data:image/svg+xml;charset=utf-8,{}",
                     md_icons::filled::ICON_GROUP
                 )),
                 group: Some(format!("group-chat/{}", event_hash)),
+                group_summary: true,
+                summary: None,
             })),
             MessengerEvent::GroupMessage(group_message) => {
                 let Some(group_chat) = query_group_chat_at_events(
@@ -85,12 +91,15 @@ impl NotificationsZomeTrait for MessengerNotifications {
 
                 Ok(Some(Notification {
                     title: profile.name,
-                    body: group_message.message.message,
+                    body: group_message.message.message.clone(),
+                    large_body: Some(group_message.message.message),
                     icon_src: group_chat.info.avatar.unwrap_or(format!(
                         "data:image/svg+xml;charset=utf-8,{}",
                         md_icons::filled::ICON_GROUPS
                     )),
                     group: Some(format!("group-chat/{}", group_message.group_chat_hash)),
+                    group_summary: true,
+                    summary: None,
                 }))
             }
             MessengerEvent::GroupChatEvent(event) => match event.event {
@@ -117,11 +126,18 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             profile.name,
                             t(&input.locale, "was added to the group.")
                         ),
+                        large_body: Some(format!(
+                            "{} {}",
+                            profile.name,
+                            t(&input.locale, "was added to the group.")
+                        )),
                         icon_src: group_chat.info.avatar.unwrap_or(format!(
                             "data:image/svg+xml;charset=utf-8,{}",
                             md_icons::filled::ICON_GROUP
                         )),
                         group: Some(format!("group-chat/{}", event.group_chat_hash)),
+                        group_summary: true,
+                        summary: None,
                     }))
                 }
                 GroupEvent::RemoveMember { member_agents } => {
@@ -165,11 +181,18 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             profile.name,
                             t(&input.locale, "was removed from the group.")
                         ),
+                        large_body: Some(format!(
+                            "{} {}",
+                            profile.name,
+                            t(&input.locale, "was removed from the group.")
+                        )),
                         icon_src: group_chat.info.avatar.unwrap_or(format!(
                             "data:image/svg+xml;charset=utf-8,{}",
                             md_icons::filled::ICON_GROUP
                         )),
                         group: Some(format!("group-chat/{}", event.group_chat_hash)),
+                        group_summary: true,
+                        summary: None,
                     }))
                 }
                 GroupEvent::LeaveGroup => {
@@ -201,11 +224,18 @@ impl NotificationsZomeTrait for MessengerNotifications {
                     Ok(Some(Notification {
                         title: group_chat.info.name,
                         body: format!("{} {}", profile.name, t(&input.locale, "left the group.")),
+                        large_body: Some(format!(
+                            "{} {}",
+                            profile.name,
+                            t(&input.locale, "left the group.")
+                        )),
                         icon_src: group_chat.info.avatar.unwrap_or(format!(
                             "data:image/svg+xml;charset=utf-8,{}",
                             md_icons::filled::ICON_GROUP
                         )),
                         group: Some(format!("group-chat/{}", event.group_chat_hash)),
+                        group_summary: true,
+                        summary: None,
                     }))
                 }
                 GroupEvent::DeleteGroup => {
@@ -241,11 +271,18 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             profile.name,
                             t(&input.locale, "deleted the group.")
                         ),
+                        large_body: Some(format!(
+                            "{} {}",
+                            profile.name,
+                            t(&input.locale, "deleted the group.")
+                        )),
                         icon_src: group_chat.info.avatar.unwrap_or(format!(
                             "data:image/svg+xml;charset=utf-8,{}",
                             md_icons::filled::ICON_GROUP
                         )),
                         group: Some(format!("group-chat/{}", event.group_chat_hash)),
+                        group_summary: true,
+                        summary: None,
                     }))
                 }
                 _ => Ok(None),
