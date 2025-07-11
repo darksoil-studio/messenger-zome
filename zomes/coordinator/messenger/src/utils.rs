@@ -1,57 +1,50 @@
-use std::collections::BTreeMap;
-
 use hdk::prelude::*;
 
 pub fn find_zomes_with_zome_trait(zome_trait_hash: [u8; 32]) -> ExternResult<Vec<ZomeName>> {
-    let all_traits = all_implemented_traits()?;
+    let coordinators = local_cell_coordinator_zomes()?;
 
-    let zomes: Vec<ZomeName> = all_traits
+    let zomes: Vec<ZomeName> = coordinators
         .into_iter()
-        .filter(|(_, traits)| traits.iter().any(|t| t.eq(&zome_trait_hash)))
-        .map(|(z, _)| z)
+        .filter(|zome| {
+            let Ok(traits) = implemented_traits(CallTargetCell::Local, zome.clone()) else {
+                return false;
+            };
+
+            traits.iter().any(|t| t.eq(&zome_trait_hash))
+        })
         .collect();
 
     Ok(zomes)
 }
 
-fn all_implemented_traits() -> ExternResult<BTreeMap<ZomeName, Vec<[u8; 32]>>> {
-    let coordinator_zomes = coordinator_zomes()?;
+fn implemented_traits(cell: CallTargetCell, zome_name: ZomeName) -> ExternResult<Vec<[u8; 32]>> {
+    let Ok(response) = call(
+        cell,
+        zome_name,
+        "__implemented_zome_traits".into(),
+        None,
+        (),
+    ) else {
+        return Ok(vec![]);
+    };
+    let ZomeCallResponse::Ok(r) = response else {
+        return Err(wasm_error!(
+            "Failed to call __implemented_zome_traits: {:?}.",
+            response
+        ));
+    };
+    let decode_result = r.decode::<Vec<[u8; 32]>>();
+    let Ok(zome_traits) = decode_result else {
+        return Err(wasm_error!(
+            "Invalid __implemented_zome_traits result type: {:?}.",
+            decode_result
+        ));
+    };
 
-    let call_input = coordinator_zomes
-        .clone()
-        .into_iter()
-        .map(|z| {
-            Call::new(
-                CallTarget::ConductorCell(CallTargetCell::Local),
-                z,
-                "__implemented_zome_traits".into(),
-                None,
-                ExternIO::encode(()).unwrap(),
-            )
-        })
-        .collect();
-
-    let call_results = HDK.with(|hdk| hdk.borrow().call(call_input))?;
-
-    let implemented_traits: BTreeMap<ZomeName, Vec<[u8; 32]>> = call_results
-        .into_iter()
-        .zip(coordinator_zomes)
-        .filter_map(|(r, zome_name)| {
-            let ZomeCallResponse::Ok(r) = r else {
-                return None;
-            };
-            let Ok(zome_traits) = r.decode::<Vec<[u8; 32]>>() else {
-                return None;
-            };
-
-            Some((zome_name, zome_traits))
-        })
-        .collect();
-
-    Ok(implemented_traits)
+    Ok(zome_traits)
 }
 
-fn coordinator_zomes() -> ExternResult<Vec<ZomeName>> {
+fn local_cell_coordinator_zomes() -> ExternResult<Vec<ZomeName>> {
     let zome_names = dna_info()?.zome_names;
 
     Ok(zome_names
