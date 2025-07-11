@@ -307,32 +307,7 @@
 <a href="#306" id="306">306</a>
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a>
-<a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
-<a href="#320" id="320">320</a>
-<a href="#321" id="321">321</a>
-<a href="#322" id="322">322</a>
-<a href="#323" id="323">323</a>
-<a href="#324" id="324">324</a>
-<a href="#325" id="325">325</a>
-<a href="#326" id="326">326</a>
-<a href="#327" id="327">327</a>
-<a href="#328" id="328">328</a>
-<a href="#329" id="329">329</a>
-<a href="#330" id="330">330</a>
-<a href="#331" id="331">331</a>
-<a href="#332" id="332">332</a>
-<a href="#333" id="333">333</a>
-<a href="#334" id="334">334</a></pre></div><pre class="rust"><code><span class="kw">use </span>profiles_provider_zome_trait::{Profile, PROFILES_PROVIDER_ZOME_TRAIT_HASH};
+<a href="#309" id="309">309</a></pre></div><pre class="rust"><code><span class="kw">use </span>profiles_provider_zome_trait::{Profile, PROFILES_PROVIDER_ZOME_TRAIT_HASH};
 <span class="kw">use </span>xliff::t::T;
 
 <span class="kw">use </span>hc_zome_traits::<span class="kw-2">*</span>;
@@ -379,11 +354,7 @@
                         <span class="string">"data:image/svg+xml;charset=utf-8,{}"</span>,
                         md_icons::filled::ICON_PERSON
                     )),
-                    url_path_to_navigate_to_on_click: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
-                        <span class="string">"/peer-chat/{}"</span>,
-                        peer_message.peer_chat_hash
-                    )),
-                    group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}"</span>, peer_message.peer_chat_hash)),
+                    group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"peer-chat/{}"</span>, peer_message.peer_chat_hash)),
                 }))
             }
             MessengerEvent::CreateGroupChat(create_group_chat) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Notification {
@@ -393,8 +364,7 @@
                     <span class="string">"data:image/svg+xml;charset=utf-8,{}"</span>,
                     md_icons::filled::ICON_GROUP
                 )),
-                group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}"</span>, event_hash)),
-                url_path_to_navigate_to_on_click: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"/group-chat/{}"</span>, event_hash)),
+                group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"group-chat/{}"</span>, event_hash)),
             })),
             MessengerEvent::GroupMessage(group_message) =&gt; {
                 <span class="kw">let </span><span class="prelude-val">Some</span>(group_chat) = query_group_chat_at_events(
@@ -429,11 +399,7 @@
                         <span class="string">"data:image/svg+xml;charset=utf-8,{}"</span>,
                         md_icons::filled::ICON_GROUPS
                     )),
-                    group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}"</span>, group_message.group_chat_hash)),
-                    url_path_to_navigate_to_on_click: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
-                        <span class="string">"/group-chat/{}"</span>,
-                        group_message.group_chat_hash
-                    )),
+                    group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"group-chat/{}"</span>, group_message.group_chat_hash)),
                 }))
             }
             MessengerEvent::GroupChatEvent(event) =&gt; <span class="kw">match </span>event.event {
@@ -464,11 +430,7 @@
                             <span class="string">"data:image/svg+xml;charset=utf-8,{}"</span>,
                             md_icons::filled::ICON_GROUP
                         )),
-                        group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}"</span>, event.group_chat_hash)),
-                        url_path_to_navigate_to_on_click: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
-                            <span class="string">"/group-chat/{}"</span>,
-                            event.group_chat_hash
-                        )),
+                        group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"group-chat/{}"</span>, event.group_chat_hash)),
                     }))
                 }
                 GroupEvent::RemoveMember { member_agents } =&gt; {
@@ -516,11 +478,7 @@
                             <span class="string">"data:image/svg+xml;charset=utf-8,{}"</span>,
                             md_icons::filled::ICON_GROUP
                         )),
-                        group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}"</span>, event.group_chat_hash)),
-                        url_path_to_navigate_to_on_click: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
-                            <span class="string">"/group-chat/{}"</span>,
-                            event.group_chat_hash
-                        )),
+                        group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"group-chat/{}"</span>, event.group_chat_hash)),
                     }))
                 }
                 GroupEvent::LeaveGroup =&gt; {
@@ -556,11 +514,7 @@
                             <span class="string">"data:image/svg+xml;charset=utf-8,{}"</span>,
                             md_icons::filled::ICON_GROUP
                         )),
-                        group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}"</span>, event.group_chat_hash)),
-                        url_path_to_navigate_to_on_click: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
-                            <span class="string">"/group-chat/{}"</span>,
-                            event.group_chat_hash
-                        )),
+                        group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"group-chat/{}"</span>, event.group_chat_hash)),
                     }))
                 }
                 GroupEvent::DeleteGroup =&gt; {
@@ -600,11 +554,7 @@
                             <span class="string">"data:image/svg+xml;charset=utf-8,{}"</span>,
                             md_icons::filled::ICON_GROUP
                         )),
-                        group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}"</span>, event.group_chat_hash)),
-                        url_path_to_navigate_to_on_click: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
-                            <span class="string">"/group-chat/{}"</span>,
-                            event.group_chat_hash
-                        )),
+                        group: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"group-chat/{}"</span>, event.group_chat_hash)),
                     }))
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
