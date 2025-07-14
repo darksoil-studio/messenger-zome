@@ -42,10 +42,13 @@ impl NotificationsZomeTrait for MessengerNotifications {
                     title: profile.name,
                     body: peer_message.message.message.clone(),
                     large_body: Some(peer_message.message.message),
-                    icon_src: profile.avatar.unwrap_or(format!(
-                        "data:image/svg+xml;charset=utf-8,{}",
-                        md_icons::filled::ICON_PERSON
-                    )),
+                    // icon: profile.avatar.unwrap_or(format!(
+                    //     "data:image/svg+xml;charset=utf-8,{}",
+                    //     md_icons::filled::ICON_PERSON
+                    // )),
+                    icon: None,
+                    icon_color: None,
+                    large_icon: None,
                     group: Some(format!("peer-chat/{}", peer_message.peer_chat_hash)),
                     group_summary: true,
                     summary: None,
@@ -55,10 +58,13 @@ impl NotificationsZomeTrait for MessengerNotifications {
                 title: create_group_chat.info.name,
                 body: t(&input.locale, "You were added to the group."),
                 large_body: Some(t(&input.locale, "You were added to the group.")),
-                icon_src: create_group_chat.info.avatar.unwrap_or(format!(
-                    "data:image/svg+xml;charset=utf-8,{}",
-                    md_icons::filled::ICON_GROUP
-                )),
+                // icon_src: create_group_chat.info.avatar.unwrap_or(format!(
+                //     "data:image/svg+xml;charset=utf-8,{}",
+                //     md_icons::filled::ICON_GROUP
+                // )),
+                icon: None,
+                icon_color: None,
+                large_icon: None,
                 group: Some(format!("group-chat/{}", event_hash)),
                 group_summary: true,
                 summary: None,
@@ -93,10 +99,13 @@ impl NotificationsZomeTrait for MessengerNotifications {
                     title: profile.name,
                     body: group_message.message.message.clone(),
                     large_body: Some(group_message.message.message),
-                    icon_src: group_chat.info.avatar.unwrap_or(format!(
-                        "data:image/svg+xml;charset=utf-8,{}",
-                        md_icons::filled::ICON_GROUPS
-                    )),
+                    // icon_src: group_chat.info.avatar.unwrap_or(format!(
+                    //     "data:image/svg+xml;charset=utf-8,{}",
+                    //     md_icons::filled::ICON_GROUPS
+                    // )),
+                    icon: None,
+                    icon_color: None,
+                    large_icon: None,
                     group: Some(format!("group-chat/{}", group_message.group_chat_hash)),
                     group_summary: true,
                     summary: None,
@@ -131,10 +140,13 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             profile.name,
                             t(&input.locale, "was added to the group.")
                         )),
-                        icon_src: group_chat.info.avatar.unwrap_or(format!(
-                            "data:image/svg+xml;charset=utf-8,{}",
-                            md_icons::filled::ICON_GROUP
-                        )),
+                        // icon_src: group_chat.info.avatar.unwrap_or(format!(
+                        //     "data:image/svg+xml;charset=utf-8,{}",
+                        //     md_icons::filled::ICON_GROUP
+                        // )),
+                        icon: None,
+                        icon_color: None,
+                        large_icon: None,
                         group: Some(format!("group-chat/{}", event.group_chat_hash)),
                         group_summary: true,
                         summary: None,
@@ -186,10 +198,14 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             profile.name,
                             t(&input.locale, "was removed from the group.")
                         )),
-                        icon_src: group_chat.info.avatar.unwrap_or(format!(
-                            "data:image/svg+xml;charset=utf-8,{}",
-                            md_icons::filled::ICON_GROUP
-                        )),
+
+                        icon: None,
+                        icon_color: None,
+                        large_icon: None,
+                        // icon_src: group_chat.info.avatar.unwrap_or(format!(
+                        //     "data:image/svg+xml;charset=utf-8,{}",
+                        //     md_icons::filled::ICON_GROUP
+                        // )),
                         group: Some(format!("group-chat/{}", event.group_chat_hash)),
                         group_summary: true,
                         summary: None,
@@ -229,10 +245,13 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             profile.name,
                             t(&input.locale, "left the group.")
                         )),
-                        icon_src: group_chat.info.avatar.unwrap_or(format!(
-                            "data:image/svg+xml;charset=utf-8,{}",
-                            md_icons::filled::ICON_GROUP
-                        )),
+                        // icon_src: group_chat.info.avatar.unwrap_or(format!(
+                        //     "data:image/svg+xml;charset=utf-8,{}",
+                        //     md_icons::filled::ICON_GROUP
+                        // )),
+                        icon: None,
+                        icon_color: None,
+                        large_icon: None,
                         group: Some(format!("group-chat/{}", event.group_chat_hash)),
                         group_summary: true,
                         summary: None,
@@ -276,10 +295,14 @@ impl NotificationsZomeTrait for MessengerNotifications {
                             profile.name,
                             t(&input.locale, "deleted the group.")
                         )),
-                        icon_src: group_chat.info.avatar.unwrap_or(format!(
-                            "data:image/svg+xml;charset=utf-8,{}",
-                            md_icons::filled::ICON_GROUP
-                        )),
+
+                        icon: None,
+                        icon_color: None,
+                        large_icon: None,
+                        // icon_src: group_chat.info.avatar.unwrap_or(format!(
+                        //     "data:image/svg+xml;charset=utf-8,{}",
+                        //     md_icons::filled::ICON_GROUP
+                        // )),
                         group: Some(format!("group-chat/{}", event.group_chat_hash)),
                         group_summary: true,
                         summary: None,
