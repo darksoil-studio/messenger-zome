@@ -7,9 +7,9 @@
   "dependencies": {
     "@darksoil-studio/holochain-signals": "^0.500.0",
     "@darksoil-studio/holochain-utils": "^0.500.0",
-    "@darksoil-studio/linked-devices-zome": "0.500.0-rev.8180713ce1e0569ee151602c1dfa0e29d7f593f1",
-    "@darksoil-studio/profiles-zome": "0.500.0-rev.90038e84a498a060c4fb76ea845ccface938a5a6",
-    "@darksoil-studio/private-event-sourcing-zome": "0.501.0-rev.9fb8fa2ac961be9bf7392075b868e1f516a83fc7",
+    "@darksoil-studio/linked-devices-zome": "0.500.0-rev.e7e158fc048c3e0e66317297cf5ac5b0f9a3d886",
+    "@darksoil-studio/profiles-zome": "0.500.0-rev.f8cdf6f37bafbc44c888e9dbc95f31854d27e048",
+    "@darksoil-studio/private-event-sourcing-zome": "0.501.0-rev.2da4a0f5a9802042b18423d5190e2d421e8bb6a2",
     "@holochain/client": "^0.19.0",
     "@holochain/tryorama": "^0.18.3",
     "@msgpack/msgpack": "^2.8.0",
