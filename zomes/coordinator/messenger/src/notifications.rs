@@ -20,11 +20,10 @@ impl NotificationsZomeTrait for MessengerNotifications {
         };
         let Some(private_event) = query_private_event::<MessengerEvent>(event_hash.clone().into())?
         else {
-            warn!(
+            return Err(wasm_error!(
                 "Event for notification id {} not found.",
                 input.notification_id
-            );
-            return Ok(None);
+            ));
         };
 
         let my_agents = query_all_my_agents()?;
